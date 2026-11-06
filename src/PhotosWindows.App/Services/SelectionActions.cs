@@ -78,8 +78,8 @@ public sealed class SelectionActions(
     {
         if (ids.Count == 0) return;
         var albums = (await organization.GetAlbumsAsync(CancellationToken.None)).Where(a => a.Kind == AlbumKind.Manual).ToList();
-        var combo = new ComboBox { PlaceholderText = Loc.Get("Album_Choose"), HorizontalAlignment = HorizontalAlignment.Stretch, DisplayMemberPath = nameof(Album.Name) };
-        foreach (var a in albums) combo.Items.Add(a);
+        var combo = new ComboBox { PlaceholderText = Loc.Get("Album_Choose"), HorizontalAlignment = HorizontalAlignment.Stretch };
+        foreach (var a in albums) combo.Items.Add(new ComboBoxItem { Content = a.Name, Tag = a });
         var newName = new TextBox { PlaceholderText = Loc.Get("Album_NewName") };
         var panel = new StackPanel { Spacing = 10, MinWidth = 320 };
         if (albums.Count > 0) panel.Children.Add(combo);
@@ -98,7 +98,7 @@ public sealed class SelectionActions(
         {
             await organization.CreateAlbumAsync(newName.Text, null, ids, CancellationToken.None);
         }
-        else if (combo.SelectedItem is Album album)
+        else if ((combo.SelectedItem as ComboBoxItem)?.Tag is Album album)
         {
             await organization.AddToAlbumAsync(album.Id, ids, CancellationToken.None);
         }
