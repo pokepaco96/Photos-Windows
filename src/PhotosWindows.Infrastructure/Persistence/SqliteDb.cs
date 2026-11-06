@@ -28,18 +28,22 @@ public sealed class SqliteDb
         _logger = logger;
     }
 
-    public static string BuildConnectionString(string databasePath, bool readOnly = false) => new SqliteConnectionStringBuilder
+    /// <param name="pooled">
+    /// Pooled connections keep the file open after Dispose. Use <c>false</c> for one-off access to files that may be
+    /// moved or deleted afterwards (backups, restores): Windows cannot rename or delete a file with an open handle.
+    /// </param>
+    public static string BuildConnectionString(string databasePath, bool readOnly = false, bool pooled = true) => new SqliteConnectionStringBuilder
     {
         DataSource = databasePath,
         Mode = readOnly ? SqliteOpenMode.ReadOnly : SqliteOpenMode.ReadWriteCreate,
         Cache = SqliteCacheMode.Private,
-        Pooling = true,
+        Pooling = pooled,
         DefaultTimeout = 30,
     }.ToString();
 
-    public static async Task<SqliteConnection> OpenAsync(string databasePath, CancellationToken cancellationToken, bool readOnly = false)
+    public static async Task<SqliteConnection> OpenAsync(string databasePath, CancellationToken cancellationToken, bool readOnly = false, bool pooled = true)
     {
-        var connection = new SqliteConnection(BuildConnectionString(databasePath, readOnly));
+        var connection = new SqliteConnection(BuildConnectionString(databasePath, readOnly, pooled));
         try
         {
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);

@@ -54,7 +54,8 @@ public sealed class SqliteCatalogStore : ICatalogStore
 
     public async Task<int> GetSchemaVersionAsync(string databasePath, CancellationToken cancellationToken)
     {
-        await using var connection = await SqliteDb.OpenAsync(databasePath, cancellationToken, readOnly: true).ConfigureAwait(false);
+        // Not pooled: this is used on backup copies that are renamed right after.
+        await using var connection = await SqliteDb.OpenAsync(databasePath, cancellationToken, readOnly: true, pooled: false).ConfigureAwait(false);
         return (int)await connection.ExecuteScalarAsync<long>("PRAGMA user_version;").ConfigureAwait(false);
     }
 
@@ -83,7 +84,7 @@ public sealed class SqliteCatalogStore : ICatalogStore
             throw new IOException("The backup destination already exists; refusing to overwrite it.");
         }
 
-        await using var source = await SqliteDb.OpenAsync(sourcePath, cancellationToken).ConfigureAwait(false);
+        await using var source = await SqliteDb.OpenAsync(sourcePath, cancellationToken, pooled: false).ConfigureAwait(false);
         await using (var destination = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = destinationPath, Pooling = false }.ToString()))
         {
             await destination.OpenAsync(cancellationToken).ConfigureAwait(false);

@@ -42,10 +42,10 @@ jobs:
           path: TestResults
           if-no-files-found: ignore
 
-  windows:
-    name: Windows build + tests
+  windows-tests:
+    name: Core + tests (Windows)
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -56,27 +56,12 @@ jobs:
       - name: Build core (Release)
         run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
       - name: Test
-        run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults
-      - name: Build Windows app (x64)
-        run: dotnet build src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64
-      - name: Publish Windows app (x64, self-contained folder)
-        run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
-      - name: Upload app artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PhotosWindows-win-x64
-          path: artifacts/PhotosWindows-win-x64
-          if-no-files-found: error
-      - name: Vulnerable package report
-        shell: pwsh
-        run: |
-          dotnet list PhotosWindows.sln package --vulnerable --include-transitive | Tee-Object -FilePath vulnerable.txt
-          if (Select-String -Path vulnerable.txt -Pattern "has the following vulnerable packages") { Write-Error "Vulnerable packages found"; exit 1 }
+        run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults --blame-hang-timeout 5m
       - name: Test summary
         if: always()
         shell: pwsh
         run: |
-          $files = Get-ChildItem TestResults -Filter *.trx -ErrorAction SilentlyContinue
+          $files = Get-ChildItem TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue
           foreach ($f in $files) {
             [xml]$x = Get-Content $f.FullName
             $c = $x.TestRun.ResultSummary.Counters
@@ -89,3 +74,28 @@ jobs:
           name: test-results-windows
           path: TestResults
           if-no-files-found: ignore
+
+  windows-app:
+    name: Windows app (WinUI 3, x64)
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Build app (Release, x64)
+        run: dotnet build src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64
+      - name: Publish app (self-contained folder)
+        run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotosWindows-win-x64
+          path: artifacts/PhotosWindows-win-x64
+          if-no-files-found: error
+      - name: Vulnerable package report
+        shell: pwsh
+        run: |
+          dotnet list PhotosWindows.sln package --vulnerable --include-transitive | Tee-Object -FilePath vulnerable.txt
+          if (Select-String -Path vulnerable.txt -Pattern "has the following vulnerable packages") { Write-Error "Vulnerable packages found"; exit 1 }
