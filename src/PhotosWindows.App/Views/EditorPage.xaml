@@ -68,7 +68,7 @@
 
                 <Expander x:Uid="Edit_CropHeader" Header="Crop and rotate" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <StackPanel Spacing="8">
-                        <ComboBox x:Uid="Edit_Aspect" Header="Aspect ratio" ItemsSource="{x:Bind ViewModel.Aspects}" SelectedItem="{x:Bind ViewModel.SelectedAspect, Mode=TwoWay}" DisplayMemberPath="DisplayName" HorizontalAlignment="Stretch" />
+                        <ComboBox x:Uid="Edit_Aspect" Header="Aspect ratio" ItemsSource="{x:Bind ViewModel.Aspects}" SelectedItem="{x:Bind ViewModel.SelectedAspectItem, Mode=TwoWay}" DisplayMemberPath="DisplayName" HorizontalAlignment="Stretch" />
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <Slider x:Uid="Edit_Straighten" Header="Straighten" Minimum="-45" Maximum="45" StepFrequency="0.1" Value="{x:Bind ViewModel.Straighten, Mode=TwoWay}" AutomationProperties.Name="Straighten" />

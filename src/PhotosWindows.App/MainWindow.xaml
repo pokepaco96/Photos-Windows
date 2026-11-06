@@ -112,18 +112,17 @@
                     Title="{x:Bind ViewModel.Activity.Title, Mode=OneWay}"
                     Message="{x:Bind ViewModel.Activity.Message, Mode=OneWay}">
                     <InfoBar.Content>
-                        <ProgressBar
-                            Margin="0,0,0,8"
-                            Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}"
-                            IsIndeterminate="{x:Bind ViewModel.Activity.IsIndeterminate, Mode=OneWay}"
-                            Value="{x:Bind ViewModel.Activity.Percent, Mode=OneWay}" />
-                    </InfoBar.Content>
-                    <InfoBar.ActionButton>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Uid="Common_CancelButton" Content="Cancel" Command="{x:Bind ViewModel.Activity.CancelCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}" />
-                            <Button Content="{x:Bind ViewModel.Activity.ActionText, Mode=OneWay}" Command="{x:Bind ViewModel.Activity.InvokeActionCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.HasAction), Mode=OneWay}" />
+                        <StackPanel Spacing="8" Margin="0,0,0,12">
+                            <ProgressBar
+                                Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}"
+                                IsIndeterminate="{x:Bind ViewModel.Activity.IsIndeterminate, Mode=OneWay}"
+                                Value="{x:Bind ViewModel.Activity.Percent, Mode=OneWay}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Uid="Common_CancelButton" Content="Cancel" Command="{x:Bind ViewModel.Activity.CancelCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}" />
+                                <Button Content="{x:Bind ViewModel.Activity.ActionText, Mode=OneWay}" Command="{x:Bind ViewModel.Activity.InvokeActionCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.HasAction), Mode=OneWay}" />
+                            </StackPanel>
                         </StackPanel>
-                    </InfoBar.ActionButton>
+                    </InfoBar.Content>
                 </InfoBar>
 
                 <Frame x:Name="ContentFrame" Grid.Row="1" />

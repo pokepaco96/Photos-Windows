@@ -30,10 +30,21 @@ public sealed partial class ImportsViewModel(IImportJobRepository jobs, ImportCo
     public ObservableCollection<ImportItemRow> Items { get; } = [];
 
     [ObservableProperty] public partial ImportJobRow? SelectedJob { get; set; }
+
+    /// <summary>Untyped mirror of <see cref="SelectedJob"/> for the ListView two-way binding.</summary>
+    public object? SelectedJobItem
+    {
+        get => SelectedJob;
+        set => SelectedJob = value as ImportJobRow;
+    }
     [ObservableProperty] public partial bool ProblemsOnly { get; set; } = true;
     [ObservableProperty] public partial bool IsEmpty { get; set; }
 
-    partial void OnSelectedJobChanged(ImportJobRow? value) => _ = LoadItemsAsync();
+    partial void OnSelectedJobChanged(ImportJobRow? value)
+    {
+        OnPropertyChanged(nameof(SelectedJobItem));
+        _ = LoadItemsAsync();
+    }
 
     partial void OnProblemsOnlyChanged(bool value) => _ = LoadItemsAsync();
 

@@ -70,7 +70,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     [ObservableProperty] public partial double ItemSize { get; set; }
     [ObservableProperty] public partial int GroupingIndex { get; set; }
     [ObservableProperty] public partial int MediaFilterIndex { get; set; }
-    [ObservableProperty] public partial bool FavoritesOnly { get; set; }
+    [ObservableProperty] public partial bool? FavoritesOnly { get; set; } = false;
     [ObservableProperty] public partial bool CanGroup { get; set; } = true;
     [ObservableProperty] public partial bool IsTrash { get; set; }
     [ObservableProperty] public partial bool IsHiddenScope { get; set; }
@@ -87,7 +87,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
     partial void OnMediaFilterIndexChanged(int value) => _ = ReloadAsync();
 
-    partial void OnFavoritesOnlyChanged(bool value) => _ = ReloadAsync();
+    partial void OnFavoritesOnlyChanged(bool? value) => _ = ReloadAsync();
 
     public async Task LoadAsync(LibraryNavigation target)
     {
@@ -112,7 +112,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             AlbumId = IsManualAlbum ? _album!.Id : null,
             Smart = IsSmartAlbum ? _album!.SmartDefinition : null,
             MediaType = MediaFilterIndex switch { 1 => MediaType.Photo, 2 => MediaType.Video, _ => null },
-            Favorite = FavoritesOnly ? true : null,
+            Favorite = FavoritesOnly == true ? true : null,
             Sort = IsManualAlbum ? AssetSort.AlbumOrder
                 : _target.Scope == LibraryScope.RecentlyAdded ? AssetSort.ImportDateDescending
                 : _settings.Load().DefaultSort,
@@ -146,7 +146,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             Subtitle = Loc.Format("Library_Counts", photos, rows.Count - photos);
             IsEmpty = rows.Count == 0;
             (EmptyTitle, EmptyMessage) = EmptyTexts();
-            ShowImportHint = IsEmpty && _target.Scope == LibraryScope.All && _target.SearchText is null && MediaFilterIndex == 0 && !FavoritesOnly;
+            ShowImportHint = IsEmpty && _target.Scope == LibraryScope.All && _target.SearchText is null && MediaFilterIndex == 0 && FavoritesOnly != true;
         }
         catch (OperationCanceledException)
         {

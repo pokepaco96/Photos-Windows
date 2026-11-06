@@ -66,6 +66,13 @@ public sealed partial class EditorViewModel(EditingService editing, IAssetReposi
     [ObservableProperty] public partial double Straighten { get; set; }
     [ObservableProperty] public partial AspectItem? SelectedAspect { get; set; }
 
+    /// <summary>Untyped mirror of <see cref="SelectedAspect"/> for the ComboBox two-way binding.</summary>
+    public object? SelectedAspectItem
+    {
+        get => SelectedAspect;
+        set => SelectedAspect = value as AspectItem;
+    }
+
     public long AssetId => _session?.AssetId ?? 0;
 
     public EditRecipe Current => _session?.Current ?? EditRecipe.Identity;
@@ -154,6 +161,7 @@ public sealed partial class EditorViewModel(EditingService editing, IAssetReposi
 
     partial void OnSelectedAspectChanged(AspectItem? value)
     {
+        OnPropertyChanged(nameof(SelectedAspectItem));
         if (value is null || _syncing || _source is null) return;
         var crop = Current.Crop;
         var ratio = value.Key == "original" ? OrientedAspect(Current, keepOriginal: true) : value.Ratio;

@@ -36,7 +36,7 @@
                 <AppBarButton.Icon><FontIcon Glyph="&#xE768;" /></AppBarButton.Icon>
             </AppBarButton>
             <AppBarButton x:Uid="Viewer_Edit" Label="Edit" Icon="Edit" Command="{x:Bind ViewModel.EditCommand}" Visibility="{x:Bind ViewModel.IsPhoto, Mode=OneWay}" ToolTipService.ToolTip="Edit (E)" />
-            <AppBarToggleButton x:Uid="Viewer_Info" Label="Info" IsChecked="{x:Bind ViewModel.IsInfoOpen, Mode=TwoWay}" ToolTipService.ToolTip="Info (I)">
+            <AppBarToggleButton x:Uid="Viewer_Info" Label="Info" IsChecked="{x:Bind ViewModel.IsInfoOpen, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleInfoCommand}" ToolTipService.ToolTip="Info (I)">
                 <AppBarToggleButton.Icon><FontIcon Glyph="&#xE946;" /></AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarButton x:Uid="Viewer_FullScreen" Label="Full screen" Command="{x:Bind ViewModel.ToggleFullScreenCommand}" ToolTipService.ToolTip="Full screen (F)">

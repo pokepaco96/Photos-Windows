@@ -15,7 +15,7 @@
         </Grid.ColumnDefinitions>
         <TextBlock x:Uid="Imports_Title" Text="Imports" Style="{StaticResource PageTitleStyle}" Grid.ColumnSpan="2" />
 
-        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Jobs}" SelectedItem="{x:Bind ViewModel.SelectedJob, Mode=TwoWay}" SelectionMode="Single" AutomationProperties.Name="Import history">
+        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Jobs}" SelectedItem="{x:Bind ViewModel.SelectedJobItem, Mode=TwoWay}" SelectionMode="Single" AutomationProperties.Name="Import history">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ImportJobRow">
                     <StackPanel Padding="0,8" Spacing="2">

@@ -35,8 +35,8 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty] public partial bool HasMissing { get; set; }
     [ObservableProperty] public partial bool HasOrphans { get; set; }
     [ObservableProperty] public partial bool HasPartials { get; set; }
-    [ObservableProperty] public partial bool IncludeOriginalsInBackup { get; set; } = true;
-    [ObservableProperty] public partial bool VerifyHashes { get; set; }
+    [ObservableProperty] public partial bool? IncludeOriginalsInBackup { get; set; } = true;
+    [ObservableProperty] public partial bool? VerifyHashes { get; set; } = false;
 
     public string Version => typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
@@ -110,7 +110,7 @@ public sealed partial class SettingsViewModel(
     {
         var folder = await window.PickFolderAsync();
         if (folder is null) return;
-        var includeOriginals = IncludeOriginalsInBackup;
+        var includeOriginals = IncludeOriginalsInBackup == true;
         await activity.RunAsync(Loc.Get("Backup_Activity"), async (progress, ct) =>
         {
             var p = new Progress<BackupProgress>(b => progress.Report(new ActivityProgress(b.Total > 0 && b.Stage == "originals" ? (double)b.Done / b.Total : null, Loc.Get("BackupStage_" + b.Stage))));
@@ -172,7 +172,7 @@ public sealed partial class SettingsViewModel(
     [RelayCommand]
     private async Task VerifyLibraryAsync()
     {
-        var hashes = VerifyHashes;
+        var hashes = VerifyHashes == true;
         await activity.RunAsync(Loc.Get("Verify_Activity"), async (progress, ct) =>
         {
             var p = new Progress<VerificationProgress>(v => progress.Report(new ActivityProgress((double)v.Done / Math.Max(1, v.Total), Loc.Format("Verify_Progress", v.Done, v.Total))));
