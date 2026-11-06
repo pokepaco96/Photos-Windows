@@ -127,7 +127,7 @@ public sealed class ExportService
         var recipe = (await _edits.GetAsync(asset.Id, ct).ConfigureAwait(false))?.Recipe ?? EditRecipe.Identity;
         var family = MediaFormats.FromExtension(source)?.Family ?? FormatFamily.Unknown;
         var encode = new EncodeOptions(options.Format, options.Quality);
-        var rendered = await Task.Run(() => _renderer.Render(source, family, recipe, options.MaxLongSide, encode, ct), ct).ConfigureAwait(false);
+        var rendered = await _renderer.RenderAsync(source, family, recipe, options.MaxLongSide, encode, ct).ConfigureAwait(false);
 
         var bytes = rendered.Encoded;
         if (options.Format == OutputFormat.Jpeg)

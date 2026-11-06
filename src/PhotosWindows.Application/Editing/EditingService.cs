@@ -53,11 +53,11 @@ public sealed class EditingService
         var path = await ResolveOriginalAsync(assetId, ct).ConfigureAwait(false);
         if (path is null) return null;
         var family = MediaFormats.FromExtension(path)?.Family ?? FormatFamily.Unknown;
-        return await Task.Run(() => _renderer.DecodeForAnalysis(path, family, maxLongSide, ct), ct).ConfigureAwait(false);
+        return await _renderer.DecodeOrientedAsync(path, family, maxLongSide, ct).ConfigureAwait(false);
     }
 
     public Task<RenderedImage> RenderPreviewAsync(RasterImage source, EditRecipe recipe, int maxLongSide, CancellationToken ct) =>
-        Task.Run(() => _renderer.Render(source, recipe, maxLongSide, EncodeOptions.PreviewJpeg, ct), ct);
+        _renderer.RenderAsync(source, recipe, maxLongSide, EncodeOptions.PreviewJpeg, ct);
 
     /// <summary>Full-quality render from the original (viewer at large sizes and export).</summary>
     public async Task<RenderedImage?> RenderFromOriginalAsync(long assetId, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken ct)
@@ -65,7 +65,7 @@ public sealed class EditingService
         var path = await ResolveOriginalAsync(assetId, ct).ConfigureAwait(false);
         if (path is null) return null;
         var family = MediaFormats.FromExtension(path)?.Family ?? FormatFamily.Unknown;
-        return await Task.Run(() => _renderer.Render(path, family, recipe, maxLongSide, encode, ct), ct).ConfigureAwait(false);
+        return await _renderer.RenderAsync(path, family, recipe, maxLongSide, encode, ct).ConfigureAwait(false);
     }
 
     public async Task<string?> ResolveOriginalAsync(long assetId, CancellationToken ct)

@@ -26,24 +26,28 @@ public sealed class SkiaImageRenderer : IImageRenderer
 
     public bool CanDecode(FormatFamily family) => SkiaFamilies.Contains(family) || _decoders.Any(d => d.CanDecode(family));
 
-    public RenderedImage Render(string sourcePath, FormatFamily family, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken)
+    public async Task<RenderedImage> RenderAsync(string sourcePath, FormatFamily family, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken)
     {
         var needed = RequiredDecodeSize(recipe, maxLongSide);
-        using var decoded = Decode(sourcePath, family, needed, cancellationToken);
-        return RenderDecoded(decoded.Bitmap, decoded.Orientation, recipe, maxLongSide, encode, cancellationToken);
+        using var decoded = await DecodeAsync(sourcePath, family, needed, cancellationToken).ConfigureAwait(false);
+        return await Task.Run(() => RenderDecoded(decoded.Bitmap, decoded.Orientation, recipe, maxLongSide, encode, cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
-    public RenderedImage Render(RasterImage source, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken)
-    {
-        using var bitmap = ToBitmap(source);
-        return RenderDecoded(bitmap, source.Orientation, recipe, maxLongSide, encode, cancellationToken);
-    }
+    public Task<RenderedImage> RenderAsync(RasterImage source, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken) =>
+        Task.Run(() =>
+        {
+            using var bitmap = ToBitmap(source);
+            return RenderDecoded(bitmap, source.Orientation, recipe, maxLongSide, encode, cancellationToken);
+        }, cancellationToken);
 
-    public RasterImage DecodeForAnalysis(string sourcePath, FormatFamily family, int maxLongSide, CancellationToken cancellationToken)
+    public async Task<RasterImage> DecodeOrientedAsync(string sourcePath, FormatFamily family, int maxLongSide, CancellationToken cancellationToken)
     {
-        using var decoded = Decode(sourcePath, family, maxLongSide, cancellationToken);
-        using var output = Transform(decoded.Bitmap, decoded.Orientation, EditRecipe.Identity, maxLongSide);
-        return ToRaster(output);
+        using var decoded = await DecodeAsync(sourcePath, family, maxLongSide, cancellationToken).ConfigureAwait(false);
+        return await Task.Run(() =>
+        {
+            using var output = Transform(decoded.Bitmap, decoded.Orientation, EditRecipe.Identity, maxLongSide);
+            return ToRaster(output);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Reads only the header to obtain stored dimensions; null when the format is not handled by Skia.</summary>
@@ -142,7 +146,7 @@ public sealed class SkiaImageRenderer : IImageRenderer
         public void Dispose() => Bitmap.Dispose();
     }
 
-    private DecodedImage Decode(string path, FormatFamily family, int? minLongSide, CancellationToken cancellationToken)
+    private async Task<DecodedImage> DecodeAsync(string path, FormatFamily family, int? minLongSide, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var length = new FileInfo(path).Length;
@@ -153,14 +157,14 @@ public sealed class SkiaImageRenderer : IImageRenderer
 
         if (SkiaFamilies.Contains(family))
         {
-            return DecodeWithSkia(path, minLongSide);
+            return await Task.Run(() => DecodeWithSkia(path, minLongSide), cancellationToken).ConfigureAwait(false);
         }
 
         foreach (var decoder in _decoders.Where(d => d.CanDecode(family)))
         {
             try
             {
-                var raster = decoder.Decode(path, family, minLongSide, cancellationToken);
+                var raster = await decoder.DecodeAsync(path, family, minLongSide, cancellationToken).ConfigureAwait(false);
                 return new DecodedImage(ToBitmap(raster), raster.Orientation);
             }
             catch (MediaDecodeException ex)

@@ -48,7 +48,7 @@ public interface IRasterDecoder
     /// Decodes the image, optionally downscaled so that its longest side is at least <paramref name="minLongSide"/>
     /// (decoders may use that hint to decode faster). Throws <see cref="MediaDecodeException"/> on failure.
     /// </summary>
-    RasterImage Decode(string path, FormatFamily family, int? minLongSide, CancellationToken cancellationToken);
+    Task<RasterImage> DecodeAsync(string path, FormatFamily family, int? minLongSide, CancellationToken cancellationToken);
 }
 
 /// <summary>Extracts a representative still frame from a video file.</summary>

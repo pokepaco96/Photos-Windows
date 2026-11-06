@@ -112,13 +112,13 @@ public sealed class ThumbnailService
                     var frame = await _videoFrames.ExtractPosterFrameAsync(source, (int)size, CancellationToken.None).ConfigureAwait(false);
                     if (frame is not null)
                     {
-                        rendered = await Task.Run(() => _renderer.Render(frame, recipe, (int)size, EncodeOptions.ThumbnailJpeg, CancellationToken.None)).ConfigureAwait(false);
+                        rendered = await _renderer.RenderAsync(frame, recipe, (int)size, EncodeOptions.ThumbnailJpeg, CancellationToken.None).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                rendered = await Task.Run(() => _renderer.Render(source, family, recipe, (int)size, EncodeOptions.ThumbnailJpeg, CancellationToken.None)).ConfigureAwait(false);
+                rendered = await _renderer.RenderAsync(source, family, recipe, (int)size, EncodeOptions.ThumbnailJpeg, CancellationToken.None).ConfigureAwait(false);
             }
 
             if (rendered is null)
@@ -196,7 +196,7 @@ public sealed class ThumbnailService
         await _workers.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var raster = await Task.Run(() => _renderer.DecodeForAnalysis(path, family, 64, cancellationToken), cancellationToken).ConfigureAwait(false);
+            var raster = await _renderer.DecodeOrientedAsync(path, family, 64, cancellationToken).ConfigureAwait(false);
             await _assets.SetPerceptualHashAsync(assetId, _hasher.Compute(raster), cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException)

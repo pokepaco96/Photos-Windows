@@ -32,12 +32,13 @@ public sealed record RenderedImage(byte[] Encoded, int Width, int Height, Output
 public interface IImageRenderer
 {
     /// <param name="maxLongSide">Downscale so the longest side of the result is at most this value; null = full resolution.</param>
-    RenderedImage Render(string sourcePath, FormatFamily family, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken);
+    /// <remarks>CPU-bound work runs on the thread pool; callers do not need to wrap it in Task.Run.</remarks>
+    Task<RenderedImage> RenderAsync(string sourcePath, FormatFamily family, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken);
 
-    RenderedImage Render(RasterImage source, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken);
+    Task<RenderedImage> RenderAsync(RasterImage source, EditRecipe recipe, int? maxLongSide, EncodeOptions encode, CancellationToken cancellationToken);
 
-    /// <summary>Decodes (orientation applied) and returns raw pixels, downscaled; used for analysis such as perceptual hashing.</summary>
-    RasterImage DecodeForAnalysis(string sourcePath, FormatFamily family, int maxLongSide, CancellationToken cancellationToken);
+    /// <summary>Decodes (orientation applied) and returns raw pixels, downscaled; used for previews and analysis such as perceptual hashing.</summary>
+    Task<RasterImage> DecodeOrientedAsync(string sourcePath, FormatFamily family, int maxLongSide, CancellationToken cancellationToken);
 
     bool CanDecode(FormatFamily family);
 
