@@ -94,3 +94,35 @@ public sealed record SmartAlbumDefinition(SmartMatch Match, IReadOnlyList<SmartR
 {
     public static SmartAlbumDefinition Empty { get; } = new(SmartMatch.All, []);
 }
+
+/// <summary>Checks that a smart rule's value has the right shape for its field, so invalid rules are refused when saved.</summary>
+public static class SmartRuleValidator
+{
+    public static string? Validate(SmartRule rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        var v = rule.Value?.Trim() ?? string.Empty;
+        if (v.Length == 0) return $"The rule for {rule.Field} needs a value.";
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        switch (rule.Field)
+        {
+            case SmartField.Favorite or SmartField.Edited or SmartField.HasLocation:
+                return v.ToLowerInvariant() is "true" or "false" or "1" or "0" or "yes" or "no" ? null : $"Use true or false for {rule.Field}.";
+            case SmartField.MediaType:
+                return Enum.TryParse<MediaType>(v, ignoreCase: true, out _) ? null : "Use Photo or Video.";
+            case SmartField.Rating:
+                return int.TryParse(v, System.Globalization.NumberStyles.Integer, ci, out var r) && r is >= 0 and <= 5 ? null : "Rating must be a number from 0 to 5.";
+            case SmartField.Album:
+                return long.TryParse(v, System.Globalization.NumberStyles.Integer, ci, out _) ? null : "Album rules need an album id.";
+            case SmartField.CaptureDate or SmartField.ImportDate:
+                if (rule.Operator == SmartOperator.InLastDays)
+                {
+                    return int.TryParse(v, System.Globalization.NumberStyles.Integer, ci, out var d) && d is > 0 and <= 100_000 ? null : "Enter a number of days.";
+                }
+
+                return DateTime.TryParseExact(v, "yyyy-MM-dd", ci, System.Globalization.DateTimeStyles.None, out _) ? null : "Dates must use the format YYYY-MM-DD.";
+            default:
+                return v.Length <= LibraryRules.MaxNameLength ? null : "The value is too long.";
+        }
+    }
+}

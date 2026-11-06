@@ -1,0 +1,133 @@
+<Window
+    x:Class="PhotosWindows.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="using:PhotosWindows.App.Converters"
+    Title="Photos Windows">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootGrid" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="I" Modifiers="Control,Shift" Invoked="OnImportAccelerator" />
+            <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnSearchAccelerator" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid x:Name="AppTitleBar" Padding="16,0,140,0">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Image Source="ms-appx:///Assets/AppIcon.png" Width="18" Height="18" />
+                <TextBlock Text="Photos Windows" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Bind ViewModel.LibraryName, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.6" VerticalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <NavigationView
+            x:Name="NavView"
+            Grid.Row="1"
+            IsBackButtonVisible="Auto"
+            IsBackEnabled="{x:Bind ContentFrame.CanGoBack, Mode=OneWay}"
+            BackRequested="OnBackRequested"
+            ItemInvoked="OnItemInvoked"
+            IsPaneVisible="{x:Bind ViewModel.HasLibrary, Mode=OneWay}"
+            IsSettingsVisible="True"
+            PaneDisplayMode="Left"
+            OpenPaneLength="260">
+
+            <NavigationView.AutoSuggestBox>
+                <AutoSuggestBox
+                    x:Name="SearchBox"
+                    x:Uid="SearchBox"
+                    PlaceholderText="Search photos"
+                    QueryIcon="Find"
+                    QuerySubmitted="OnSearchSubmitted"
+                    AutomationProperties.Name="Search" />
+            </NavigationView.AutoSuggestBox>
+
+            <NavigationView.MenuItems>
+                <NavigationViewItemHeader x:Uid="Nav_LibraryHeader" Content="Library" />
+                <NavigationViewItem x:Uid="Nav_All" Content="All photos" Tag="All" IsSelected="True">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE91B;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Videos" Content="Videos" Tag="Videos">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE714;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Favorites" Content="Favorites" Tag="Favorites">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xEB51;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_RecentlyAdded" Content="Recently added" Tag="RecentlyAdded">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE823;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Edited" Content="Edited" Tag="Edited">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE70F;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Located" Content="With location" Tag="WithLocation">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE707;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Uid="Nav_AlbumsHeader" Content="Albums" />
+                <NavigationViewItem x:Uid="Nav_Albums" Content="My albums" Tag="Albums">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8B9;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Uid="Nav_UtilitiesHeader" Content="Utilities" />
+                <NavigationViewItem x:Uid="Nav_Duplicates" Content="Duplicates" Tag="Duplicates">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8C8;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Hidden" Content="Hidden" Tag="Hidden">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xED1A;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Trash" Content="Recently deleted" Tag="RecentlyDeleted">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE74D;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Imports" Content="Imports" Tag="Imports">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Uid="Nav_Import" Content="Import…" Tag="Import" SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8B5;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <InfoBar
+                    Margin="12,4,12,0"
+                    IsOpen="{x:Bind ViewModel.Activity.IsOpen, Mode=OneWay}"
+                    IsClosable="{x:Bind conv:Bind.Not(ViewModel.Activity.IsBusy), Mode=OneWay}"
+                    CloseButtonCommand="{x:Bind ViewModel.Activity.DismissCommand}"
+                    Severity="{x:Bind ViewModel.Activity.Severity, Mode=OneWay}"
+                    Title="{x:Bind ViewModel.Activity.Title, Mode=OneWay}"
+                    Message="{x:Bind ViewModel.Activity.Message, Mode=OneWay}">
+                    <InfoBar.Content>
+                        <ProgressBar
+                            Margin="0,0,0,8"
+                            Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}"
+                            IsIndeterminate="{x:Bind ViewModel.Activity.IsIndeterminate, Mode=OneWay}"
+                            Value="{x:Bind ViewModel.Activity.Percent, Mode=OneWay}" />
+                    </InfoBar.Content>
+                    <InfoBar.ActionButton>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Uid="Common_CancelButton" Content="Cancel" Command="{x:Bind ViewModel.Activity.CancelCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}" />
+                            <Button Content="{x:Bind ViewModel.Activity.ActionText, Mode=OneWay}" Command="{x:Bind ViewModel.Activity.InvokeActionCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.HasAction), Mode=OneWay}" />
+                        </StackPanel>
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <Frame x:Name="ContentFrame" Grid.Row="1" />
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>

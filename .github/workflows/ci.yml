@@ -29,11 +29,11 @@ jobs:
         with:
           global-json-file: global.json
       - name: Restore
-        run: dotnet restore PhotosWindows.sln
+        run: dotnet restore PhotosWindows.Core.slnf
       - name: Build (Release, warnings as errors)
-        run: dotnet build PhotosWindows.sln -c Release --no-restore
+        run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
       - name: Test
-        run: dotnet test PhotosWindows.sln -c Release --no-build --logger "trx" --results-directory TestResults
+        run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -52,14 +52,21 @@ jobs:
         with:
           global-json-file: global.json
       - name: Restore
-        run: dotnet restore PhotosWindows.sln
+        run: dotnet restore PhotosWindows.Core.slnf
       - name: Build core (Release)
-        run: dotnet build PhotosWindows.sln -c Release --no-restore
+        run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
       - name: Test
-        run: dotnet test PhotosWindows.sln -c Release --no-build --logger "trx" --results-directory TestResults
+        run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults
       - name: Build Windows app (x64)
-        if: hashFiles('src/PhotosWindows.App/PhotosWindows.App.csproj') != ''
         run: dotnet build src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64
+      - name: Publish Windows app (x64, self-contained folder)
+        run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotosWindows-win-x64
+          path: artifacts/PhotosWindows-win-x64
+          if-no-files-found: error
       - name: Vulnerable package report
         shell: pwsh
         run: |

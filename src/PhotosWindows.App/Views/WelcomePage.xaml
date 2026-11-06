@@ -1,0 +1,89 @@
+<Page
+    x:Class="PhotosWindows.App.Views.WelcomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:PhotosWindows.App.ViewModels"
+    xmlns:conv="using:PhotosWindows.App.Converters">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="760" Margin="32,24" Spacing="16">
+            <Image Source="ms-appx:///Assets/AppIcon.png" Width="72" Height="72" HorizontalAlignment="Left" />
+            <TextBlock x:Uid="Welcome_Title" Text="Welcome to Photos Windows" Style="{StaticResource TitleLargeTextBlockStyle}" TextWrapping="Wrap" />
+            <TextBlock x:Uid="Welcome_Intro" TextWrapping="Wrap" Style="{StaticResource BodyLargeTextBlockStyle}"
+                       Text="Your photos and videos are organised in a library: a folder on your PC that contains the catalogue, thumbnails and, if you want, copies of your originals." />
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.CreateCommand}" IsEnabled="{x:Bind conv:Bind.Not(ViewModel.IsBusy), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" FontSize="14" />
+                        <TextBlock x:Uid="Welcome_Create" Text="Create a library" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{x:Bind ViewModel.OpenCommand}" IsEnabled="{x:Bind conv:Bind.Not(ViewModel.IsBusy), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8E5;" FontSize="14" />
+                        <TextBlock x:Uid="Welcome_Open" Text="Open a library" />
+                    </StackPanel>
+                </Button>
+                <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="20" Height="20" />
+            </StackPanel>
+
+            <StackPanel Visibility="{x:Bind conv:Bind.Visible(ViewModel.HasRecent), Mode=OneWay}" Spacing="4">
+                <TextBlock x:Uid="Welcome_Recent" Text="Recent libraries" Style="{StaticResource SectionHeaderStyle}" />
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Recent}">
+                    <ItemsRepeater.Layout><StackLayout Spacing="6" /></ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RecentLibrary">
+                            <Grid ColumnSpacing="8" Padding="12,8" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock Text="{x:Bind StatusText}" Opacity="0.7" TextTrimming="CharacterEllipsis" Style="{StaticResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" x:Uid="Welcome_OpenRecent" Content="Open" IsEnabled="{x:Bind IsAvailable}" Click="OnOpenRecent" Tag="{x:Bind}" />
+                                <Button Grid.Column="2" x:Uid="Welcome_Forget" Content="Remove from list" Click="OnForgetRecent" Tag="{x:Bind}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <TextBlock x:Uid="Welcome_HowTitle" Text="How it works" Style="{StaticResource SectionHeaderStyle}" />
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Spacing="4">
+                    <TextBlock x:Uid="Welcome_AddTitle" Text="Add without moving" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="Welcome_AddText" TextWrapping="Wrap" Opacity="0.8" Text="Photos stay in their folders. The library only remembers where they are. Ideal for folders you already organise." />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock x:Uid="Welcome_CopyTitle" Text="Copy to the library" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="Welcome_CopyText" TextWrapping="Wrap" Opacity="0.8" Text="Copies go to the library's originals folder, sorted by year and month. Ideal for memory cards and phones." />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Spacing="4">
+                    <TextBlock x:Uid="Welcome_SafeTitle" Text="Your originals are never changed" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="Welcome_SafeText" TextWrapping="Wrap" Opacity="0.8" Text="Edits are saved as instructions in the catalogue. Importing never moves or deletes your files." />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4">
+                    <TextBlock x:Uid="Welcome_LocalTitle" Text="Everything stays on this PC" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="Welcome_LocalText" TextWrapping="Wrap" Opacity="0.8" Text="No account, no cloud and no telemetry. Indexing, search and editing run locally and work offline." />
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Spacing="4">
+                    <TextBlock x:Uid="Welcome_BackupTitle" Text="Back up regularly" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="Welcome_BackupText" TextWrapping="Wrap" Opacity="0.8" Text="Settings › Backup creates a verified copy of the catalogue and, optionally, of the originals copied into the library. Keep it on another drive." />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

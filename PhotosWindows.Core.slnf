@@ -1,0 +1,15 @@
+{
+  "solution": {
+    "path": "PhotosWindows.sln",
+    "projects": [
+      "src\\PhotosWindows.Domain\\PhotosWindows.Domain.csproj",
+      "src\\PhotosWindows.Application\\PhotosWindows.Application.csproj",
+      "src\\PhotosWindows.Infrastructure\\PhotosWindows.Infrastructure.csproj",
+      "src\\PhotosWindows.Imaging\\PhotosWindows.Imaging.csproj",
+      "src\\PhotosWindows.Platform.Windows\\PhotosWindows.Platform.Windows.csproj",
+      "tests\\PhotosWindows.Domain.Tests\\PhotosWindows.Domain.Tests.csproj",
+      "tests\\PhotosWindows.Imaging.Tests\\PhotosWindows.Imaging.Tests.csproj",
+      "tests\\PhotosWindows.Integration.Tests\\PhotosWindows.Integration.Tests.csproj"
+    ]
+  }
+}

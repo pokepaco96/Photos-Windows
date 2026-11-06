@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Activity_Cancelled" xml:space="preserve"><value>Cancelado. Se ha conservado el trabajo realizado.</value></data>
+  <data name="Activity_Failed" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="Activity_Starting" xml:space="preserve"><value>Iniciando…</value></data>
+  <data name="Album_AddTitle" xml:space="preserve"><value>Añadir {0} elemento(s) a un álbum</value></data>
+  <data name="Album_Choose" xml:space="preserve"><value>Elige un álbum</value></data>
+  <data name="Album_NewName" xml:space="preserve"><value>Nombre del álbum</value></data>
+  <data name="Album_OrCreate" xml:space="preserve"><value>…o crea un álbum nuevo:</value></data>
+  <data name="Albums_DeleteAlbumMessage" xml:space="preserve"><value>¿Eliminar el álbum «{0}»? Las fotos seguirán en tu biblioteca.</value></data>
+  <data name="Albums_DeleteFolderMessage" xml:space="preserve"><value>¿Eliminar la carpeta «{0}»? Sus álbumes subirán un nivel; no se elimina ninguna foto.</value></data>
+  <data name="Albums_EditRules.Text" xml:space="preserve"><value>Editar reglas…</value></data>
+  <data name="Albums_EmptyText.Text" xml:space="preserve"><value>Los álbumes agrupan fotos sin copiarlas. Selecciona fotos en la biblioteca y elige «Añadir a álbum», o crea uno aquí.</value></data>
+  <data name="Albums_EmptyTitle.Text" xml:space="preserve"><value>Aún no hay álbumes</value></data>
+  <data name="Albums_FolderCount" xml:space="preserve"><value>{0} elemento(s)</value></data>
+  <data name="Albums_FolderName" xml:space="preserve"><value>Nombre de la carpeta</value></data>
+  <data name="Albums_MoveMenu.Text" xml:space="preserve"><value>Mover a carpeta…</value></data>
+  <data name="Albums_MoveTitle" xml:space="preserve"><value>Mover «{0}» a</value></data>
+  <data name="Albums_NewAlbum" xml:space="preserve"><value>Nuevo álbum</value></data>
+  <data name="Albums_NewAlbumButton.Label" xml:space="preserve"><value>Nuevo álbum</value></data>
+  <data name="Albums_NewFolder" xml:space="preserve"><value>Nueva carpeta</value></data>
+  <data name="Albums_NewFolderButton.Label" xml:space="preserve"><value>Nueva carpeta</value></data>
+  <data name="Albums_NewSmart" xml:space="preserve"><value>Nuevo álbum inteligente</value></data>
+  <data name="Albums_NewSmartButton.Label" xml:space="preserve"><value>Nuevo álbum inteligente</value></data>
+  <data name="Albums_Smart" xml:space="preserve"><value>Álbum inteligente</value></data>
+  <data name="Albums_Title" xml:space="preserve"><value>Álbumes</value></data>
+  <data name="Albums_TopLevel" xml:space="preserve"><value>Nivel superior</value></data>
+  <data name="Albums_Up.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Subir un nivel</value></data>
+  <data name="Aspect_Free" xml:space="preserve"><value>Libre</value></data>
+  <data name="Aspect_Original" xml:space="preserve"><value>Original</value></data>
+  <data name="BackupStage_catalog" xml:space="preserve"><value>Copiando el catálogo…</value></data>
+  <data name="BackupStage_checksums" xml:space="preserve"><value>Calculando sumas de verificación…</value></data>
+  <data name="BackupStage_originals" xml:space="preserve"><value>Copiando originales…</value></data>
+  <data name="BackupStage_verify" xml:space="preserve"><value>Verificando la copia…</value></data>
+  <data name="Backup_Activity" xml:space="preserve"><value>Copia de seguridad</value></data>
+  <data name="Backup_Done" xml:space="preserve"><value>Copia creada y verificada: {0}</value></data>
+  <data name="Backup_Invalid" xml:space="preserve"><value>Esta copia NO es válida:</value></data>
+  <data name="Backup_Valid" xml:space="preserve"><value>Copia válida del {0}: {1} elementos, {2} archivos verificados.</value></data>
+  <data name="Backup_VerifyTitle" xml:space="preserve"><value>Verificar copia</value></data>
+  <data name="Cmd_AddToAlbum.Label" xml:space="preserve"><value>Añadir a álbum</value></data>
+  <data name="Cmd_AddToAlbumMenu.Text" xml:space="preserve"><value>Añadir a álbum…</value></data>
+  <data name="Cmd_Delete.Label" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Cmd_DeleteMenu.Text" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Cmd_DeletePermanently.Label" xml:space="preserve"><value>Eliminar definitivamente</value></data>
+  <data name="Cmd_EmptyTrash.Label" xml:space="preserve"><value>Vaciar Eliminados recientemente</value></data>
+  <data name="Cmd_Export.Label" xml:space="preserve"><value>Exportar</value></data>
+  <data name="Cmd_ExportMenu.Text" xml:space="preserve"><value>Exportar…</value></data>
+  <data name="Cmd_Favorite.Label" xml:space="preserve"><value>Favorito</value></data>
+  <data name="Cmd_FavoriteMenu.Text" xml:space="preserve"><value>Marcar como favorito</value></data>
+  <data name="Cmd_Hide.Label" xml:space="preserve"><value>Ocultar</value></data>
+  <data name="Cmd_HideMenu.Text" xml:space="preserve"><value>Ocultar</value></data>
+  <data name="Cmd_Keywords.Label" xml:space="preserve"><value>Añadir palabras clave…</value></data>
+  <data name="Cmd_KeywordsMenu.Text" xml:space="preserve"><value>Añadir palabras clave…</value></data>
+  <data name="Cmd_OpenItem.Text" xml:space="preserve"><value>Abrir</value></data>
+  <data name="Cmd_RemoveFromAlbum.Label" xml:space="preserve"><value>Quitar del álbum</value></data>
+  <data name="Cmd_Restore.Label" xml:space="preserve"><value>Recuperar</value></data>
+  <data name="Cmd_Unfavorite.Label" xml:space="preserve"><value>Quitar de favoritos</value></data>
+  <data name="Cmd_UnfavoriteMenu.Text" xml:space="preserve"><value>Quitar de favoritos</value></data>
+  <data name="Cmd_Unhide.Label" xml:space="preserve"><value>Mostrar</value></data>
+  <data name="Common_Add" xml:space="preserve"><value>Añadir</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Common_CancelButton.Content" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Common_Create" xml:space="preserve"><value>Crear</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Common_DeleteMenu.Text" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Common_Move" xml:space="preserve"><value>Mover</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>Aceptar</value></data>
+  <data name="Common_Rename" xml:space="preserve"><value>Cambiar nombre</value></data>
+  <data name="Common_RenameMenu.Text" xml:space="preserve"><value>Cambiar nombre…</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="DateSource_ExifDigitized" xml:space="preserve"><value>de la cámara (digitalización)</value></data>
+  <data name="DateSource_ExifOriginal" xml:space="preserve"><value>de la cámara</value></data>
+  <data name="DateSource_FileModified" xml:space="preserve"><value>fecha de modificación del archivo</value></data>
+  <data name="DateSource_FileName" xml:space="preserve"><value>del nombre de archivo</value></data>
+  <data name="DateSource_Manual" xml:space="preserve"><value>ajustada manualmente</value></data>
+  <data name="DateSource_QuickTime" xml:space="preserve"><value>del vídeo</value></data>
+  <data name="DateSource_Unknown" xml:space="preserve"><value>origen desconocido</value></data>
+  <data name="DateSource_XmpSidecar" xml:space="preserve"><value>de XMP</value></data>
+  <data name="Delete_AlsoReferenced" xml:space="preserve"><value>Eliminar también los originales añadidos sin mover (irán a la Papelera de reciclaje)</value></data>
+  <data name="Delete_AndMore" xml:space="preserve"><value>…y {0} más</value></data>
+  <data name="Delete_Confirm" xml:space="preserve"><value>Eliminar definitivamente</value></data>
+  <data name="Delete_Errors" xml:space="preserve"><value>No se pudieron eliminar {0} archivo(s):</value></data>
+  <data name="Delete_NotRecoverable" xml:space="preserve"><value>Los archivos se eliminarán del disco.</value></data>
+  <data name="Delete_RecycleBin" xml:space="preserve"><value>Los archivos eliminados irán a la Papelera de reciclaje de Windows.</value></data>
+  <data name="Delete_Summary" xml:space="preserve"><value>Se quitarán {0} elemento(s) de la biblioteca. Se eliminarán {1} archivo(s) ({2}). Se conservarán en el disco {3} original(es) añadidos sin mover.</value></data>
+  <data name="Delete_Title" xml:space="preserve"><value>¿Eliminar definitivamente?</value></data>
+  <data name="Duplicates_Exact" xml:space="preserve"><value>Archivos idénticos</value></data>
+  <data name="Duplicates_Help.Text" xml:space="preserve"><value>Los duplicados exactos tienen contenido idéntico. Los similares se parecen y solo son sugerencias. Al conservar uno, los demás pasan a Eliminados recientemente; nunca se elimina nada automáticamente.</value></data>
+  <data name="Duplicates_IncludeSimilar.Header" xml:space="preserve"><value>Incluir fotos visualmente similares</value></data>
+  <data name="Duplicates_Keep" xml:space="preserve"><value>Conservar</value></data>
+  <data name="Duplicates_KeepMessage" xml:space="preserve"><value>¿Conservar «{0}» y mover los otros {1} elemento(s) a Eliminados recientemente?</value></data>
+  <data name="Duplicates_KeepThis.Content" xml:space="preserve"><value>Conservar esta</value></data>
+  <data name="Duplicates_KeepTitle" xml:space="preserve"><value>Conservar un elemento</value></data>
+  <data name="Duplicates_None.Text" xml:space="preserve"><value>No se han encontrado duplicados.</value></data>
+  <data name="Duplicates_NotDuplicates.Content" xml:space="preserve"><value>No son duplicados</value></data>
+  <data name="Duplicates_Similar" xml:space="preserve"><value>Fotos similares (diferencia {0})</value></data>
+  <data name="Duplicates_Title.Text" xml:space="preserve"><value>Duplicados</value></data>
+  <data name="Edit_Aspect.Header" xml:space="preserve"><value>Proporción</value></data>
+  <data name="Edit_BlackAndWhite.Header" xml:space="preserve"><value>Blanco y negro</value></data>
+  <data name="Edit_Brightness.Header" xml:space="preserve"><value>Brillo</value></data>
+  <data name="Edit_ColorHeader.Header" xml:space="preserve"><value>Color</value></data>
+  <data name="Edit_Contrast.Header" xml:space="preserve"><value>Contraste</value></data>
+  <data name="Edit_CropHeader.Header" xml:space="preserve"><value>Recortar y girar</value></data>
+  <data name="Edit_EffectsHeader.Header" xml:space="preserve"><value>Efectos</value></data>
+  <data name="Edit_Exposure.Header" xml:space="preserve"><value>Exposición</value></data>
+  <data name="Edit_FlipH.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Voltear horizontalmente</value></data>
+  <data name="Edit_FlipV.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Voltear verticalmente</value></data>
+  <data name="Edit_Highlights.Header" xml:space="preserve"><value>Altas luces</value></data>
+  <data name="Edit_LightHeader.Header" xml:space="preserve"><value>Luz</value></data>
+  <data name="Edit_PresetsHeader.Header" xml:space="preserve"><value>Estilos</value></data>
+  <data name="Edit_ResetCrop.Content" xml:space="preserve"><value>Restablecer recorte</value></data>
+  <data name="Edit_ResetOne.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Restablecer</value></data>
+  <data name="Edit_RotateLeft.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Girar a la izquierda</value></data>
+  <data name="Edit_RotateRight.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Girar a la derecha</value></data>
+  <data name="Edit_Saturation.Header" xml:space="preserve"><value>Saturación</value></data>
+  <data name="Edit_Shadows.Header" xml:space="preserve"><value>Sombras</value></data>
+  <data name="Edit_Sharpness.Header" xml:space="preserve"><value>Nitidez</value></data>
+  <data name="Edit_Straighten.Header" xml:space="preserve"><value>Enderezar</value></data>
+  <data name="Edit_Temperature.Header" xml:space="preserve"><value>Calidez</value></data>
+  <data name="Edit_Tint.Header" xml:space="preserve"><value>Matiz</value></data>
+  <data name="Edit_Vibrance.Header" xml:space="preserve"><value>Intensidad</value></data>
+  <data name="Edit_Vignette.Header" xml:space="preserve"><value>Viñeta</value></data>
+  <data name="Editor_Cancel.Label" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Editor_Compare.Label" xml:space="preserve"><value>Antes / después</value></data>
+  <data name="Editor_Crop.Label" xml:space="preserve"><value>Recortar</value></data>
+  <data name="Editor_Discard" xml:space="preserve"><value>Descartar</value></data>
+  <data name="Editor_DiscardMessage" xml:space="preserve"><value>Se perderán los cambios no guardados.</value></data>
+  <data name="Editor_DiscardTitle" xml:space="preserve"><value>¿Descartar cambios?</value></data>
+  <data name="Editor_Done.Label" xml:space="preserve"><value>Listo</value></data>
+  <data name="Editor_OriginalSafe.Text" xml:space="preserve"><value>Las ediciones se guardan en el catálogo. El archivo original nunca se modifica.</value></data>
+  <data name="Editor_Redo.Label" xml:space="preserve"><value>Rehacer</value></data>
+  <data name="Editor_ResetAll.Label" xml:space="preserve"><value>Restablecer todos los ajustes</value></data>
+  <data name="Editor_Revert" xml:space="preserve"><value>Revertir</value></data>
+  <data name="Editor_RevertMessage" xml:space="preserve"><value>Se quitarán todas las ediciones. Las versiones anteriores quedan en el historial del catálogo.</value></data>
+  <data name="Editor_RevertOriginal.Label" xml:space="preserve"><value>Volver al original</value></data>
+  <data name="Editor_RevertTitle" xml:space="preserve"><value>¿Volver al original?</value></data>
+  <data name="Editor_Title.Text" xml:space="preserve"><value>Editar</value></data>
+  <data name="Editor_Undo.Label" xml:space="preserve"><value>Deshacer</value></data>
+  <data name="Empty_AlbumMessage" xml:space="preserve"><value>Selecciona fotos en la biblioteca y elige «Añadir a álbum».</value></data>
+  <data name="Empty_AlbumTitle" xml:space="preserve"><value>Este álbum está vacío</value></data>
+  <data name="Empty_FavoritesMessage" xml:space="preserve"><value>Marca fotos con el corazón para encontrarlas aquí.</value></data>
+  <data name="Empty_FavoritesTitle" xml:space="preserve"><value>Aún no hay favoritos</value></data>
+  <data name="Empty_HiddenMessage" xml:space="preserve"><value>Los elementos ocultos no aparecen en la biblioteca, pero no se eliminan.</value></data>
+  <data name="Empty_HiddenTitle" xml:space="preserve"><value>No hay nada oculto</value></data>
+  <data name="Empty_LibraryMessage" xml:space="preserve"><value>Importa una carpeta, una tarjeta de memoria o arrastra fotos aquí.</value></data>
+  <data name="Empty_LibraryTitle" xml:space="preserve"><value>Tu biblioteca está vacía</value></data>
+  <data name="Empty_SearchMessage" xml:space="preserve"><value>Prueba con otras palabras, un año (2023) o un tipo (vídeos).</value></data>
+  <data name="Empty_SearchTitle" xml:space="preserve"><value>Sin resultados</value></data>
+  <data name="Empty_SmartMessage" xml:space="preserve"><value>Ningún elemento cumple las reglas de este álbum inteligente.</value></data>
+  <data name="Empty_SmartTitle" xml:space="preserve"><value>Sin coincidencias</value></data>
+  <data name="Empty_TrashMessage" xml:space="preserve"><value>Los elementos eliminados permanecen aquí hasta que los elimines definitivamente.</value></data>
+  <data name="Empty_TrashTitle" xml:space="preserve"><value>Eliminados recientemente está vacío</value></data>
+  <data name="Error_AccessDenied" xml:space="preserve"><value>Windows denegó el acceso al archivo o la carpeta.</value></data>
+  <data name="Error_Io" xml:space="preserve"><value>Falló una operación de archivo: {0}</value></data>
+  <data name="Error_NotFound" xml:space="preserve"><value>No se encontró el archivo o la carpeta. Puede que se haya movido o que la unidad esté desconectada.</value></data>
+  <data name="Error_Unexpected" xml:space="preserve"><value>Algo salió mal</value></data>
+  <data name="Export_Activity" xml:space="preserve"><value>Exportar</value></data>
+  <data name="Export_ChooseFolder" xml:space="preserve"><value>Elegir carpeta…</value></data>
+  <data name="Export_Descriptive" xml:space="preserve"><value>Incluir título, descripción, palabras clave y valoración</value></data>
+  <data name="Export_Done" xml:space="preserve"><value>{0} elemento(s) exportados a {1}</value></data>
+  <data name="Export_DoneWithErrors" xml:space="preserve"><value>{0} exportados, {1} con error. Primer error: {2}</value></data>
+  <data name="Export_Edited" xml:space="preserve"><value>Copia editada</value></data>
+  <data name="Export_Format" xml:space="preserve"><value>Formato</value></data>
+  <data name="Export_Location" xml:space="preserve"><value>Incluir ubicación (GPS)</value></data>
+  <data name="Export_Metadata" xml:space="preserve"><value>Incluir fecha y datos de la cámara</value></data>
+  <data name="Export_OpenFolder" xml:space="preserve"><value>Abrir carpeta</value></data>
+  <data name="Export_Original" xml:space="preserve"><value>Original sin modificar (copia exacta)</value></data>
+  <data name="Export_Progress" xml:space="preserve"><value>{0} de {1}: {2}</value></data>
+  <data name="Export_Quality" xml:space="preserve"><value>Calidad JPEG/WebP</value></data>
+  <data name="Export_Size" xml:space="preserve"><value>Tamaño</value></data>
+  <data name="Export_SizeFull" xml:space="preserve"><value>Tamaño completo</value></data>
+  <data name="Export_Title" xml:space="preserve"><value>Exportar {0} elemento(s)</value></data>
+  <data name="Filter_All.Content" xml:space="preserve"><value>Fotos y vídeos</value></data>
+  <data name="Filter_Favorites.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Solo favoritos</value></data>
+  <data name="Filter_Photos.Content" xml:space="preserve"><value>Fotos</value></data>
+  <data name="Filter_Videos.Content" xml:space="preserve"><value>Vídeos</value></data>
+  <data name="Group_Count" xml:space="preserve"><value>{0}</value></data>
+  <data name="Group_Days.Content" xml:space="preserve"><value>Días</value></data>
+  <data name="Group_Months.Content" xml:space="preserve"><value>Meses</value></data>
+  <data name="Group_None.Content" xml:space="preserve"><value>Todo</value></data>
+  <data name="Group_Years.Content" xml:space="preserve"><value>Años</value></data>
+  <data name="ImportItem_AlreadyInLibrary" xml:space="preserve"><value>Ya estaba en la biblioteca</value></data>
+  <data name="ImportItem_Attached" xml:space="preserve"><value>Asociado a su foto</value></data>
+  <data name="ImportItem_Duplicate" xml:space="preserve"><value>Duplicado (no importado)</value></data>
+  <data name="ImportItem_Failed" xml:space="preserve"><value>Error</value></data>
+  <data name="ImportItem_Imported" xml:space="preserve"><value>Importado</value></data>
+  <data name="ImportItem_Pending" xml:space="preserve"><value>Pendiente</value></data>
+  <data name="ImportItem_Skipped" xml:space="preserve"><value>Omitido</value></data>
+  <data name="ImportItem_Unsupported" xml:space="preserve"><value>No compatible</value></data>
+  <data name="ImportMode_AddInPlace" xml:space="preserve"><value>Añadido sin mover</value></data>
+  <data name="ImportMode_CopyToLibrary" xml:space="preserve"><value>Copiado a la biblioteca</value></data>
+  <data name="ImportStatus_Cancelled" xml:space="preserve"><value>Cancelada</value></data>
+  <data name="ImportStatus_Completed" xml:space="preserve"><value>Completada</value></data>
+  <data name="ImportStatus_CompletedWithErrors" xml:space="preserve"><value>Completada con errores</value></data>
+  <data name="ImportStatus_Interrupted" xml:space="preserve"><value>Interrumpida: se puede reanudar</value></data>
+  <data name="ImportStatus_Pending" xml:space="preserve"><value>Pendiente</value></data>
+  <data name="ImportStatus_Running" xml:space="preserve"><value>En curso</value></data>
+  <data name="Import_AlreadyRunning" xml:space="preserve"><value>Hay otra operación en curso. Espera a que termine o cancélala.</value></data>
+  <data name="Import_DropCaption" xml:space="preserve"><value>Importar a la biblioteca</value></data>
+  <data name="Import_Eta" xml:space="preserve"><value>quedan unos {0} min</value></data>
+  <data name="Import_FromFiles" xml:space="preserve"><value>Importar archivos…</value></data>
+  <data name="Import_FromFolder" xml:space="preserve"><value>Importar carpeta o unidad…</value></data>
+  <data name="Import_IncludeDuplicates" xml:space="preserve"><value>Importar copias idénticas de archivos que ya están en la biblioteca</value></data>
+  <data name="Import_ModeAdd" xml:space="preserve"><value>Añadir sin mover</value></data>
+  <data name="Import_ModeAddHelp" xml:space="preserve"><value>Los archivos se quedan donde están. Si están en un disco externo, mantenlo conectado para abrirlos.</value></data>
+  <data name="Import_ModeCopy" xml:space="preserve"><value>Copiar a la biblioteca</value></data>
+  <data name="Import_ModeCopyHelp" xml:space="preserve"><value>Las copias van a la carpeta de originales de la biblioteca (por año y mes). Los archivos de origen no se eliminan.</value></data>
+  <data name="Import_OriginalsSafe" xml:space="preserve"><value>La importación nunca modifica ni elimina tus archivos originales.</value></data>
+  <data name="Import_Progress" xml:space="preserve"><value>{0} de {1} · {2} importados · {3} duplicados · {4} omitidos o con error {5}</value></data>
+  <data name="Import_SourcesCount" xml:space="preserve"><value>{0} elementos seleccionados</value></data>
+  <data name="Import_Start" xml:space="preserve"><value>Importar</value></data>
+  <data name="Import_Subfolders" xml:space="preserve"><value>Incluir subcarpetas</value></data>
+  <data name="Import_Summary" xml:space="preserve"><value>{0} elemento(s) nuevos, {1} duplicado(s), {2} omitido(s), {3} con error.</value></data>
+  <data name="Import_SummaryCancelled" xml:space="preserve"><value>Importación cancelada tras {0} archivo(s). Puedes reanudarla desde Importaciones.</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>Importar</value></data>
+  <data name="Import_ViewReport" xml:space="preserve"><value>Ver informe</value></data>
+  <data name="Imports_Counts" xml:space="preserve"><value>{0} importados · {1} duplicados · {2} omitidos · {3} con error · {4} archivos</value></data>
+  <data name="Imports_Empty.Text" xml:space="preserve"><value>Aún no hay importaciones.</value></data>
+  <data name="Imports_ProblemsOnly.Header" xml:space="preserve"><value>Mostrar solo problemas</value></data>
+  <data name="Imports_Resume.Content" xml:space="preserve"><value>Reanudar</value></data>
+  <data name="Imports_Title.Text" xml:space="preserve"><value>Importaciones</value></data>
+  <data name="Info_AddKeyword.PlaceholderText" xml:space="preserve"><value>Escribe una palabra clave y pulsa Intro</value></data>
+  <data name="Info_AlbumsHeader.Text" xml:space="preserve"><value>Álbumes</value></data>
+  <data name="Info_Camera" xml:space="preserve"><value>Cámara</value></data>
+  <data name="Info_Captured" xml:space="preserve"><value>Fecha de captura</value></data>
+  <data name="Info_ClearLocation.Content" xml:space="preserve"><value>Quitar la ubicación del catálogo</value></data>
+  <data name="Info_DescriptionBox.Header" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Info_Details.Text" xml:space="preserve"><value>Detalles</value></data>
+  <data name="Info_Dimensions" xml:space="preserve"><value>Dimensiones</value></data>
+  <data name="Info_Duration" xml:space="preserve"><value>Duración</value></data>
+  <data name="Info_Exposure" xml:space="preserve"><value>Exposición</value></data>
+  <data name="Info_FileName" xml:space="preserve"><value>Archivo</value></data>
+  <data name="Info_Format" xml:space="preserve"><value>Formato y tamaño</value></data>
+  <data name="Info_Imported" xml:space="preserve"><value>Importado</value></data>
+  <data name="Info_Keywords.Text" xml:space="preserve"><value>Palabras clave</value></data>
+  <data name="Info_Lens" xml:space="preserve"><value>Objetivo</value></data>
+  <data name="Info_Location" xml:space="preserve"><value>Ubicación</value></data>
+  <data name="Info_NoAlbums" xml:space="preserve"><value>No está en ningún álbum</value></data>
+  <data name="Info_Path" xml:space="preserve"><value>Ruta</value></data>
+  <data name="Info_Save.Content" xml:space="preserve"><value>Guardar detalles</value></data>
+  <data name="Info_Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Info_Storage" xml:space="preserve"><value>Almacenamiento</value></data>
+  <data name="Info_StorageManaged" xml:space="preserve"><value>Copiado en la biblioteca</value></data>
+  <data name="Info_StorageReferenced" xml:space="preserve"><value>Añadido sin mover</value></data>
+  <data name="Info_Title.Text" xml:space="preserve"><value>Información</value></data>
+  <data name="Info_TitleBox.Header" xml:space="preserve"><value>Título</value></data>
+  <data name="Keywords_AddTitle" xml:space="preserve"><value>Añadir palabras clave a {0} elemento(s)</value></data>
+  <data name="Keywords_Placeholder" xml:space="preserve"><value>playa, familia, verano</value></data>
+  <data name="Library_Counts" xml:space="preserve"><value>{0} fotos · {1} vídeos</value></data>
+  <data name="Library_ImportButton.Content" xml:space="preserve"><value>Importar fotos…</value></data>
+  <data name="Library_Unavailable" xml:space="preserve"><value>No se pudo abrir la biblioteca</value></data>
+  <data name="Library_Zoom.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Tamaño de las miniaturas</value></data>
+  <data name="Nav_Albums.Content" xml:space="preserve"><value>Mis álbumes</value></data>
+  <data name="Nav_AlbumsHeader.Content" xml:space="preserve"><value>Álbumes</value></data>
+  <data name="Nav_All.Content" xml:space="preserve"><value>Fototeca</value></data>
+  <data name="Nav_Duplicates.Content" xml:space="preserve"><value>Duplicados</value></data>
+  <data name="Nav_Edited.Content" xml:space="preserve"><value>Editados</value></data>
+  <data name="Nav_Favorites.Content" xml:space="preserve"><value>Favoritos</value></data>
+  <data name="Nav_Hidden.Content" xml:space="preserve"><value>Ocultos</value></data>
+  <data name="Nav_Import.Content" xml:space="preserve"><value>Importar…</value></data>
+  <data name="Nav_Imports.Content" xml:space="preserve"><value>Importaciones</value></data>
+  <data name="Nav_LibraryHeader.Content" xml:space="preserve"><value>Biblioteca</value></data>
+  <data name="Nav_Located.Content" xml:space="preserve"><value>Con ubicación</value></data>
+  <data name="Nav_RecentlyAdded.Content" xml:space="preserve"><value>Añadidos recientemente</value></data>
+  <data name="Nav_Trash.Content" xml:space="preserve"><value>Eliminados recientemente</value></data>
+  <data name="Nav_UtilitiesHeader.Content" xml:space="preserve"><value>Utilidades</value></data>
+  <data name="Nav_Videos.Content" xml:space="preserve"><value>Vídeos</value></data>
+  <data name="Preset_Cool" xml:space="preserve"><value>Frío</value></data>
+  <data name="Preset_Drama" xml:space="preserve"><value>Dramático</value></data>
+  <data name="Preset_Fade" xml:space="preserve"><value>Desvaído</value></data>
+  <data name="Preset_Mono" xml:space="preserve"><value>Mono</value></data>
+  <data name="Preset_Noir" xml:space="preserve"><value>Noir</value></data>
+  <data name="Preset_Original" xml:space="preserve"><value>Original</value></data>
+  <data name="Preset_Soft" xml:space="preserve"><value>Suave</value></data>
+  <data name="Preset_Vivid" xml:space="preserve"><value>Vívido</value></data>
+  <data name="Preset_Warm" xml:space="preserve"><value>Cálido</value></data>
+  <data name="Restore_Catalog" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="Restore_CatalogMessage" xml:space="preserve"><value>El catálogo actual se guardará en la carpeta backups de la biblioteca y se sustituirá por el de la copia. Los originales no se tocan. A continuación elige la carpeta de la copia.</value></data>
+  <data name="Restore_CatalogTitle" xml:space="preserve"><value>Restaurar catálogo</value></data>
+  <data name="Restore_Done" xml:space="preserve"><value>Restaurada y abierta: {0}</value></data>
+  <data name="Restore_PickBackup" xml:space="preserve"><value>Elige la carpeta de la copia (PhotosWindows-Backup-…).</value></data>
+  <data name="Restore_PickDestination" xml:space="preserve"><value>Ahora elige dónde crear la biblioteca restaurada.</value></data>
+  <data name="Restore_Title" xml:space="preserve"><value>Restaurar copia</value></data>
+  <data name="Scope_All" xml:space="preserve"><value>Fototeca</value></data>
+  <data name="Scope_Edited" xml:space="preserve"><value>Editados</value></data>
+  <data name="Scope_Favorites" xml:space="preserve"><value>Favoritos</value></data>
+  <data name="Scope_Hidden" xml:space="preserve"><value>Ocultos</value></data>
+  <data name="Scope_LivePhotos" xml:space="preserve"><value>Fotos con movimiento</value></data>
+  <data name="Scope_Photos" xml:space="preserve"><value>Fotos</value></data>
+  <data name="Scope_Raw" xml:space="preserve"><value>RAW</value></data>
+  <data name="Scope_RecentlyAdded" xml:space="preserve"><value>Añadidos recientemente</value></data>
+  <data name="Scope_RecentlyDeleted" xml:space="preserve"><value>Eliminados recientemente</value></data>
+  <data name="Scope_Videos" xml:space="preserve"><value>Vídeos</value></data>
+  <data name="Scope_WithLocation" xml:space="preserve"><value>Con ubicación</value></data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve"><value>Buscar fotos</value></data>
+  <data name="Search_Title" xml:space="preserve"><value>Búsqueda: {0}</value></data>
+  <data name="Selection_Count" xml:space="preserve"><value>{0} seleccionados</value></data>
+  <data name="Settings_About.Text" xml:space="preserve"><value>Acerca de</value></data>
+  <data name="Settings_AboutText.Text" xml:space="preserve"><value>Proyecto independiente, sin afiliación con Apple. Creado con .NET, Windows App SDK, SQLite, SkiaSharp, MetadataExtractor, XmpCore, Dapper y CommunityToolkit.Mvvm bajo sus licencias de código abierto (ver docs/THIRD_PARTY_NOTICES.md).</value></data>
+  <data name="Settings_Adopt.Content" xml:space="preserve"><value>Añadir copias no catalogadas</value></data>
+  <data name="Settings_Albums" xml:space="preserve"><value>Álbumes</value></data>
+  <data name="Settings_Appearance.Text" xml:space="preserve"><value>Apariencia</value></data>
+  <data name="Settings_Backup.Text" xml:space="preserve"><value>Copia de seguridad y restauración</value></data>
+  <data name="Settings_BackupHelp.Text" xml:space="preserve"><value>Una copia contiene el catálogo (álbumes, palabras clave, ediciones) y, opcionalmente, los originales copiados en la biblioteca. Las fotos añadidas sin mover no se incluyen: haz copia también de esas carpetas.</value></data>
+  <data name="Settings_Cache.Text" xml:space="preserve"><value>Caché de miniaturas</value></data>
+  <data name="Settings_CacheHelp.Text" xml:space="preserve"><value>Las miniaturas siempre se pueden regenerar. Puedes mover la caché a una unidad más rápida o con más espacio.</value></data>
+  <data name="Settings_CacheSize" xml:space="preserve"><value>Caché de miniaturas</value></data>
+  <data name="Settings_CatalogSize" xml:space="preserve"><value>Catálogo</value></data>
+  <data name="Settings_ChangeCache.Content" xml:space="preserve"><value>Cambiar ubicación…</value></data>
+  <data name="Settings_CleanPartials.Content" xml:space="preserve"><value>Eliminar copias incompletas</value></data>
+  <data name="Settings_ClearCache" xml:space="preserve"><value>Vaciar caché</value></data>
+  <data name="Settings_ClearCacheButton.Content" xml:space="preserve"><value>Vaciar caché</value></data>
+  <data name="Settings_ClearCacheMessage" xml:space="preserve"><value>Las miniaturas se regenerarán en segundo plano. No se elimina nada más.</value></data>
+  <data name="Settings_CreateBackup.Content" xml:space="preserve"><value>Crear copia de seguridad…</value></data>
+  <data name="Settings_IncludeOriginals.Content" xml:space="preserve"><value>Incluir los originales guardados en la biblioteca</value></data>
+  <data name="Settings_Library.Text" xml:space="preserve"><value>Biblioteca</value></data>
+  <data name="Settings_Maintenance.Text" xml:space="preserve"><value>Comprobar y reparar</value></data>
+  <data name="Settings_MaintenanceHelp.Text" xml:space="preserve"><value>Comprueba el catálogo y cada archivo: originales no encontrados o movidos, cambios inesperados y copias incompletas. No se elimina nada sin preguntar.</value></data>
+  <data name="Settings_ManagedSize" xml:space="preserve"><value>Originales en la biblioteca</value></data>
+  <data name="Settings_OpenFolder.Content" xml:space="preserve"><value>Abrir en el Explorador</value></data>
+  <data name="Settings_OpenLogs.Content" xml:space="preserve"><value>Abrir carpeta de registros</value></data>
+  <data name="Settings_PendingThumbs" xml:space="preserve"><value>Miniaturas pendientes</value></data>
+  <data name="Settings_Photos" xml:space="preserve"><value>Fotos</value></data>
+  <data name="Settings_Privacy.Text" xml:space="preserve"><value>Privacidad</value></data>
+  <data name="Settings_PrivacyText.Text" xml:space="preserve"><value>Photos Windows funciona sin conexión. No tiene cuenta, ni sincronización en la nube, ni telemetría, y nunca sube fotos, miniaturas ni metadatos. Los registros de diagnóstico se quedan en este PC.</value></data>
+  <data name="Settings_RebuildIndex.Content" xml:space="preserve"><value>Reconstruir índice de búsqueda</value></data>
+  <data name="Settings_ReferencedSize" xml:space="preserve"><value>Originales añadidos sin mover</value></data>
+  <data name="Settings_Relink.Content" xml:space="preserve"><value>Buscar archivos movidos en una carpeta…</value></data>
+  <data name="Settings_ResetCache.Content" xml:space="preserve"><value>Usar ubicación predeterminada</value></data>
+  <data name="Settings_RestoreCatalog.Content" xml:space="preserve"><value>Restaurar catálogo…</value></data>
+  <data name="Settings_RestoreNew.Content" xml:space="preserve"><value>Restaurar como biblioteca nueva…</value></data>
+  <data name="Settings_SwitchLibrary.Content" xml:space="preserve"><value>Cambiar de biblioteca…</value></data>
+  <data name="Settings_Theme.Header" xml:space="preserve"><value>Tema</value></data>
+  <data name="Settings_Title.Text" xml:space="preserve"><value>Ajustes</value></data>
+  <data name="Settings_Unavailable" xml:space="preserve"><value>Archivos no disponibles</value></data>
+  <data name="Settings_Verify.Content" xml:space="preserve"><value>Comprobar biblioteca</value></data>
+  <data name="Settings_VerifyBackup.Content" xml:space="preserve"><value>Verificar una copia…</value></data>
+  <data name="Settings_VerifyHashes.Content" xml:space="preserve"><value>Verificar también el contenido de los archivos (más lento)</value></data>
+  <data name="Settings_Videos" xml:space="preserve"><value>Vídeos</value></data>
+  <data name="SmartField_Album" xml:space="preserve"><value>Álbum</value></data>
+  <data name="SmartField_Camera" xml:space="preserve"><value>Cámara</value></data>
+  <data name="SmartField_CaptureDate" xml:space="preserve"><value>Fecha de captura</value></data>
+  <data name="SmartField_Edited" xml:space="preserve"><value>Editado</value></data>
+  <data name="SmartField_Favorite" xml:space="preserve"><value>Favorito</value></data>
+  <data name="SmartField_FileName" xml:space="preserve"><value>Nombre de archivo</value></data>
+  <data name="SmartField_Format" xml:space="preserve"><value>Formato</value></data>
+  <data name="SmartField_HasLocation" xml:space="preserve"><value>Tiene ubicación</value></data>
+  <data name="SmartField_ImportDate" xml:space="preserve"><value>Fecha de importación</value></data>
+  <data name="SmartField_Keyword" xml:space="preserve"><value>Palabra clave</value></data>
+  <data name="SmartField_Lens" xml:space="preserve"><value>Objetivo</value></data>
+  <data name="SmartField_MediaType" xml:space="preserve"><value>Tipo</value></data>
+  <data name="SmartField_Rating" xml:space="preserve"><value>Valoración</value></data>
+  <data name="SmartField_Title" xml:space="preserve"><value>Título</value></data>
+  <data name="SmartOp_After" xml:space="preserve"><value>es posterior a</value></data>
+  <data name="SmartOp_Before" xml:space="preserve"><value>es anterior a</value></data>
+  <data name="SmartOp_Contains" xml:space="preserve"><value>contiene</value></data>
+  <data name="SmartOp_DoesNotContain" xml:space="preserve"><value>no contiene</value></data>
+  <data name="SmartOp_GreaterOrEqual" xml:space="preserve"><value>es al menos</value></data>
+  <data name="SmartOp_InLastDays" xml:space="preserve"><value>en los últimos (días)</value></data>
+  <data name="SmartOp_Is" xml:space="preserve"><value>es</value></data>
+  <data name="SmartOp_IsNot" xml:space="preserve"><value>no es</value></data>
+  <data name="SmartOp_LessOrEqual" xml:space="preserve"><value>es como máximo</value></data>
+  <data name="Smart_AddRule" xml:space="preserve"><value>Añadir regla</value></data>
+  <data name="Smart_DefaultName" xml:space="preserve"><value>Álbum inteligente</value></data>
+  <data name="Smart_Help" xml:space="preserve"><value>Fechas: AAAA-MM-DD, o un número de días para «en los últimos». Campos sí/no: true o false. Tipo: Photo o Video.</value></data>
+  <data name="Smart_Match" xml:space="preserve"><value>Coincidir con</value></data>
+  <data name="Smart_MatchAll" xml:space="preserve"><value>todas las reglas</value></data>
+  <data name="Smart_MatchAny" xml:space="preserve"><value>cualquier regla</value></data>
+  <data name="Smart_Name" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Smart_RemoveRule" xml:space="preserve"><value>Quitar regla</value></data>
+  <data name="Smart_Value" xml:space="preserve"><value>Valor</value></data>
+  <data name="Tile_Edited" xml:space="preserve"><value>editada</value></data>
+  <data name="Tile_Favorite" xml:space="preserve"><value>favorita</value></data>
+  <data name="Tile_Photo" xml:space="preserve"><value>Foto</value></data>
+  <data name="Tile_Unavailable" xml:space="preserve"><value>archivo no disponible</value></data>
+  <data name="Tile_Video" xml:space="preserve"><value>Vídeo</value></data>
+  <data name="Trash_Confirm" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Trash_ConfirmMessage" xml:space="preserve"><value>¿Mover {0} elemento(s) a Eliminados recientemente? Podrás recuperarlos desde allí. Los archivos no se eliminan.</value></data>
+  <data name="Trash_ConfirmTitle" xml:space="preserve"><value>¿Eliminar de la biblioteca?</value></data>
+  <data name="Verify_Activity" xml:space="preserve"><value>Comprobando la biblioteca</value></data>
+  <data name="Verify_Adopt" xml:space="preserve"><value>Añadiendo copias no catalogadas</value></data>
+  <data name="Verify_CleanPartials" xml:space="preserve"><value>Copias incompletas</value></data>
+  <data name="Verify_Healthy" xml:space="preserve"><value>Todo correcto: {0} archivos comprobados, sin problemas.</value></data>
+  <data name="Verify_IndexRebuilt" xml:space="preserve"><value>Índice de búsqueda reconstruido.</value></data>
+  <data name="Verify_PartialsRemoved" xml:space="preserve"><value>Se eliminaron {0} archivo(s) de copia incompleta.</value></data>
+  <data name="Verify_Problems" xml:space="preserve"><value>{0} archivos comprobados: {1} no encontrados, {2} modificados, {3} copias no catalogadas, {4} copias incompletas, {5} problema(s) del catálogo.</value></data>
+  <data name="Verify_Progress" xml:space="preserve"><value>{0} de {1} archivos</value></data>
+  <data name="Verify_RebuildIndex" xml:space="preserve"><value>Reconstruyendo el índice de búsqueda</value></data>
+  <data name="Verify_Relink" xml:space="preserve"><value>Buscar archivos movidos</value></data>
+  <data name="Verify_Relinked" xml:space="preserve"><value>Se encontraron y volvieron a vincular {0} de {1} archivos no encontrados.</value></data>
+  <data name="Viewer_Compare.Label" xml:space="preserve"><value>Ver original</value></data>
+  <data name="Viewer_Compare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Comparar con el original (M)</value></data>
+  <data name="Viewer_Edit.Label" xml:space="preserve"><value>Editar</value></data>
+  <data name="Viewer_Edit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Editar (E)</value></data>
+  <data name="Viewer_ErrorBar.Title" xml:space="preserve"><value>No se puede mostrar este elemento</value></data>
+  <data name="Viewer_Favorite.Label" xml:space="preserve"><value>Favorito</value></data>
+  <data name="Viewer_Favorite.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Favorito (.)</value></data>
+  <data name="Viewer_FullScreen.Label" xml:space="preserve"><value>Pantalla completa</value></data>
+  <data name="Viewer_FullScreen.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Pantalla completa (F)</value></data>
+  <data name="Viewer_Info.Label" xml:space="preserve"><value>Información</value></data>
+  <data name="Viewer_Info.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Información (I)</value></data>
+  <data name="Viewer_Next.Label" xml:space="preserve"><value>Siguiente</value></data>
+  <data name="Viewer_Next.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Siguiente (Derecha)</value></data>
+  <data name="Viewer_PlayLive.Label" xml:space="preserve"><value>Reproducir movimiento</value></data>
+  <data name="Viewer_PlayLive.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Reproducir el clip de movimiento</value></data>
+  <data name="Viewer_Position" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Viewer_Previous.Label" xml:space="preserve"><value>Anterior</value></data>
+  <data name="Viewer_Previous.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Anterior (Izquierda)</value></data>
+  <data name="Viewer_Rotate.Label" xml:space="preserve"><value>Girar vista</value></data>
+  <data name="Viewer_Rotate.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Girar la vista (R): el archivo no cambia</value></data>
+  <data name="Viewer_Unavailable" xml:space="preserve"><value>El archivo original no está disponible. Puede que se haya movido, eliminado o que esté en una unidad desconectada. Usa Ajustes › Comprobar biblioteca para localizarlo.</value></data>
+  <data name="Viewer_VideoError" xml:space="preserve"><value>No se puede reproducir este vídeo. Puede que falte su códec (para HEVC, instala «Extensiones de vídeo HEVC» desde Microsoft Store).</value></data>
+  <data name="Viewer_VideoErrorTitle" xml:space="preserve"><value>No se puede reproducir el vídeo</value></data>
+  <data name="Welcome_AddText.Text" xml:space="preserve"><value>Las fotos se quedan en sus carpetas. La biblioteca solo recuerda dónde están. Ideal para carpetas que ya tienes organizadas.</value></data>
+  <data name="Welcome_AddTitle.Text" xml:space="preserve"><value>Añadir sin mover</value></data>
+  <data name="Welcome_BackupText.Text" xml:space="preserve"><value>Ajustes › Copia de seguridad crea una copia verificada del catálogo y, si quieres, de los originales copiados en la biblioteca. Guárdala en otra unidad.</value></data>
+  <data name="Welcome_BackupTitle.Text" xml:space="preserve"><value>Haz copias con regularidad</value></data>
+  <data name="Welcome_ChooseLocation" xml:space="preserve"><value>Elegir ubicación…</value></data>
+  <data name="Welcome_CopyText.Text" xml:space="preserve"><value>Las copias van a la carpeta de originales de la biblioteca, ordenadas por año y mes. Ideal para tarjetas de memoria y móviles.</value></data>
+  <data name="Welcome_CopyTitle.Text" xml:space="preserve"><value>Copiar a la biblioteca</value></data>
+  <data name="Welcome_Create.Text" xml:space="preserve"><value>Crear una biblioteca</value></data>
+  <data name="Welcome_CreateTitle" xml:space="preserve"><value>Crear una biblioteca</value></data>
+  <data name="Welcome_DefaultName" xml:space="preserve"><value>Mis fotos</value></data>
+  <data name="Welcome_Forget.Content" xml:space="preserve"><value>Quitar de la lista</value></data>
+  <data name="Welcome_HowTitle.Text" xml:space="preserve"><value>Cómo funciona</value></data>
+  <data name="Welcome_Intro.Text" xml:space="preserve"><value>Tus fotos y vídeos se organizan en una biblioteca: una carpeta de tu PC que contiene el catálogo, las miniaturas y, si quieres, copias de tus originales.</value></data>
+  <data name="Welcome_LocalText.Text" xml:space="preserve"><value>Sin cuenta, sin nube y sin telemetría. La indexación, la búsqueda y la edición se ejecutan localmente y funcionan sin conexión.</value></data>
+  <data name="Welcome_LocalTitle.Text" xml:space="preserve"><value>Todo se queda en este PC</value></data>
+  <data name="Welcome_NamePlaceholder" xml:space="preserve"><value>Nombre de la biblioteca</value></data>
+  <data name="Welcome_NotLibraryMessage" xml:space="preserve"><value>Elige una carpeta terminada en .pwlibrary que contenga library.json.</value></data>
+  <data name="Welcome_NotLibraryTitle" xml:space="preserve"><value>Esto no es una biblioteca</value></data>
+  <data name="Welcome_Open.Text" xml:space="preserve"><value>Abrir una biblioteca</value></data>
+  <data name="Welcome_OpenRecent.Content" xml:space="preserve"><value>Abrir</value></data>
+  <data name="Welcome_Recent.Text" xml:space="preserve"><value>Bibliotecas recientes</value></data>
+  <data name="Welcome_RecentUnavailable" xml:space="preserve"><value>{0} — no disponible (unidad desconectada o movida)</value></data>
+  <data name="Welcome_SafeText.Text" xml:space="preserve"><value>Las ediciones se guardan como instrucciones en el catálogo. Importar nunca mueve ni elimina tus archivos.</value></data>
+  <data name="Welcome_SafeTitle.Text" xml:space="preserve"><value>Tus originales nunca se modifican</value></data>
+  <data name="Welcome_Title.Text" xml:space="preserve"><value>Te damos la bienvenida a Photos Windows</value></data>
+</root>

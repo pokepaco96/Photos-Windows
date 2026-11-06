@@ -111,6 +111,8 @@ public class OrganizationTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => host.Organization.AddToAlbumAsync(smart, [ids[0]], CancellationToken.None));
         await Assert.ThrowsAsync<ArgumentException>(() => host.Organization.CreateSmartAlbumAsync("empty", null, SmartAlbumDefinition.Empty, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => host.Organization.CreateSmartAlbumAsync("bad", null,
+            new SmartAlbumDefinition(SmartMatch.All, [new SmartRule(SmartField.Rating, SmartOperator.GreaterOrEqual, "lots")]), CancellationToken.None));
     }
 
     [Fact]

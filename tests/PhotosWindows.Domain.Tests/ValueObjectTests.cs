@@ -58,4 +58,21 @@ public class ValueObjectTests
         Assert.Throws<ArgumentException>(() => LibraryRules.NormalizeName("   ", "n"));
         Assert.Throws<ArgumentException>(() => LibraryRules.NormalizeName(new string('x', 201), "n"));
     }
+
+    [Theory]
+    [InlineData(SmartField.Rating, SmartOperator.GreaterOrEqual, "4", true)]
+    [InlineData(SmartField.Rating, SmartOperator.GreaterOrEqual, "seven", false)]
+    [InlineData(SmartField.Rating, SmartOperator.Is, "9", false)]
+    [InlineData(SmartField.CaptureDate, SmartOperator.After, "2024-02-29", true)]
+    [InlineData(SmartField.CaptureDate, SmartOperator.After, "29/02/2024", false)]
+    [InlineData(SmartField.ImportDate, SmartOperator.InLastDays, "30", true)]
+    [InlineData(SmartField.ImportDate, SmartOperator.InLastDays, "-1", false)]
+    [InlineData(SmartField.Favorite, SmartOperator.Is, "TRUE", true)]
+    [InlineData(SmartField.Favorite, SmartOperator.Is, "maybe", false)]
+    [InlineData(SmartField.MediaType, SmartOperator.Is, "video", true)]
+    [InlineData(SmartField.MediaType, SmartOperator.Is, "gif", false)]
+    [InlineData(SmartField.Keyword, SmartOperator.Contains, "beach", true)]
+    [InlineData(SmartField.Keyword, SmartOperator.Contains, "  ", false)]
+    public void Smart_rule_values_are_validated(SmartField field, SmartOperator op, string value, bool valid) =>
+        Assert.Equal(valid, SmartRuleValidator.Validate(new SmartRule(field, op, value)) is null);
 }

@@ -1,0 +1,324 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml.Media;
+using PhotosWindows.App.Services;
+using PhotosWindows.Application.Abstractions;
+using PhotosWindows.Application.Editing;
+using PhotosWindows.Application.Organization;
+using PhotosWindows.Application.Thumbnails;
+using PhotosWindows.Domain;
+
+namespace PhotosWindows.App.ViewModels;
+
+public sealed record InfoRow(string Label, string Value);
+
+/// <summary>Full-screen-capable viewer for photos and videos with an information/inspector pane.</summary>
+public sealed partial class ViewerViewModel(
+    IAssetRepository assets,
+    ILibraryContext context,
+    EditingService editing,
+    OrganizationService organization,
+    ThumbnailService thumbnails,
+    ImageLoader images,
+    SelectionActions actions,
+    NavigationService navigation,
+    WindowContext window) : ObservableObject
+{
+    private const int ViewerRenderSize = 3840;
+    private IReadOnlyList<long> _ids = [];
+    private CancellationTokenSource? _cts;
+
+    public ObservableCollection<InfoRow> Details { get; } = [];
+    public ObservableCollection<string> Keywords { get; } = [];
+
+    [ObservableProperty] public partial int Index { get; set; }
+    [ObservableProperty] public partial string Position { get; set; } = string.Empty;
+    [ObservableProperty] public partial Asset? Asset { get; set; }
+    [ObservableProperty] public partial ImageSource? Image { get; set; }
+    [ObservableProperty] public partial Uri? VideoSource { get; set; }
+    [ObservableProperty] public partial bool IsVideo { get; set; }
+    [ObservableProperty] public partial bool IsPhoto { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool HasError { get; set; }
+    [ObservableProperty] public partial string ErrorMessage { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsInfoOpen { get; set; }
+    [ObservableProperty] public partial bool IsFavorite { get; set; }
+    [ObservableProperty] public partial bool HasEdits { get; set; }
+    [ObservableProperty] public partial bool ShowingOriginal { get; set; }
+    [ObservableProperty] public partial bool HasLiveVideo { get; set; }
+    [ObservableProperty] public partial int ViewRotation { get; set; }
+    [ObservableProperty] public partial string EditTitle { get; set; } = string.Empty;
+    [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
+    [ObservableProperty] public partial double Rating { get; set; }
+    [ObservableProperty] public partial string AlbumsText { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool CanGoPrevious { get; set; }
+    [ObservableProperty] public partial bool CanGoNext { get; set; }
+
+    public double RotationAngle => ViewRotation * 90;
+
+    partial void OnViewRotationChanged(int value) => OnPropertyChanged(nameof(RotationAngle));
+
+    public Task LoadAsync(ViewerNavigation target)
+    {
+        _ids = target.Ids;
+        return ShowAsync(Math.Clamp(target.Index, 0, Math.Max(0, _ids.Count - 1)));
+    }
+
+    private async Task ShowAsync(int index)
+    {
+        if (_ids.Count == 0) return;
+        _cts?.Cancel();
+        var cts = _cts = new CancellationTokenSource();
+        Index = index;
+        Position = Loc.Format("Viewer_Position", index + 1, _ids.Count);
+        CanGoPrevious = index > 0;
+        CanGoNext = index < _ids.Count - 1;
+        IsLoading = true;
+        HasError = false;
+        ShowingOriginal = false;
+        ViewRotation = 0;
+        VideoSource = null;
+        try
+        {
+            var asset = await assets.GetAsync(_ids[index], cts.Token);
+            if (asset is null || cts.IsCancellationRequested) return;
+            Asset = asset;
+            IsVideo = asset.MediaType == MediaType.Video;
+            IsPhoto = !IsVideo;
+            IsFavorite = asset.IsFavorite;
+            HasEdits = asset.HasEdits;
+            HasLiveVideo = asset.HasLiveVideo;
+            await LoadInspectorAsync(asset, cts.Token);
+
+            var original = await editing.ResolveOriginalAsync(asset.Id, cts.Token);
+            if (original is null)
+            {
+                await ShowCachedPreviewAsync(asset, cts.Token);
+                ShowError(Loc.Get("Viewer_Unavailable"));
+                return;
+            }
+
+            if (IsVideo)
+            {
+                Image = null;
+                VideoSource = new Uri(original);
+                return;
+            }
+
+            // Fast first paint from the cached large thumbnail, then full quality.
+            await ShowCachedPreviewAsync(asset, cts.Token);
+            await RenderAsync(asset, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Navigated to another item.
+        }
+        catch (MediaDecodeException ex)
+        {
+            ShowError(ex.Message);
+        }
+        finally
+        {
+            if (_cts == cts) IsLoading = false;
+        }
+    }
+
+    private async Task ShowCachedPreviewAsync(Asset asset, CancellationToken ct)
+    {
+        var path = await thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ct);
+        if (path is not null)
+        {
+            Image = await images.FromFileAsync(path, 0, ct);
+        }
+    }
+
+    private async Task RenderAsync(Asset asset, CancellationToken ct)
+    {
+        var recipe = ShowingOriginal ? EditRecipe.Identity : await editing.GetRecipeAsync(asset.Id, ct);
+        var rendered = await editing.RenderFromOriginalAsync(asset.Id, recipe, ViewerRenderSize, EncodeOptions.PreviewJpeg, ct);
+        if (rendered is null || ct.IsCancellationRequested) return;
+        Image = await ImageLoader.FromBytesAsync(rendered.Encoded, 0);
+    }
+
+    private void ShowError(string message)
+    {
+        HasError = true;
+        ErrorMessage = message;
+    }
+
+    private async Task LoadInspectorAsync(Asset asset, CancellationToken ct)
+    {
+        EditTitle = asset.Title ?? string.Empty;
+        EditDescription = asset.Description ?? string.Empty;
+        Rating = asset.Rating == 0 ? -1 : asset.Rating;
+        Keywords.Clear();
+        foreach (var k in await organization.GetKeywordsForAsync(asset.Id, ct)) Keywords.Add(k);
+        var albums = await organization.GetAlbumsContainingAsync(asset.Id, ct);
+        AlbumsText = albums.Count == 0 ? Loc.Get("Info_NoAlbums") : string.Join(", ", albums.Select(a => a.Name));
+
+        var culture = CultureInfo.CurrentCulture;
+        var file = await assets.GetOriginalFileAsync(asset.Id, ct);
+        Details.Clear();
+        void Add(string key, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value)) Details.Add(new InfoRow(Loc.Get(key), value));
+        }
+
+        Add("Info_FileName", asset.FileName);
+        var date = asset.CaptureDate.LocalDateTime.ToString("F", culture);
+        if (asset.CaptureDate.UtcOffset is { } off) date += $" (UTC{(off < TimeSpan.Zero ? "-" : "+")}{off:hh\\:mm})";
+        Add("Info_Captured", date + " · " + Loc.Get("DateSource_" + asset.CaptureDate.Source));
+        Add("Info_Imported", asset.ImportedUtc.ToLocalTime().ToString("g", culture));
+        var (w, h) = asset.DisplaySize;
+        Add("Info_Dimensions", w > 0 ? $"{w} × {h} ({w * (double)h / 1_000_000:0.#} MP)" : null);
+        Add("Info_Format", $"{asset.Format} · {SelectionActions.FormatBytes(asset.FileSize)}");
+        if (asset.Duration is { } d) Add("Info_Duration", d.ToString(@"h\:mm\:ss", culture));
+        Add("Info_Camera", asset.Camera.DisplayName);
+        Add("Info_Lens", asset.Camera.Lens);
+        var exposure = new List<string>();
+        if (asset.Camera.FNumber is { } f) exposure.Add($"ƒ/{f:0.#}");
+        if (asset.Camera.ExposureTimeSeconds is { } t) exposure.Add(t < 1 ? $"1/{Math.Round(1 / t)} s" : $"{t:0.#} s");
+        if (asset.Camera.Iso is { } iso) exposure.Add($"ISO {iso}");
+        if (asset.Camera.FocalLengthMm is { } fl) exposure.Add($"{fl:0} mm");
+        Add("Info_Exposure", string.Join("  ", exposure));
+        if (asset.Location is { } loc)
+        {
+            Add("Info_Location", string.Create(culture, $"{loc.Latitude:0.00000}, {loc.Longitude:0.00000}") + (loc.Altitude is { } alt ? string.Create(culture, $" · {alt:0} m") : string.Empty));
+        }
+
+        if (file is not null)
+        {
+            Add("Info_Storage", file.StorageMode == StorageMode.Managed ? Loc.Get("Info_StorageManaged") : Loc.Get("Info_StorageReferenced"));
+            Add("Info_Path", context.Current?.Resolve(file));
+            if (!file.IsAvailable) Add("Info_Status", Loc.Get("Viewer_Unavailable"));
+        }
+    }
+
+    [RelayCommand]
+    private Task NextAsync() => CanGoNext ? ShowAsync(Index + 1) : Task.CompletedTask;
+
+    [RelayCommand]
+    private Task PreviousAsync() => CanGoPrevious ? ShowAsync(Index - 1) : Task.CompletedTask;
+
+    [RelayCommand]
+    private void RotateView() => ViewRotation = (ViewRotation + 1) % 4;
+
+    [RelayCommand]
+    private void ToggleInfo() => IsInfoOpen = !IsInfoOpen;
+
+    [RelayCommand]
+    private void ToggleFullScreen() => window.SetFullScreen(!window.IsFullScreen);
+
+    public void ExitFullScreen()
+    {
+        if (window.IsFullScreen) window.SetFullScreen(false);
+    }
+
+    [RelayCommand]
+    private async Task ToggleFavoriteAsync()
+    {
+        if (Asset is null) return;
+        IsFavorite = !IsFavorite;
+        await actions.SetFavoriteAsync([Asset.Id], IsFavorite);
+    }
+
+    /// <summary>Shows the unedited original (or back to the edit) without changing anything.</summary>
+    [RelayCommand]
+    private async Task CompareAsync()
+    {
+        if (Asset is null || !HasEdits) return;
+        ShowingOriginal = !ShowingOriginal;
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        IsLoading = true;
+        try
+        {
+            await RenderAsync(Asset, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // superseded
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task PlayLiveVideoAsync()
+    {
+        if (Asset is null || context.Current is not { } library) return;
+        var files = await assets.GetFilesAsync(Asset.Id, CancellationToken.None);
+        var live = files.FirstOrDefault(f => f.Role == FileRole.LiveVideo);
+        if (live is null) return;
+        var path = library.Resolve(live);
+        if (File.Exists(path))
+        {
+            IsVideo = true;
+            VideoSource = new Uri(path);
+        }
+    }
+
+    [RelayCommand]
+    private void Edit()
+    {
+        if (Asset is { MediaType: MediaType.Photo } a && !HasError) navigation.ToEditor(a.Id);
+    }
+
+    [RelayCommand]
+    private async Task DeleteAsync()
+    {
+        if (Asset is null) return;
+        if (Asset.IsInTrash) return;
+        if (!await actions.MoveToTrashAsync([Asset.Id])) return;
+        var remaining = _ids.Where(id => id != Asset.Id).ToList();
+        if (remaining.Count == 0)
+        {
+            navigation.GoBack();
+            return;
+        }
+
+        _ids = remaining;
+        await ShowAsync(Math.Min(Index, remaining.Count - 1));
+    }
+
+    [RelayCommand] private Task ExportAsync() => Asset is null ? Task.CompletedTask : actions.ExportAsync([Asset.Id]);
+
+    [RelayCommand] private Task AddToAlbumAsync() => Asset is null ? Task.CompletedTask : actions.AddToAlbumAsync([Asset.Id]);
+
+    [RelayCommand]
+    private async Task SaveDetailsAsync()
+    {
+        if (Asset is null) return;
+        await organization.UpdateDetailsAsync(Asset.Id, new AssetDetailsUpdate(EditTitle, EditDescription, Rating < 0 ? 0 : (int)Rating, null), CancellationToken.None);
+    }
+
+    [RelayCommand]
+    private async Task AddKeywordAsync(string? keyword)
+    {
+        if (Asset is null || string.IsNullOrWhiteSpace(keyword)) return;
+        await organization.AddKeywordsAsync([Asset.Id], [keyword.Trim()], CancellationToken.None);
+        if (!Keywords.Contains(keyword.Trim(), StringComparer.OrdinalIgnoreCase)) Keywords.Add(keyword.Trim());
+    }
+
+    [RelayCommand]
+    private async Task RemoveKeywordAsync(string? keyword)
+    {
+        if (Asset is null || keyword is null) return;
+        await organization.RemoveKeywordAsync([Asset.Id], keyword, CancellationToken.None);
+        Keywords.Remove(keyword);
+    }
+
+    [RelayCommand]
+    private async Task ClearLocationAsync()
+    {
+        if (Asset is null) return;
+        await organization.UpdateDetailsAsync(Asset.Id, new AssetDetailsUpdate(EditTitle, EditDescription, Rating < 0 ? 0 : (int)Rating, null, ClearLocation: true), CancellationToken.None);
+        await ShowAsync(Index);
+    }
+
+    public void Cancel() => _cts?.Cancel();
+}

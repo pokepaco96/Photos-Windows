@@ -280,5 +280,13 @@ public sealed class OrganizationService
         {
             throw new ArgumentException("A smart album can have at most 30 rules.", nameof(definition));
         }
+
+        foreach (var rule in definition.Rules)
+        {
+            if (SmartRuleValidator.Validate(rule) is { } error)
+            {
+                throw new ArgumentException(error, nameof(definition));
+            }
+        }
     }
 }

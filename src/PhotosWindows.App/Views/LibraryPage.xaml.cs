@@ -1,0 +1,138 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Navigation;
+using PhotosWindows.App.Services;
+using PhotosWindows.App.ViewModels;
+using Windows.System;
+
+namespace PhotosWindows.App.Views;
+
+public sealed partial class LibraryPage : Page
+{
+    private readonly CollectionViewSource _source = new() { IsSourceGrouped = true };
+
+    public LibraryPage()
+    {
+        ViewModel = App.Services.GetRequiredService<LibraryViewModel>();
+        InitializeComponent();
+        _source.Source = ViewModel.Groups;
+        AssetsGrid.ItemsSource = _source.View;
+        ViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(LibraryViewModel.ItemSize)) ApplyItemSize();
+            if (e.PropertyName == nameof(LibraryViewModel.IsManualAlbum)) ConfigureReorder();
+        };
+        AssetsGrid.Loaded += (_, _) => ApplyItemSize();
+    }
+
+    public LibraryViewModel ViewModel { get; }
+
+    public LibraryNavigation? Target { get; private set; }
+
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        Target = e.Parameter as LibraryNavigation ?? LibraryNavigation.AllPhotos;
+        await ViewModel.LoadAsync(Target);
+        ConfigureReorder();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.Dispose();
+
+    private void ApplyItemSize()
+    {
+        if (AssetsGrid.ItemsPanelRoot is ItemsWrapGrid panel)
+        {
+            panel.ItemWidth = ViewModel.ItemSize;
+            panel.ItemHeight = ViewModel.ItemSize;
+        }
+    }
+
+    /// <summary>Manual albums can be reordered by drag &amp; drop (needs an ungrouped source).</summary>
+    private void ConfigureReorder()
+    {
+        var reorder = ViewModel.IsManualAlbum;
+        AssetsGrid.CanDragItems = reorder;
+        AssetsGrid.CanReorderItems = reorder;
+        AssetsGrid.AllowDrop = reorder;
+        if (reorder && ViewModel.Groups.Count == 1)
+        {
+            AssetsGrid.ItemsSource = ViewModel.Groups[0];
+            AssetsGrid.GroupStyle.Clear();
+        }
+    }
+
+    private async void OnDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+    {
+        if (!ViewModel.IsManualAlbum || ViewModel.Groups.Count != 1) return;
+        foreach (var item in args.Items.OfType<AssetItemViewModel>())
+        {
+            var index = ViewModel.Groups[0].IndexOf(item);
+            if (index >= 0) await ViewModel.MoveInAlbumAsync(item.Id, index);
+        }
+    }
+
+    private void OnContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.Item is not AssetItemViewModel item) return;
+        if (args.InRecycleQueue)
+        {
+            item.Unload();
+            return;
+        }
+
+        if (args.Phase == 0)
+        {
+            // Phase 1 runs after the layout pass, so fast scrolling does not start loads for tiles that are only passing by.
+            args.RegisterUpdateCallback(1, OnContainerContentChanging);
+        }
+        else
+        {
+            _ = ViewModel.LoadTileAsync(item);
+        }
+    }
+
+    private void OnSelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        ViewModel.UpdateSelection(AssetsGrid.SelectedItems.OfType<AssetItemViewModel>().Select(i => i.Id).ToList());
+
+    private void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is AssetItemViewModel item) ViewModel.Open(item);
+    }
+
+    private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        // Right-clicking an unselected tile acts on that tile only.
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is AssetItemViewModel item && !AssetsGrid.SelectedItems.Contains(item))
+        {
+            AssetsGrid.SelectedItems.Clear();
+            AssetsGrid.SelectedItems.Add(item);
+        }
+    }
+
+    private void OnOpenSelected(object sender, RoutedEventArgs e)
+    {
+        if (AssetsGrid.SelectedItems.OfType<AssetItemViewModel>().FirstOrDefault() is { } item) ViewModel.Open(item);
+    }
+
+    private void OnGridKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case VirtualKey.Enter when AssetsGrid.SelectedItems.OfType<AssetItemViewModel>().FirstOrDefault() is { } item:
+                ViewModel.Open(item);
+                e.Handled = true;
+                break;
+            case VirtualKey.Delete when ViewModel.HasSelection:
+                (ViewModel.IsTrash ? ViewModel.DeletePermanentlyCommand : ViewModel.TrashCommand).Execute(null);
+                e.Handled = true;
+                break;
+            case VirtualKey.Escape:
+                AssetsGrid.SelectedItems.Clear();
+                e.Handled = true;
+                break;
+        }
+    }
+}
