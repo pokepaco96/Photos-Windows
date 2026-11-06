@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PhotosWindows.Infrastructure\PhotosWindows.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PhotosWindows.Imaging\PhotosWindows.Imaging.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Condition="!$([MSBuild]::IsOSPlatform('Windows'))" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+</Project>
