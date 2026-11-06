@@ -80,8 +80,9 @@ public static partial class DateParsing
         var diff = localWallClock - DateTime.SpecifyKind(gpsUtc, DateTimeKind.Unspecified);
         var quarters = Math.Round(diff.TotalMinutes / 15.0);
         var rounded = TimeSpan.FromMinutes(quarters * 15);
-        // Clocks drift; accept up to 10 minutes of disagreement with the GPS clock.
-        if (Math.Abs((diff - rounded).TotalMinutes) > 10 || rounded > TimeSpan.FromHours(14) || rounded < TimeSpan.FromHours(-12))
+        // Camera clocks drift; accept up to 5 minutes of disagreement with the GPS clock
+        // (must stay below 7.5 minutes, otherwise every difference would round to some quarter hour).
+        if (Math.Abs((diff - rounded).TotalMinutes) > 5 || rounded > TimeSpan.FromHours(14) || rounded < TimeSpan.FromHours(-12))
         {
             return null;
         }

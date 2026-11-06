@@ -67,7 +67,15 @@ public static class Fixtures
         var bmp = new SKBitmap(new SKImageInfo(w, h, SKColorType.Bgra8888, SKAlphaType.Opaque));
         var rng = new Random(seed);
         using var canvas = new SKCanvas(bmp);
-        canvas.Clear(new SKColor((byte)rng.Next(256), (byte)rng.Next(256), (byte)rng.Next(256)));
+        // Textured (gradient) background: like real photos, unlike flat colours that make perceptual hashes unstable.
+        using (var bg = new SKPaint())
+        {
+            bg.Shader = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(w, h),
+                [new SKColor((byte)rng.Next(256), (byte)rng.Next(256), (byte)rng.Next(256)), new SKColor((byte)rng.Next(256), (byte)rng.Next(256), (byte)rng.Next(256))],
+                SKShaderTileMode.Clamp);
+            canvas.DrawRect(0, 0, w, h, bg);
+        }
+
         using var paint = new SKPaint();
         for (var i = 0; i < 6; i++)
         {
