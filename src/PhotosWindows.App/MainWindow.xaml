@@ -77,6 +77,9 @@
                 <NavigationViewItem x:Uid="Nav_Albums" AutomationProperties.AutomationId="Nav_Albums" Content="My albums" Tag="Albums">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE8B9;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_People" AutomationProperties.AutomationId="Nav_People" Content="People" Tag="People" Visibility="{x:Bind ViewModel.ShowPeople, Mode=OneWay}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE716;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
 
                 <NavigationViewItemHeader x:Uid="Nav_UtilitiesHeader" AutomationProperties.AutomationId="Nav_UtilitiesHeader" Content="Utilities" />
                 <NavigationViewItem x:Uid="Nav_Duplicates" AutomationProperties.AutomationId="Nav_Duplicates" Content="Duplicates" Tag="Duplicates">

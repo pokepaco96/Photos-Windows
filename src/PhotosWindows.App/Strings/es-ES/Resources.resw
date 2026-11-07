@@ -445,4 +445,108 @@
   <data name="Welcome_SafeText.Text" xml:space="preserve"><value>Las ediciones se guardan como instrucciones en el catálogo. Importar nunca mueve ni elimina tus archivos.</value></data>
   <data name="Welcome_SafeTitle.Text" xml:space="preserve"><value>Tus originales nunca se modifican</value></data>
   <data name="Welcome_Title.Text" xml:space="preserve"><value>Te damos la bienvenida a Photos Windows</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Nav_People.Content" xml:space="preserve"><value>Personas</value></data>
+  <data name="People_Title" xml:space="preserve"><value>Personas</value></data>
+  <data name="People_Unnamed" xml:space="preserve"><value>Persona sin identificar</value></data>
+  <data name="People_UngroupedFace" xml:space="preserve"><value>rostro sin agrupar</value></data>
+  <data name="People_PhotoCount" xml:space="preserve"><value>{0} foto(s)</value></data>
+  <data name="People_FaceName" xml:space="preserve"><value>Rostro {0}</value></data>
+  <data name="People_Stats" xml:space="preserve"><value>Analizadas {0} de {1} fotos · {2} rostros · {3} personas · {4} sin agrupar · {5} pendientes · {6} con error · {7} excluidas</value></data>
+  <data name="People_DownloadTitle" xml:space="preserve"><value>Descargar los modelos de rostros</value></data>
+  <data name="People_DownloadIntro" xml:space="preserve"><value>Personas necesita dos archivos de modelo que no se incluyen con la app. Se descargan una vez desde la réplica oficial de OpenCV Model Zoo y se comprueban con una suma de verificación fija antes de usarlos.</value></data>
+  <data name="People_DownloadModel" xml:space="preserve"><value>• {0}: {1}, licencia {2}, desde {3}. {4}</value></data>
+  <data name="People_DownloadPrivacy" xml:space="preserve"><value>Solo se piden los archivos de modelo. No se envía ninguna foto, rostro, nombre ni dato de tu biblioteca, ni ahora ni después. Luego todo funciona sin conexión.</value></data>
+  <data name="People_DownloadButton" xml:space="preserve"><value>Descargar</value></data>
+  <data name="People_DownloadActivity" xml:space="preserve"><value>Modelos de rostros</value></data>
+  <data name="People_DownloadProgress" xml:space="preserve"><value>Descargando {0} de {1}</value></data>
+  <data name="People_DownloadDone" xml:space="preserve"><value>Modelos de rostros descargados y verificados.</value></data>
+  <data name="People_InstallFilesTitle" xml:space="preserve"><value>Instalar modelos desde archivos</value></data>
+  <data name="People_InstallFilesDone" xml:space="preserve"><value>Instalados y verificados: {0}.</value></data>
+  <data name="People_InstallFilesNone" xml:space="preserve"><value>Ningún archivo es un modelo compatible (el tamaño o la suma de verificación no coinciden). No se ha instalado nada.</value></data>
+  <data name="People_ConsentTitle" xml:space="preserve"><value>¿Activar Personas en esta biblioteca?</value></data>
+  <data name="People_ConsentWhat" xml:space="preserve"><value>Photos Windows buscará rostros en las fotos de esta biblioteca, en este PC, y agrupará los que se parezcan a la misma persona para que puedas ponerles nombre.</value></data>
+  <data name="People_ConsentStored" xml:space="preserve"><value>Para cada rostro guarda su posición y una descripción numérica (128 valores) en el catálogo de la biblioteca, y miniaturas de rostros en su caché. Las fotos nunca se modifican.</value></data>
+  <data name="People_ConsentDelete" xml:space="preserve"><value>Puedes corregir los grupos cuando quieras, excluir fotos y borrar todos estos datos en Ajustes › Personas. Las copias de seguridad no los incluyen salvo que lo elijas.</value></data>
+  <data name="People_ConsentNever" xml:space="preserve"><value>No se envía nada a internet. Los nombres son solo los que tú escribes: la app nunca adivina quién es alguien.</value></data>
+  <data name="People_ConsentAccept" xml:space="preserve"><value>Activar</value></data>
+  <data name="People_AnalyzeActivity" xml:space="preserve"><value>Personas</value></data>
+  <data name="People_AnalyzeProgress" xml:space="preserve"><value>Analizando fotos: {0} de {1} · {2} rostros encontrados</value></data>
+  <data name="People_AnalyzeDone" xml:space="preserve"><value>{0} foto(s) analizada(s), {1} rostro(s) encontrado(s), {2} personas, {3} no se pudieron leer.</value></data>
+  <data name="People_AnalyzePending" xml:space="preserve"><value>Analizar {0} foto(s)</value></data>
+  <data name="People_Open" xml:space="preserve"><value>Abrir Personas</value></data>
+  <data name="People_DeleteAllTitle" xml:space="preserve"><value>¿Borrar todos los datos de reconocimiento facial?</value></data>
+  <data name="People_DeleteAllMessage" xml:space="preserve"><value>Se borrarán todos los rostros, descripciones numéricas, grupos, nombres y resultados de análisis de esta biblioteca, y se desactivará Personas. Tus fotos, álbumes y ediciones no se tocan. No se puede deshacer.</value></data>
+  <data name="People_DeleteAllButton" xml:space="preserve"><value>Borrar datos faciales</value></data>
+  <data name="People_RenameTitle" xml:space="preserve"><value>Poner nombre a esta persona</value></data>
+  <data name="People_NamePlaceholder" xml:space="preserve"><value>Nombre</value></data>
+  <data name="People_MergeIntoTitle" xml:space="preserve"><value>Fusionar «{0}» con…</value></data>
+  <data name="People_MergeSelectedTitle" xml:space="preserve"><value>Fusionar {0} grupos: ¿cuál conservar?</value></data>
+  <data name="People_MergeButton" xml:space="preserve"><value>Fusionar</value></data>
+  <data name="People_DeleteTitle" xml:space="preserve"><value>¿Borrar esta persona?</value></data>
+  <data name="People_DeleteMessage" xml:space="preserve"><value>Se borrarán el grupo «{0}», sus rostros y sus descripciones numéricas. Las fotos se quedan en tu biblioteca.</value></data>
+  <data name="People_NoOtherPeople" xml:space="preserve"><value>No hay otra persona para elegir.</value></data>
+  <data name="People_AddToPersonTitle" xml:space="preserve"><value>Añadir este rostro a…</value></data>
+  <data name="People_FacesTitle" xml:space="preserve"><value>Rostros de {0}</value></data>
+  <data name="People_FacesHelp" xml:space="preserve"><value>Selecciona los rostros que no son esta persona y elige «No es esta persona», o ignora los que no importan.</value></data>
+  <data name="People_UseAsCover" xml:space="preserve"><value>Usar como portada</value></data>
+  <data name="People_NotThisPerson" xml:space="preserve"><value>No es esta persona</value></data>
+  <data name="People_IgnoreFaces" xml:space="preserve"><value>Ignorar</value></data>
+  <data name="People_NotSetUpTitle" xml:space="preserve"><value>Personas está desactivado</value></data>
+  <data name="People_NotSetUpText" xml:space="preserve"><value>Actívalo e instala los modelos de rostros en Ajustes › Personas.</value></data>
+  <data name="People_NotAnalyzedTitle" xml:space="preserve"><value>Aún no hay fotos analizadas</value></data>
+  <data name="People_NotAnalyzedText" xml:space="preserve"><value>Analiza tus fotos para encontrar rostros. Se hace en este PC y puedes cancelarlo cuando quieras.</value></data>
+  <data name="People_NoneFoundTitle" xml:space="preserve"><value>Aún no hay personas</value></data>
+  <data name="People_NoneFoundText" xml:space="preserve"><value>Un grupo aparece cuando el mismo rostro está en al menos dos fotos. Los rostros encontrados una sola vez aparecen abajo.</value></data>
+  <data name="People_UngroupedTitle" xml:space="preserve"><value>Rostros sin agrupar ({0})</value></data>
+  <data name="People_UngroupedName" xml:space="preserve"><value>Rostros sin agrupar</value></data>
+  <data name="People_RenameButton.Label" xml:space="preserve"><value>Poner nombre…</value></data>
+  <data name="People_MergeSelected.Label" xml:space="preserve"><value>Fusionar…</value></data>
+  <data name="People_SettingsButton.Label" xml:space="preserve"><value>Ajustes de Personas</value></data>
+  <data name="People_Hint.Text" xml:space="preserve"><value>Los grupos son sugerencias hechas en este PC. Ponles nombre, fusiónalos o corrígelos: Photos Windows nunca adivina nombres.</value></data>
+  <data name="People_RenameMenu.Text" xml:space="preserve"><value>Poner nombre…</value></data>
+  <data name="People_DeletePersonMenu.Text" xml:space="preserve"><value>Borrar persona…</value></data>
+  <data name="People_UngroupedHelp.Text" xml:space="preserve"><value>Rostros encontrados una sola vez por ahora. Haz clic derecho en un rostro para ponerle nombre, añadirlo a una persona o ignorarlo.</value></data>
+  <data name="People_NameFaceMenu.Text" xml:space="preserve"><value>Poner nombre…</value></data>
+  <data name="People_AddToPersonMenu.Text" xml:space="preserve"><value>Añadir a una persona…</value></data>
+  <data name="People_IgnoreFaceMenu.Text" xml:space="preserve"><value>Ignorar este rostro</value></data>
+  <data name="Empty_PersonTitle" xml:space="preserve"><value>No hay fotos de esta persona</value></data>
+  <data name="Empty_PersonMessage" xml:space="preserve"><value>Sus fotos pueden estar ocultas, eliminadas o excluidas de Personas.</value></data>
+  <data name="Person_Rename.Label" xml:space="preserve"><value>Poner nombre…</value></data>
+  <data name="Person_Faces.Label" xml:space="preserve"><value>Rostros…</value></data>
+  <data name="Person_MergeInto.Label" xml:space="preserve"><value>Fusionar con otra persona…</value></data>
+  <data name="Person_Delete.Label" xml:space="preserve"><value>Borrar persona…</value></data>
+  <data name="Cmd_ExcludeFromPeople.Label" xml:space="preserve"><value>Excluir de Personas</value></data>
+  <data name="People_ModelsInstalled" xml:space="preserve"><value>Modelos de rostros instalados y verificados: {0}.</value></data>
+  <data name="People_ModelsMissing" xml:space="preserve"><value>Los modelos de rostros no están instalados. Son una descarga opcional (unos 39 MB).</value></data>
+  <data name="People_ModelsInvalid" xml:space="preserve"><value>Un archivo de modelo no coincide con su suma de verificación y no se usa. Vuelve a descargar los modelos o instálalos desde archivos.</value></data>
+  <data name="People_RemoveModelsTitle" xml:space="preserve"><value>¿Quitar los modelos de rostros?</value></data>
+  <data name="People_RemoveModelsMessage" xml:space="preserve"><value>Personas deja de funcionar hasta que se vuelvan a instalar. Los grupos y nombres se conservan.</value></data>
+  <data name="People_RemoveModelsButton" xml:space="preserve"><value>Quitar</value></data>
+  <data name="People_AnalyzeNowTitle" xml:space="preserve"><value>¿Analizar las fotos ahora?</value></data>
+  <data name="People_AnalyzeNowMessage" xml:space="preserve"><value>Puedes seguir usando la app mientras se hace y cancelarlo cuando quieras.</value></data>
+  <data name="People_AnalyzeNowButton" xml:space="preserve"><value>Analizar</value></data>
+  <data name="People_DisableTitle" xml:space="preserve"><value>¿Desactivar Personas?</value></data>
+  <data name="People_DisableMessage" xml:space="preserve"><value>No se analizarán fotos y la sección se oculta. Los datos faciales existentes se conservan hasta que los borres.</value></data>
+  <data name="People_DisableButton" xml:space="preserve"><value>Desactivar</value></data>
+  <data name="People_ReanalyzeTitle" xml:space="preserve"><value>¿Volver a analizar todas las fotos?</value></data>
+  <data name="People_ReanalyzeMessage" xml:space="preserve"><value>Se vuelven a analizar todas las fotos. Los nombres y tus correcciones se conservan para los mismos rostros.</value></data>
+  <data name="People_ReanalyzeButton" xml:space="preserve"><value>Volver a analizar</value></data>
+  <data name="Settings_IncludeFaceData.Content" xml:space="preserve"><value>Incluir datos de Personas (rostros, grupos y nombres)</value></data>
+  <data name="Settings_People.Text" xml:space="preserve"><value>Personas</value></data>
+  <data name="Settings_PeopleText.Text" xml:space="preserve"><value>Encuentra rostros en tus fotos y agrupa los que se parecen a la misma persona para que puedas ponerles nombre. Todo se hace en este PC; está desactivado hasta que lo actives en una biblioteca.</value></data>
+  <data name="Settings_DownloadFaceModels.Content" xml:space="preserve"><value>Descargar modelos…</value></data>
+  <data name="Settings_InstallFaceModels.Content" xml:space="preserve"><value>Instalar desde archivos…</value></data>
+  <data name="Settings_RemoveFaceModels.Content" xml:space="preserve"><value>Quitar modelos</value></data>
+  <data name="Settings_EnablePeople.Content" xml:space="preserve"><value>Activar Personas en esta biblioteca…</value></data>
+  <data name="Settings_AnalyzePeople.Content" xml:space="preserve"><value>Analizar fotos</value></data>
+  <data name="Settings_ReanalyzePeople.Content" xml:space="preserve"><value>Volver a analizar todo…</value></data>
+  <data name="Settings_DisablePeople.Content" xml:space="preserve"><value>Desactivar…</value></data>
+  <data name="Settings_DeletePeopleData.Content" xml:space="preserve"><value>Borrar todos los datos de reconocimiento facial…</value></data>
+  <data name="Info_PeopleHeader.Text" xml:space="preserve"><value>Personas</value></data>
+  <data name="Info_NoPeople" xml:space="preserve"><value>No se han encontrado rostros en esta foto.</value></data>
+  <data name="Info_PeopleExcluded" xml:space="preserve"><value>Esta foto está excluida de Personas.</value></data>
+  <data name="Info_ExcludeFromPeople.Content" xml:space="preserve"><value>Excluir de Personas</value></data>
+  <data name="Info_IncludeInPeople.Content" xml:space="preserve"><value>Incluir en Personas</value></data>
+  <data name="Info_AnalyzePeopleAgain.Content" xml:space="preserve"><value>Volver a analizar</value></data>
 </root>

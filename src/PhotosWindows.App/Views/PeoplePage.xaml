@@ -1,0 +1,83 @@
+<Page
+    x:Class="PhotosWindows.App.Views.PeoplePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:PhotosWindows.App.ViewModels"
+    xmlns:conv="using:PhotosWindows.App.Converters">
+
+    <ScrollViewer>
+        <StackPanel Padding="24,8,24,24" Spacing="8">
+            <TextBlock AutomationProperties.AutomationId="PageTitle" Text="{x:Bind Title}" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock AutomationProperties.AutomationId="People_Stats" Text="{x:Bind ViewModel.Stats, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.75" TextWrapping="Wrap" />
+
+            <CommandBar HorizontalAlignment="Left" DefaultLabelPosition="Right" Margin="-8,0,0,4" Visibility="{x:Bind ViewModel.IsAvailable, Mode=OneWay}">
+                <AppBarButton AutomationProperties.AutomationId="People_Analyze" Label="{x:Bind ViewModel.AnalyzeText, Mode=OneWay}" Command="{x:Bind ViewModel.AnalyzeCommand}" Visibility="{x:Bind ViewModel.HasPending, Mode=OneWay}">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE721;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="People_RenameButton" AutomationProperties.AutomationId="People_RenameButton" Label="Name…" Icon="Rename" Command="{x:Bind ViewModel.RenameCommand}" IsEnabled="{x:Bind ViewModel.CanRename, Mode=OneWay}" />
+                <AppBarButton x:Uid="People_MergeSelected" AutomationProperties.AutomationId="People_MergeSelected" Label="Merge…" Command="{x:Bind ViewModel.MergeCommand}" IsEnabled="{x:Bind ViewModel.CanMerge, Mode=OneWay}">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE71B;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="People_SettingsButton" AutomationProperties.AutomationId="People_SettingsButton" Label="People settings" Icon="Setting" Command="{x:Bind ViewModel.OpenSettingsCommand}" />
+            </CommandBar>
+
+            <TextBlock x:Uid="People_Hint" AutomationProperties.AutomationId="People_Hint" Visibility="{x:Bind ViewModel.IsAvailable, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.7"
+                       Text="Groups are suggestions made on this PC. Name them, merge them or correct them: Photos Windows never guesses names." />
+
+            <GridView x:Name="PeopleGrid" AutomationProperties.AutomationId="People_Grid"
+                      ItemsSource="{x:Bind ViewModel.People}" SelectionMode="Multiple" IsItemClickEnabled="True" ItemClick="OnPersonClick"
+                      SelectionChanged="OnSelectionChanged" ContainerContentChanging="OnPersonContainerChanging">
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PersonCardViewModel">
+                        <StackPanel Width="150" Spacing="6" Padding="4">
+                            <StackPanel.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Uid="People_RenameMenu" AutomationProperties.AutomationId="People_RenameMenu" Text="Name…" Click="OnRenamePerson" Tag="{x:Bind}" />
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem x:Uid="People_DeletePersonMenu" AutomationProperties.AutomationId="People_DeletePersonMenu" Text="Delete person…" Click="OnDeletePerson" Tag="{x:Bind}" />
+                                </MenuFlyout>
+                            </StackPanel.ContextFlyout>
+                            <Grid Width="140" Height="140" CornerRadius="70" Background="{ThemeResource TilePlaceholderBrush}" HorizontalAlignment="Center">
+                                <FontIcon Glyph="&#xE77B;" FontSize="40" Opacity="0.45" />
+                                <Image Source="{x:Bind Face, Mode=OneWay}" Stretch="UniformToFill" />
+                            </Grid>
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Subtitle}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+            <StackPanel Spacing="8" HorizontalAlignment="Center" MaxWidth="460" Margin="0,24,0,0" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
+                <FontIcon Glyph="&#xE716;" FontSize="48" Opacity="0.4" />
+                <TextBlock AutomationProperties.AutomationId="People_EmptyTitle" Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.AutomationId="People_EmptyText" Text="{x:Bind ViewModel.EmptyText, Mode=OneWay}" TextWrapping="Wrap" TextAlignment="Center" Opacity="0.75" />
+            </StackPanel>
+
+            <StackPanel Spacing="4" Margin="0,16,0,0" Visibility="{x:Bind ViewModel.HasUngrouped, Mode=OneWay}">
+                <TextBlock AutomationProperties.AutomationId="People_UngroupedTitle" Text="{x:Bind ViewModel.UngroupedTitle, Mode=OneWay}" Style="{StaticResource SectionHeaderStyle}" />
+                <TextBlock x:Uid="People_UngroupedHelp" AutomationProperties.AutomationId="People_UngroupedHelp" TextWrapping="Wrap" Opacity="0.7"
+                           Text="Faces found once so far. Right-click a face to name it, add it to a person or ignore it." />
+                <GridView x:Name="UngroupedGrid" AutomationProperties.AutomationId="People_Ungrouped"
+                          ItemsSource="{x:Bind ViewModel.Ungrouped}" SelectionMode="None" ContainerContentChanging="OnFaceContainerChanging">
+                    <GridView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FaceTileViewModel">
+                            <Grid Width="96" Height="96" CornerRadius="48" Background="{ThemeResource TilePlaceholderBrush}">
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem x:Uid="People_NameFaceMenu" AutomationProperties.AutomationId="People_NameFaceMenu" Text="Name…" Click="OnNameFace" Tag="{x:Bind}" />
+                                        <MenuFlyoutItem x:Uid="People_AddToPersonMenu" AutomationProperties.AutomationId="People_AddToPersonMenu" Text="Add to a person…" Click="OnAddFace" Tag="{x:Bind}" />
+                                        <MenuFlyoutSeparator />
+                                        <MenuFlyoutItem x:Uid="People_IgnoreFaceMenu" AutomationProperties.AutomationId="People_IgnoreFaceMenu" Text="Ignore this face" Click="OnIgnoreFace" Tag="{x:Bind}" />
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                                <FontIcon Glyph="&#xE77B;" FontSize="28" Opacity="0.45" />
+                                <Image Source="{x:Bind Image, Mode=OneWay}" Stretch="UniformToFill" />
+                            </Grid>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
