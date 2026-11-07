@@ -63,7 +63,7 @@ BenchmarkDotNet.Artifacts/
 # .NET
 project.lock.json
 project.fragment.lock.json
-artifacts/
+artifacts/*
 
 # Tye
 .tye/
@@ -489,7 +489,12 @@ $RECYCLE.BIN/
 *.db-shm
 *.sqlite
 TestResults/
-artifacts/
+artifacts/*
+# Curated, synthetic-only QA evidence is committed; local and CI run output is not.
+!artifacts/qa/
+artifacts/qa/*
+!artifacts/qa/README.md
+!artifacts/qa/evidence/
 *.msix
 *.appx
 *.appxbundle
