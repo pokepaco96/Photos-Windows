@@ -88,7 +88,9 @@ public sealed partial class ViewerPage : Page
         var h = Stage.ActualHeight;
         if (w <= 0 || h <= 0) return;
         var rotated = ViewModel.ViewRotation % 2 == 1;
-        var (iw, ih) = Photo.Source is BitmapSource { PixelWidth: > 0, PixelHeight: > 0 } bitmap
+        // Read the view model, not Photo.Source: x:Bind may not have pushed the new image yet when this runs from
+        // PropertyChanged, which sized the next photo with the previous one's dimensions (UI run #14).
+        var (iw, ih) = ViewModel.Image is BitmapSource { PixelWidth: > 0, PixelHeight: > 0 } bitmap
             ? (bitmap.PixelWidth, (double)bitmap.PixelHeight)
             : (rotated ? h : w, rotated ? w : h);
         var (visualW, visualH) = rotated ? (ih, iw) : (iw, ih);
@@ -115,6 +117,25 @@ public sealed partial class ViewerPage : Page
             var x = p.X + Photo.Margin.Left;
             var y = p.Y + Photo.Margin.Top;
             Zoomer.ChangeView(x * 2.5 - Zoomer.ViewportWidth / 2, y * 2.5 - Zoomer.ViewportHeight / 2, 2.5f);
+        }
+    }
+
+    /// <summary>
+    /// Navigation keys are taken before child controls see them: the photo's ScrollViewer consumed Left/Right
+    /// and a focused toolbar button consumed Escape, so neither reached <see cref="OnKeyDown"/> (UI run #14).
+    /// When zoomed in, arrows keep panning the photo.
+    /// </summary>
+    private void OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.OriginalSource is TextBox or Slider) return; // typing, or seeking a video with the arrows
+        var zoomed = Zoomer.ZoomFactor > 1.01f;
+        switch (e.Key)
+        {
+            case VirtualKey.Left when !zoomed:
+            case VirtualKey.Right when !zoomed:
+            case VirtualKey.Escape:
+                OnKeyDown(sender, e);
+                break;
         }
     }
 
