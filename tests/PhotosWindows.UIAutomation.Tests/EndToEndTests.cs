@@ -229,9 +229,23 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
 
     private void BackToLibrary()
     {
+        LogFocus("before Escape");
         AppSession.Keys(VirtualKeyShort.ESCAPE);
         App.WaitUntil(() => App.Exists("AssetsGrid"), "the library grid after going back", TimeSpan.FromSeconds(15));
         WaitLibraryIdle();
+    }
+
+    private void LogFocus(string when)
+    {
+        try
+        {
+            var f = App.Automation.FocusedElement();
+            qa.Evidence.Log($"focus {when}: {f.ControlType} id={f.Properties.AutomationId.ValueOrDefault} name='{f.Properties.Name.ValueOrDefault}' class={f.Properties.ClassName.ValueOrDefault}");
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            qa.Evidence.Log($"focus {when}: unknown ({ex.GetType().Name})");
+        }
     }
 
     private string ManagedCopy(string fileName) =>

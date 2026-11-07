@@ -306,9 +306,10 @@ public sealed class AppSession : IDisposable
 
     public double SliderValue(string automationId) => Find(automationId).Patterns.RangeValue.Pattern.Value.Value;
 
+    /// <summary>Presses and releases keys (a chord when several). Keyboard.Press alone never released the key.</summary>
     public static void Keys(params VirtualKeyShort[] keys)
     {
-        if (keys.Length == 1) Keyboard.Press(keys[0]);
+        if (keys.Length == 1) Keyboard.Type(keys[0]);
         else Keyboard.TypeSimultaneously(keys);
         Wait.UntilInputIsProcessed();
         Thread.Sleep(250);
@@ -341,7 +342,7 @@ public sealed class AppSession : IDisposable
         box.Focus();
         if (box.Patterns.Value.IsSupported) box.Patterns.Value.Pattern.SetValue(folder);
         else Keyboard.Type(folder);
-        Keyboard.Press(VirtualKeyShort.RETURN);
+        Keyboard.Type(VirtualKeyShort.RETURN);
         Thread.Sleep(1200);
         if (FindFileDialog() is not null)
         {
@@ -377,7 +378,7 @@ public sealed class AppSession : IDisposable
                 continue;
             }
 
-            Keyboard.Press(VirtualKeyShort.ESCAPE);
+            Keyboard.Type(VirtualKeyShort.ESCAPE);
             Thread.Sleep(400);
         }
     }

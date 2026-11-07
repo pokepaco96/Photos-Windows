@@ -187,6 +187,7 @@ public sealed partial class EndToEndTests
         var second = App.TextOf("Viewer_Position");
         CheckPhotoFitsAndCentred(); // regression (UI run #14): the next photo was sized with the previous one's box
         App.Find("Viewer_Photo").Click();
+        LogFocus("after clicking the photo");
         AppSession.Keys(VirtualKeyShort.LEFT);
         App.WaitUntil(() => App.TextOf("Viewer_Position") == first, "Left arrow to go back");
         qa.Evidence.Log($"positions: {first} → {second} → {first}");
