@@ -6,6 +6,10 @@ name: UI automation (Windows)
 # - For a dedicated machine use a self-hosted runner labelled [self-hosted, windows, ui] running as a
 #   logged-on user (not as a service). See docs/QA_AUTOMATION.md.
 on:
+  # TEMPORARY bootstrap: GitHub only accepts workflow_dispatch for workflows present on the default branch.
+  # Until this file is merged there, pushes to the QA branch run it. Remove this block once merged.
+  push:
+    branches: [claude/ui-automation-qa]
   workflow_dispatch:
     inputs:
       runner:
@@ -32,7 +36,7 @@ env:
 jobs:
   ui-tests:
     name: UI automation
-    runs-on: ${{ fromJSON(inputs.runner) }}
+    runs-on: ${{ fromJSON(inputs.runner || '"windows-latest"') }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -60,11 +64,12 @@ jobs:
           if ($proc.SessionId -eq 0) { Write-Warning "Session 0: no interactive desktop. UI tests will fail (reported, never skipped)." }
 
       - name: Request screen resolution (hosted runners)
-        if: inputs.resolution != ''
+        if: inputs.resolution != '' || github.event_name == 'push'
         continue-on-error: true
         shell: pwsh
         run: |
-          $w, $h = '${{ inputs.resolution }}'.Split('x')
+          $res = '${{ inputs.resolution }}'; if (-not $res) { $res = '1920x1080' }
+          $w, $h = $res.Split('x')
           Set-DisplayResolution -Width $w -Height $h -Force
           Add-Type -AssemblyName System.Windows.Forms
           "Screen now: $([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width)x$([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height)"
