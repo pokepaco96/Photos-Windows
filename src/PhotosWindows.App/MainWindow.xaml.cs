@@ -78,6 +78,7 @@ public sealed partial class MainWindow : Window
         switch ((args.InvokedItemContainer as NavigationViewItem)?.Tag as string)
         {
             case "Albums": _navigation.ToAlbums(); break;
+            case "People": _navigation.ToPeople(); break;
             case "Duplicates": _navigation.ToDuplicates(); break;
             case "Imports": _navigation.ToImports(); break;
             case "Import": ShowImportMenu(args.InvokedItemContainer); break;
@@ -102,12 +103,14 @@ public sealed partial class MainWindow : Window
         // Keep the sidebar highlight in sync when navigating back or from inside pages.
         string? tag = page == typeof(SettingsPage) ? null
             : page == typeof(AlbumsPage) ? "Albums"
+            : page == typeof(PeoplePage) ? "People"
             : page == typeof(DuplicatesPage) ? "Duplicates"
             : page == typeof(ImportsPage) ? "Imports"
             // Use the navigation parameter: the page's own state is not set yet when Navigated fires.
             : page == typeof(LibraryPage) ? (parameter as LibraryNavigation ?? LibraryNavigation.AllPhotos) switch
             {
                 { SearchText: not null } => null, // search results: no sidebar section
+                { PersonId: not null } => "People",
                 { AlbumId: not null } => "Albums",
                 var t => t.Scope.ToString(),
             }

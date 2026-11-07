@@ -55,6 +55,7 @@
             <TextBlock x:Uid="Settings_BackupHelp" AutomationProperties.AutomationId="Settings_BackupHelp" TextWrapping="Wrap" Opacity="0.8"
                        Text="A backup contains the catalogue (albums, keywords, edits) and, optionally, the originals copied into the library. Photos added without moving are not included: back up those folders as well." />
             <CheckBox x:Uid="Settings_IncludeOriginals" AutomationProperties.AutomationId="Settings_IncludeOriginals" Content="Include originals stored in the library" IsChecked="{x:Bind ViewModel.IncludeOriginalsInBackup, Mode=TwoWay}" />
+            <CheckBox x:Uid="Settings_IncludeFaceData" AutomationProperties.AutomationId="Settings_IncludeFaceData" Content="Include People data (faces, groups and names)" IsChecked="{x:Bind ViewModel.IncludeFaceDataInBackup, Mode=TwoWay}" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button x:Uid="Settings_CreateBackup" AutomationProperties.AutomationId="Settings_CreateBackup" Content="Create backup…" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.CreateBackupCommand}" />
                 <Button x:Uid="Settings_VerifyBackup" AutomationProperties.AutomationId="Settings_VerifyBackup" Content="Verify a backup…" Command="{x:Bind ViewModel.VerifyBackupCommand}" />
@@ -77,6 +78,25 @@
                 <Button x:Uid="Settings_Adopt" AutomationProperties.AutomationId="Settings_Adopt" Content="Add uncatalogued copies" Command="{x:Bind ViewModel.AdoptOrphansCommand}" Visibility="{x:Bind ViewModel.HasOrphans, Mode=OneWay}" />
                 <Button x:Uid="Settings_CleanPartials" AutomationProperties.AutomationId="Settings_CleanPartials" Content="Remove incomplete copies" Command="{x:Bind ViewModel.CleanPartialsCommand}" Visibility="{x:Bind ViewModel.HasPartials, Mode=OneWay}" />
             </StackPanel>
+
+            <!-- People -->
+            <TextBlock x:Uid="Settings_People" AutomationProperties.AutomationId="Settings_People" Text="People" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_PeopleText" AutomationProperties.AutomationId="Settings_PeopleText" TextWrapping="Wrap" Opacity="0.8"
+                       Text="Finds faces in your photos and groups the ones that look like the same person, so you can name them. Everything runs on this PC; it is off until you turn it on for a library." />
+            <TextBlock AutomationProperties.AutomationId="Settings_PeopleModels" Text="{x:Bind ViewModel.PeopleModelsStatus, Mode=OneWay}" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="Settings_DownloadFaceModels" AutomationProperties.AutomationId="Settings_DownloadFaceModels" Content="Download models…" Command="{x:Bind ViewModel.DownloadFaceModelsCommand}" Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.PeopleModelsInstalled), Mode=OneWay}" />
+                <Button x:Uid="Settings_InstallFaceModels" AutomationProperties.AutomationId="Settings_InstallFaceModels" Content="Install from files…" Command="{x:Bind ViewModel.InstallFaceModelsFromFilesCommand}" Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.PeopleModelsInstalled), Mode=OneWay}" />
+                <Button x:Uid="Settings_RemoveFaceModels" AutomationProperties.AutomationId="Settings_RemoveFaceModels" Content="Remove models" Command="{x:Bind ViewModel.RemoveFaceModelsCommand}" Visibility="{x:Bind ViewModel.PeopleModelsInstalled, Mode=OneWay}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="Settings_EnablePeople" AutomationProperties.AutomationId="Settings_EnablePeople" Content="Turn on People for this library…" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.EnablePeopleCommand}" Visibility="{x:Bind ViewModel.PeopleCanEnable, Mode=OneWay}" />
+                <Button x:Uid="Settings_AnalyzePeople" AutomationProperties.AutomationId="Settings_AnalyzePeople" Content="Analyse photos" Command="{x:Bind ViewModel.AnalyzePeopleCommand}" Visibility="{x:Bind ViewModel.PeopleEnabled, Mode=OneWay}" />
+                <Button x:Uid="Settings_ReanalyzePeople" AutomationProperties.AutomationId="Settings_ReanalyzePeople" Content="Analyse all again…" Command="{x:Bind ViewModel.ReanalyzePeopleCommand}" Visibility="{x:Bind ViewModel.PeopleEnabled, Mode=OneWay}" />
+                <Button x:Uid="Settings_DisablePeople" AutomationProperties.AutomationId="Settings_DisablePeople" Content="Turn off…" Command="{x:Bind ViewModel.DisablePeopleCommand}" Visibility="{x:Bind ViewModel.PeopleEnabled, Mode=OneWay}" />
+            </StackPanel>
+            <TextBlock AutomationProperties.AutomationId="Settings_PeopleStats" Text="{x:Bind ViewModel.PeopleStats, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.75" />
+            <Button x:Uid="Settings_DeletePeopleData" AutomationProperties.AutomationId="Settings_DeletePeopleData" Content="Delete all face recognition data…" Command="{x:Bind ViewModel.DeletePeopleDataCommand}" />
 
             <!-- Privacy -->
             <TextBlock x:Uid="Settings_Privacy" AutomationProperties.AutomationId="Settings_Privacy" Text="Privacy" Style="{StaticResource SectionHeaderStyle}" />

@@ -21,7 +21,8 @@ public sealed partial class SettingsViewModel(
     DialogService dialogs,
     WindowContext window,
     NavigationService navigation,
-    IAppPaths paths) : ObservableObject
+    IAppPaths paths,
+    PeopleCoordinator people) : ObservableObject
 {
     private VerificationReport? _lastReport;
 
@@ -38,6 +39,15 @@ public sealed partial class SettingsViewModel(
     [ObservableProperty] public partial bool? IncludeOriginalsInBackup { get; set; } = true;
     [ObservableProperty] public partial bool? VerifyHashes { get; set; } = false;
 
+    /// <summary>People data (biometric) is left out of backups unless the user ticks this.</summary>
+    [ObservableProperty] public partial bool? IncludeFaceDataInBackup { get; set; } = false;
+
+    [ObservableProperty] public partial bool PeopleModelsInstalled { get; set; }
+    [ObservableProperty] public partial string PeopleModelsStatus { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool PeopleEnabled { get; set; }
+    [ObservableProperty] public partial bool PeopleCanEnable { get; set; }
+    [ObservableProperty] public partial string PeopleStats { get; set; } = string.Empty;
+
     public string Version => typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
     partial void OnThemeIndexChanged(int value) => theme.Set((AppTheme)value);
@@ -45,6 +55,7 @@ public sealed partial class SettingsViewModel(
     public async Task LoadAsync()
     {
         ThemeIndex = (int)theme.Current;
+        await LoadPeopleAsync();
         if (context.Current is not { } library) return;
         LibraryName = library.Name;
         LibraryPath = library.RootPath;
@@ -97,6 +108,82 @@ public sealed partial class SettingsViewModel(
         await LoadAsync();
     }
 
+    private async Task LoadPeopleAsync()
+    {
+        var status = people.Models.GetStatus();
+        PeopleModelsInstalled = status.All(m => m.State == ModelState.Installed);
+        PeopleModelsStatus = PeopleModelsInstalled
+            ? Loc.Format("People_ModelsInstalled", string.Join(", ", status.Select(m => $"{m.Model.DisplayName} ({m.Model.License})")))
+            : status.Any(m => m.State == ModelState.Invalid) ? Loc.Get("People_ModelsInvalid") : Loc.Get("People_ModelsMissing");
+        PeopleEnabled = context.Current is not null && await people.People.IsEnabledAsync(CancellationToken.None);
+        PeopleCanEnable = context.Current is not null && PeopleModelsInstalled && !PeopleEnabled;
+        PeopleStats = PeopleEnabled && PeopleModelsInstalled ? PeopleText.Stats(await people.People.GetStatsAsync(CancellationToken.None)) : string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task DownloadFaceModelsAsync()
+    {
+        await people.DownloadModelsAsync();
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task InstallFaceModelsFromFilesAsync()
+    {
+        await people.InstallModelsFromFilesAsync();
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task RemoveFaceModelsAsync()
+    {
+        if (!await dialogs.ConfirmAsync(Loc.Get("People_RemoveModelsTitle"), Loc.Get("People_RemoveModelsMessage"), Loc.Get("People_RemoveModelsButton"))) return;
+        people.Models.Uninstall();
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task EnablePeopleAsync()
+    {
+        if (await people.EnableAsync() && await dialogs.ConfirmAsync(Loc.Get("People_AnalyzeNowTitle"), Loc.Get("People_AnalyzeNowMessage"), Loc.Get("People_AnalyzeNowButton")))
+        {
+            _ = people.AnalyzeAsync();
+        }
+
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task DisablePeopleAsync()
+    {
+        if (!await dialogs.ConfirmAsync(Loc.Get("People_DisableTitle"), Loc.Get("People_DisableMessage"), Loc.Get("People_DisableButton"))) return;
+        await people.People.DisableAsync(CancellationToken.None);
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task AnalyzePeopleAsync()
+    {
+        await people.AnalyzeAsync();
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task ReanalyzePeopleAsync()
+    {
+        if (!await dialogs.ConfirmAsync(Loc.Get("People_ReanalyzeTitle"), Loc.Get("People_ReanalyzeMessage"), Loc.Get("People_ReanalyzeButton"))) return;
+        await people.People.ResetAnalysisAsync(null, CancellationToken.None);
+        await people.AnalyzeAsync();
+        await LoadPeopleAsync();
+    }
+
+    [RelayCommand]
+    private async Task DeletePeopleDataAsync()
+    {
+        await people.DeleteAllAsync();
+        await LoadPeopleAsync();
+    }
+
     [RelayCommand]
     private async Task ClearCacheAsync()
     {
@@ -111,10 +198,11 @@ public sealed partial class SettingsViewModel(
         var folder = await window.PickFolderAsync();
         if (folder is null) return;
         var includeOriginals = IncludeOriginalsInBackup == true;
+        var includeFaceData = IncludeFaceDataInBackup == true;
         await activity.RunAsync(Loc.Get("Backup_Activity"), async (progress, ct) =>
         {
             var p = new InlineProgress<BackupProgress>(b => progress.Report(new ActivityProgress(b.Total > 0 && b.Stage == "originals" ? (double)b.Done / b.Total : null, Loc.Get("BackupStage_" + b.Stage))));
-            var path = await backup.CreateBackupAsync(folder, includeOriginals, p, ct);
+            var path = await backup.CreateBackupAsync(folder, includeOriginals, p, ct, includeFaceData);
             return new ActivityOutcome(Loc.Format("Backup_Done", path), InfoBarSeverity.Success, Loc.Get("Export_OpenFolder"), () => _ = LaunchFolderAsync(path));
         });
     }

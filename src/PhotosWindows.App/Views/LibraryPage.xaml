@@ -67,6 +67,10 @@
             <CommandBar.Content>
                 <TextBlock Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" AutomationProperties.AutomationId="SelectionText" Margin="12,14,12,0" Opacity="0.8" />
             </CommandBar.Content>
+            <AppBarButton x:Uid="Person_Rename" AutomationProperties.AutomationId="Person_Rename" Label="Name…" Icon="Rename" Command="{x:Bind ViewModel.RenamePersonCommand}" Visibility="{x:Bind ViewModel.IsPerson, Mode=OneWay}" />
+            <AppBarButton x:Uid="Person_Faces" AutomationProperties.AutomationId="Person_Faces" Label="Faces…" Command="{x:Bind ViewModel.ManageFacesCommand}" Visibility="{x:Bind ViewModel.IsPerson, Mode=OneWay}">
+                <AppBarButton.Icon><FontIcon Glyph="&#xE77B;" /></AppBarButton.Icon>
+            </AppBarButton>
             <AppBarButton x:Uid="Cmd_Favorite" AutomationProperties.AutomationId="Cmd_Favorite" Label="Favorite" Icon="Favorite" Command="{x:Bind ViewModel.FavoriteCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}" />
             <AppBarButton x:Uid="Cmd_AddToAlbum" AutomationProperties.AutomationId="Cmd_AddToAlbum" Label="Add to album" Command="{x:Bind ViewModel.AddToAlbumCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE8B9;" /></AppBarButton.Icon>
@@ -91,6 +95,13 @@
                 <AppBarButton.Icon><FontIcon Glyph="&#xE7B3;" /></AppBarButton.Icon>
             </AppBarButton>
             <CommandBar.SecondaryCommands>
+                <AppBarButton x:Uid="Person_MergeInto" AutomationProperties.AutomationId="Person_MergeInto" Label="Merge into another person…" Command="{x:Bind ViewModel.MergePersonIntoCommand}" Visibility="{x:Bind ViewModel.IsPerson, Mode=OneWay}">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE71B;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Uid="Person_Delete" AutomationProperties.AutomationId="Person_Delete" Label="Delete person…" Icon="Delete" Command="{x:Bind ViewModel.DeletePersonCommand}" Visibility="{x:Bind ViewModel.IsPerson, Mode=OneWay}" />
+                <AppBarButton x:Uid="Cmd_ExcludeFromPeople" AutomationProperties.AutomationId="Cmd_ExcludeFromPeople" Label="Exclude from People" Command="{x:Bind ViewModel.ExcludeFromPeopleCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.PeopleAvailable, Mode=OneWay}">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE8F8;" /></AppBarButton.Icon>
+                </AppBarButton>
                 <AppBarButton x:Uid="Cmd_Unfavorite" AutomationProperties.AutomationId="Cmd_Unfavorite" Label="Remove from favorites" Icon="UnFavorite" Command="{x:Bind ViewModel.UnfavoriteCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
                 <AppBarButton x:Uid="Cmd_Keywords" AutomationProperties.AutomationId="Cmd_Keywords" Label="Add keywords…" Command="{x:Bind ViewModel.AddKeywordsCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE8EC;" /></AppBarButton.Icon>
