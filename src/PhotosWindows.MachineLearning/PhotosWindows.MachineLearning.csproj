@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>PhotosWindows.MachineLearning</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PhotosWindows.Application\PhotosWindows.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- MIT. CPU inference only; models are NOT included (downloaded by the user, see docs/research/FACE_MODELS_REVIEW.md). -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+</Project>
