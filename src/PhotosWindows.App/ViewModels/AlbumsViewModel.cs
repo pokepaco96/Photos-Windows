@@ -18,7 +18,7 @@ public sealed partial class AlbumCardViewModel : ObservableObject
     {
         Album = album;
         Name = album.Name;
-        Subtitle = album.Kind == AlbumKind.Smart ? Loc.Get("Albums_Smart") : Loc.Format("Group_Count", album.ItemCount);
+        Subtitle = album.Kind == AlbumKind.Smart ? Loc.Get("Albums_Smart") : Loc.Format("Albums_ItemCount", album.ItemCount);
         Glyph = album.Kind == AlbumKind.Smart ? "" : "";
     }
 

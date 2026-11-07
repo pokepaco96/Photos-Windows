@@ -53,7 +53,7 @@
             <InfoBar AutomationProperties.AutomationId="Editor_Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Error" VerticalAlignment="Top" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
         </Grid>
 
-        <ScrollViewer x:Name="Adjustments" Grid.Row="1" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
+        <ScrollViewer x:Name="Adjustments" AutomationProperties.AutomationId="Editor_Adjustments" Grid.Row="1" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
             <StackPanel Padding="16" Spacing="8">
                 <Expander x:Uid="Edit_PresetsHeader" AutomationProperties.AutomationId="Edit_PresetsHeader" Header="Styles" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.Presets}">
@@ -87,8 +87,9 @@
                             <Button Command="{x:Bind ViewModel.RotateRightCommand}" x:Uid="Edit_RotateRight" AutomationProperties.AutomationId="Edit_RotateRight" ToolTipService.ToolTip="Rotate right" AutomationProperties.Name="Rotate right"><FontIcon Glyph="&#xE7AD;" RenderTransformOrigin="0.5,0.5"><FontIcon.RenderTransform><ScaleTransform ScaleX="-1" /></FontIcon.RenderTransform></FontIcon></Button>
                             <Button Command="{x:Bind ViewModel.FlipHorizontalCommand}" x:Uid="Edit_FlipH" AutomationProperties.AutomationId="Edit_FlipH" ToolTipService.ToolTip="Flip horizontally" AutomationProperties.Name="Flip horizontally"><FontIcon Glyph="&#xE8AB;" /></Button>
                             <Button Command="{x:Bind ViewModel.FlipVerticalCommand}" x:Uid="Edit_FlipV" AutomationProperties.AutomationId="Edit_FlipV" ToolTipService.ToolTip="Flip vertically" AutomationProperties.Name="Flip vertically"><FontIcon Glyph="&#xE8AB;" RenderTransformOrigin="0.5,0.5"><FontIcon.RenderTransform><RotateTransform Angle="90" /></FontIcon.RenderTransform></FontIcon></Button>
-                            <Button Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Crop" x:Uid="Edit_ResetCrop" AutomationProperties.AutomationId="Edit_ResetCrop" Content="Reset crop" />
                         </StackPanel>
+                        <!-- Own line: in the same horizontal row it was cut off at the panel edge (UI run #14). -->
+                        <Button Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Crop" x:Uid="Edit_ResetCrop" AutomationProperties.AutomationId="Edit_ResetCrop" Content="Reset crop" />
                     </StackPanel>
                 </Expander>
 

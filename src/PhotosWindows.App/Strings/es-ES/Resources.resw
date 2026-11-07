@@ -17,6 +17,7 @@
   <data name="Albums_EmptyText.Text" xml:space="preserve"><value>Los álbumes agrupan fotos sin copiarlas. Selecciona fotos en la biblioteca y elige «Añadir a álbum», o crea uno aquí.</value></data>
   <data name="Albums_EmptyTitle.Text" xml:space="preserve"><value>Aún no hay álbumes</value></data>
   <data name="Albums_FolderCount" xml:space="preserve"><value>{0} elemento(s)</value></data>
+  <data name="Albums_ItemCount" xml:space="preserve"><value>{0} elemento(s)</value></data>
   <data name="Albums_FolderName" xml:space="preserve"><value>Nombre de la carpeta</value></data>
   <data name="Albums_MoveMenu.Text" xml:space="preserve"><value>Mover a carpeta…</value></data>
   <data name="Albums_MoveTitle" xml:space="preserve"><value>Mover «{0}» a</value></data>

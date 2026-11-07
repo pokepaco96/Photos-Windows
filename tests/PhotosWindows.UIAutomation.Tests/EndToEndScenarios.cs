@@ -261,6 +261,9 @@ public sealed partial class EndToEndTests
         Nav("Nav_Albums");
         Thread.Sleep(1000);
         App.Screenshot("12_albums_page");
+        // Regression (UI run #14): album cards showed a bare "2" (the date-group counter) instead of "2 item(s)".
+        var card = App.Find("AlbumCard_Viaje QA").Properties.Name.ValueOrDefault;
+        if (card != "Viaje QA, 2 item(s)") throw new InvalidOperationException($"Album card reads '{card}', expected 'Viaje QA, 2 item(s)'.");
         App.MouseClick(App.Find("AlbumCard_Viaje QA"));
         App.WaitUntil(() => App.TextOf("PageTitle") == "Viaje QA", "the album to open");
         WaitLibraryIdle();
@@ -369,6 +372,15 @@ public sealed partial class EndToEndTests
         App.Find("Edit_Exposure", TimeSpan.FromSeconds(30));
         Thread.Sleep(1500);
         App.Screenshot("17_editor_open");
+        // Regression (UI run #14): "Reset crop" was cut off at the right edge of the adjustments panel.
+        var panel = App.Find("Editor_Adjustments").BoundingRectangle;
+        var reset = App.Find("Edit_ResetCrop").BoundingRectangle;
+        var flip = App.Find("Edit_FlipV").BoundingRectangle;
+        qa.Evidence.Log($"adjustments {panel}, reset crop {reset}, flip {flip}");
+        if (reset.Right > panel.Right - 8 || flip.Right > panel.Right - 8 || reset.Width < 60)
+        {
+            throw new InvalidOperationException("Crop and rotate buttons do not fit in the adjustments panel.");
+        }
         App.SetSlider("Edit_Exposure", 1.0);
         App.Click("Preset_Mono");
         Thread.Sleep(1500);
