@@ -111,7 +111,29 @@ public sealed class AppSession : IDisposable
     public AutomationElement? TryFindById(string automationId) => TryFind(cf => cf.ByAutomationId(automationId));
 
     public AutomationElement Find(string automationId, TimeSpan? timeout = null) =>
-        WaitFor(() => Visible(TryFindById(automationId)), $"element '{automationId}'", timeout);
+        WaitFor(() => Visible(BringIntoView(TryFindById(automationId))), $"element '{automationId}'", timeout);
+
+    /// <summary>
+    /// Elements below the fold of a ScrollViewer are in the tree but offscreen (UI run #12: the backup section of
+    /// Settings). Scroll them into view like a user would: ScrollItem if supported, else keyboard focus.
+    /// </summary>
+    private static AutomationElement? BringIntoView(AutomationElement? e)
+    {
+        if (e is null) return null;
+        try
+        {
+            if (!e.Properties.IsOffscreen.ValueOrDefault) return e;
+            if (e.Patterns.ScrollItem.PatternOrDefault is { } scroll) scroll.ScrollIntoView();
+            else if (e.Properties.IsKeyboardFocusable.ValueOrDefault && e.Properties.IsEnabled.ValueOrDefault) e.Focus();
+            Thread.Sleep(300);
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or FlaUI.Core.Exceptions.PropertyNotSupportedException or FlaUI.Core.Exceptions.PatternNotSupportedException)
+        {
+            // Best effort; the caller keeps polling.
+        }
+
+        return e;
+    }
 
     public AutomationElement FindByName(string name, TimeSpan? timeout = null) =>
         WaitFor(() => Visible(TryFind(cf => cf.ByName(name))), $"element named '{name}'", timeout);

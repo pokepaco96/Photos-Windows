@@ -115,8 +115,33 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
         return App.Find(id, TimeSpan.FromSeconds(5));
     }
 
-    /// <summary>True if the tile is in the grid, on or off screen.</summary>
-    private bool TileExists(string fileName) => App.TryFindById("Tile_" + fileName) is not null;
+    /// <summary>
+    /// True if the tile is in the grid, on or off screen. The grid virtualizes: tiles far from the viewport are
+    /// not realized at all (UI run #12: 1 of 10), so scroll through the grid before concluding it is absent.
+    /// </summary>
+    private bool TileExists(string fileName)
+    {
+        var id = "Tile_" + fileName;
+        if (App.TryFindById(id) is not null) return true;
+        var scroll = App.TryFindById("AssetsGrid")?.Patterns.Scroll.PatternOrDefault;
+        if (scroll is null || !scroll.VerticallyScrollable.ValueOrDefault) return false;
+        try
+        {
+            for (var percent = 0d; percent <= 100; percent += 20)
+            {
+                scroll.SetScrollPercent(-1, percent);
+                Thread.Sleep(200);
+                if (App.TryFindById(id) is not null) return true;
+            }
+
+            return false;
+        }
+        finally
+        {
+            scroll.SetScrollPercent(-1, 0);
+            Thread.Sleep(100);
+        }
+    }
 
     private IReadOnlyList<string> VisibleTiles() =>
         App.FindAll(cf => cf.ByControlType(ControlType.ListItem))

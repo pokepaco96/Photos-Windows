@@ -152,10 +152,31 @@ public sealed partial class EndToEndTests
         App.Click("Viewer_Info");
         App.Find("Viewer_InfoPane");
         Thread.Sleep(800);
-        if (App.TryFind(cf => cf.ByName("QA Labs QA Cam 1").Or(cf.ByName("QA Cam 1"))) is null) throw new InvalidOperationException("Camera details missing in the info pane.");
+        // Regression (UI run #12): values were announced only by their label ("Camera"), never the value.
+        if (App.TryFind(cf => cf.ByName("Camera: QA Labs QA Cam 1")) is null) throw new InvalidOperationException("Camera details missing (or not announced) in the info pane.");
+        CheckPhotoFitsAndCentred();
         App.Screenshot("08_viewer_with_info");
         App.Click("Viewer_Info");
     });
+
+    /// <summary>
+    /// Regression (UI run #12): the photo was drawn at the top of a stage-sized box, leaving an empty band below.
+    /// The photo element must have the photo's aspect ratio (1600×1067) and be centred in the stage.
+    /// </summary>
+    private void CheckPhotoFitsAndCentred()
+    {
+        Thread.Sleep(500);
+        var photo = App.Find("Viewer_Photo").BoundingRectangle;
+        var stage = App.Find("Viewer_Zoomer").BoundingRectangle;
+        qa.Evidence.Log($"viewer photo {photo}, stage {stage}");
+        var aspect = (double)photo.Width / photo.Height;
+        if (Math.Abs(aspect - 1600.0 / 1067) > 0.03) throw new InvalidOperationException($"Photo box {photo.Width}×{photo.Height} does not match the photo's aspect ratio.");
+        var top = photo.Top - stage.Top;
+        var bottom = stage.Bottom - photo.Bottom;
+        var left = photo.Left - stage.Left;
+        var right = stage.Right - photo.Right;
+        if (Math.Abs(top - bottom) > 4 || Math.Abs(left - right) > 4) throw new InvalidOperationException($"Photo not centred: top {top}, bottom {bottom}, left {left}, right {right}.");
+    }
 
     [Fact, Step(9)]
     public void S09_Navigate_between_photos() => Run(9, "Navigate with Next/Previous and arrow keys", ["viewer"], null, () =>
@@ -547,6 +568,17 @@ public sealed partial class EndToEndTests
         qa.Evidence.Log($"focused after Ctrl+F: {focused.ControlType} '{focused.Properties.Name.ValueOrDefault}' id={focused.Properties.AutomationId.ValueOrDefault}");
         if (focused.ControlType != ControlType.Edit) throw new InvalidOperationException("Ctrl+F did not focus the search box.");
         AppSession.Keys(VirtualKeyShort.ESCAPE);
+
+        // Regression (UI run #12): hovering the window showed the root's "Ctrl+Shift+I" accelerator tooltip.
+        var grid = App.Find("AssetsGrid").BoundingRectangle;
+        FlaUI.Core.Input.Mouse.MoveTo(new System.Drawing.Point(grid.Right - 60, grid.Bottom - 60));
+        Thread.Sleep(2500);
+        if (App.TryFind(cf => cf.ByControlType(ControlType.ToolTip).And(cf.ByName("Ctrl+Shift+I"))) is not null
+            || App.Automation.GetDesktop().FindFirstDescendant(cf => cf.ByControlType(ControlType.ToolTip).And(cf.ByName("Ctrl+Shift+I"))) is not null)
+        {
+            App.Screenshot("25_stray_tooltip");
+            throw new InvalidOperationException("Hovering the grid shows the window-wide Ctrl+Shift+I accelerator tooltip.");
+        }
     });
 
     [Fact, Step(26)]
