@@ -21,8 +21,10 @@ public sealed partial class ViewerPage : Page
         InitializeComponent();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Loaded += (_, _) => TakeFocus();
-        // Clicking the photo (not focusable itself) keeps the viewer's shortcuts working.
-        Stage.PointerPressed += (_, _) => TakeFocus();
+        // Clicking the photo (not focusable itself) keeps the viewer's shortcuts working. The ScrollViewer marks
+        // pointer events handled, so listen to handled events too (UI run #17: a click left focus outside).
+        Stage.AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => TakeFocus()), handledEventsToo: true);
+        Stage.AddHandler(TappedEvent, new TappedEventHandler((_, _) => TakeFocus()), handledEventsToo: true);
     }
 
     public ViewerViewModel ViewModel { get; }
