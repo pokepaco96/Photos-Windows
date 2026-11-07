@@ -26,12 +26,15 @@
                 <Button x:Uid="Settings_SwitchLibrary" AutomationProperties.AutomationId="Settings_SwitchLibrary" Content="Switch library…" Command="{x:Bind ViewModel.SwitchLibraryCommand}" />
             </StackPanel>
             <ItemsRepeater ItemsSource="{x:Bind ViewModel.Storage}" AutomationProperties.AutomationId="Settings_Storage" Margin="0,8,0,0">
-                <ItemsRepeater.Layout><UniformGridLayout MinItemWidth="190" MinColumnSpacing="12" MinRowSpacing="8" /></ItemsRepeater.Layout>
+                <ItemsRepeater.Layout><UniformGridLayout MinItemWidth="220" MinColumnSpacing="12" MinRowSpacing="8" /></ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:InfoRow">
                         <StackPanel Padding="12,8" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                            <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
-                            <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind Label}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <!-- Every cell gets the size of the first one: a wrapped label pushed the value out of the card (UI run #11). -->
+                            <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Label}" />
+                            <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind Label}" Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>

@@ -493,6 +493,7 @@ public sealed partial class EndToEndTests
         App.Screenshot("24_settings_dark");
         // Regression (UI run #10): caption buttons stayed dark on the dark theme and were nearly invisible.
         if (App.CaptionButtonLuminance().Max < 150) throw new InvalidOperationException("Caption buttons are not light on the dark theme.");
+        CheckStorageCardsSingleLine();
         Nav("Nav_All");
         Thread.Sleep(1500);
         App.Screenshot("24_library_dark");
@@ -507,6 +508,24 @@ public sealed partial class EndToEndTests
         App.Screenshot("24_library_light");
         Theme("System");
     });
+
+    /// <summary>
+    /// Regression (UI run #11): in Settings the "Originals added without moving" label wrapped and its value was
+    /// clipped. Each storage label must be one line, i.e. no taller than the "Photos" label.
+    /// </summary>
+    private void CheckStorageCardsSingleLine()
+    {
+        double LabelHeight(string name) => App.FindAll(cf => cf.ByName(name).And(cf.ByControlType(ControlType.Text)))
+            .Select(e => (double)e.BoundingRectangle.Height).Where(h => h > 0).DefaultIfEmpty(0).Min();
+
+        var reference = LabelHeight("Photos");
+        foreach (var label in new[] { "Originals in the library", "Originals added without moving", "Thumbnail cache", "Catalogue" })
+        {
+            var h = LabelHeight(label);
+            qa.Evidence.Log($"storage label '{label}': {h}px (reference {reference}px)");
+            if (reference > 0 && h > reference * 1.4) throw new InvalidOperationException($"Storage label '{label}' wraps ({h}px vs {reference}px) and clips its value.");
+        }
+    }
 
     [Fact, Step(25)]
     public void S25_Keyboard_navigation() => Run(25, "Keyboard navigation (arrows, Enter, Escape, Ctrl+F)", ["imported-copy"], null, () =>
