@@ -15,6 +15,8 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <DefaultLanguage>en-US</DefaultLanguage>
+    <!-- Unpackaged apps look up resources.pri (then <exe>.pri); without this the file is named after the project and x:Uid lookups fail at runtime. -->
+    <ProjectPriFileName>resources.pri</ProjectPriFileName>
     <!-- UI code is only compiled on Windows CI; analyzer noise from generated XAML code is not promoted to errors. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
