@@ -4,6 +4,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Unreleased]
 ### Added
+- **Personas** (opt-in, local): detección de rostros (YuNet) y descriptores (SFace) con ONNX Runtime en CPU; modelos descargados solo si el usuario lo pide, con SHA-256 verificado, o instalados desde archivos; consentimiento por biblioteca; agrupación determinista con nombres solo del usuario; nombrar, fusionar, separar («No es esta persona»), ignorar, portada, borrar persona, excluir fotos; reanálisis que conserva nombres al cambiar de modelo; sección en la barra lateral solo cuando funciona; información de personas en el visor; borrado físico de todos los datos faciales; copias sin datos faciales salvo que se elijan.
+- Migración de catálogo v2 (aditiva) con prueba desde v1.
 - Núcleo de biblioteca: catálogo SQLite con migraciones, FTS5 y copias previas a migración.
 - Importación «Añadir sin mover» y «Copiar a la biblioteca» con SHA-256, duplicados, RAW+JPEG, clips de movimiento, sidecars XMP, cancelación y reanudación.
 - Lectura de metadatos EXIF/IPTC/XMP/GPS/QuickTime.
