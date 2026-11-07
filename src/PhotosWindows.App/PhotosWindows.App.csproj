@@ -32,6 +32,7 @@
     <ProjectReference Include="..\PhotosWindows.Infrastructure\PhotosWindows.Infrastructure.csproj" />
     <ProjectReference Include="..\PhotosWindows.Imaging\PhotosWindows.Imaging.csproj" />
     <ProjectReference Include="..\PhotosWindows.Platform.Windows\PhotosWindows.Platform.Windows.csproj" />
+    <ProjectReference Include="..\PhotosWindows.MachineLearning\PhotosWindows.MachineLearning.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" />

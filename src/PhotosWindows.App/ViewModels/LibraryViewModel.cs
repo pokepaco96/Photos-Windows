@@ -29,6 +29,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     private readonly EditingService _editing;
     private readonly ISettingsStore _settings;
     private readonly UiThread _ui;
+    private readonly PeopleCoordinator _people;
+    private Person? _person;
     private readonly Dictionary<long, AssetItemViewModel> _byId = [];
     private CancellationTokenSource? _loadCts;
     private LibraryNavigation _target = LibraryNavigation.AllPhotos;
@@ -36,8 +38,9 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     private bool _refreshQueued;
 
     public LibraryViewModel(IAssetRepository assets, OrganizationService organization, ThumbnailService thumbnails, ImageLoader images,
-        NavigationService navigation, SelectionActions actions, ImportCoordinator import, EditingService editing, ISettingsStore settings, UiThread ui)
+        NavigationService navigation, SelectionActions actions, ImportCoordinator import, EditingService editing, ISettingsStore settings, UiThread ui, PeopleCoordinator people)
     {
+        _people = people;
         _assets = assets;
         _organization = organization;
         _thumbnails = thumbnails;
@@ -79,6 +82,12 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     [ObservableProperty] public partial bool IsNormalScope { get; set; } = true;
     [ObservableProperty] public partial bool ShowImportHint { get; set; }
 
+    /// <summary>A person's photos (People): person commands are shown.</summary>
+    [ObservableProperty] public partial bool IsPerson { get; set; }
+
+    /// <summary>People is on and working: photos can be excluded from it.</summary>
+    [ObservableProperty] public partial bool PeopleAvailable { get; set; }
+
     public int DecodeWidth => (int)Math.Ceiling(ItemSize * 2);
 
     partial void OnItemSizeChanged(double value) => _settings.Save(_settings.Load() with { GridItemSize = (int)value });
@@ -95,12 +104,17 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         IsTrash = target.Scope == LibraryScope.RecentlyDeleted;
         IsHiddenScope = target.Scope == LibraryScope.Hidden;
         _album = target.AlbumId is { } id ? await _organization.GetAlbumAsync(id, CancellationToken.None) : null;
+        _person = target.PersonId is { } pid ? await _people.People.GetPersonAsync(pid, CancellationToken.None) : null;
+        IsPerson = _person is not null;
+        PeopleAvailable = await _people.IsAvailableAsync();
         IsManualAlbum = _album?.Kind == AlbumKind.Manual;
         IsSmartAlbum = _album?.Kind == AlbumKind.Smart;
         IsNormalScope = !IsTrash && !IsHiddenScope;
         CanGroup = !IsManualAlbum && target.Scope is not LibraryScope.RecentlyAdded;
         GroupingIndex = CanGroup ? (int)GroupingMode.Days : (int)GroupingMode.None;
-        Title = _album?.Name ?? (target.SearchText is { } q ? Loc.Format("Search_Title", q) : Loc.Get("Scope_" + target.Scope));
+        Title = _album?.Name
+            ?? (_person is not null ? PeopleCoordinator.DisplayName(_person) : null)
+            ?? (target.SearchText is { } q ? Loc.Format("Search_Title", q) : Loc.Get("Scope_" + target.Scope));
         await ReloadAsync();
     }
 
@@ -110,6 +124,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         {
             Scope = _target.Scope,
             AlbumId = IsManualAlbum ? _album!.Id : null,
+            PersonId = _target.PersonId,
             Smart = IsSmartAlbum ? _album!.SmartDefinition : null,
             MediaType = MediaFilterIndex switch { 1 => MediaType.Photo, 2 => MediaType.Video, _ => null },
             Favorite = FavoritesOnly == true ? true : null,
@@ -202,6 +217,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         if (_target.SearchText is not null) return (Loc.Get("Empty_SearchTitle"), Loc.Get("Empty_SearchMessage"));
         if (IsSmartAlbum) return (Loc.Get("Empty_SmartTitle"), Loc.Get("Empty_SmartMessage"));
         if (IsManualAlbum) return (Loc.Get("Empty_AlbumTitle"), Loc.Get("Empty_AlbumMessage"));
+        if (_target.PersonId is not null) return (Loc.Get("Empty_PersonTitle"), Loc.Get("Empty_PersonMessage"));
         return _target.Scope switch
         {
             LibraryScope.RecentlyDeleted => (Loc.Get("Empty_TrashTitle"), Loc.Get("Empty_TrashMessage")),
@@ -224,6 +240,39 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     {
         var ids = Groups.SelectMany(g => g).Select(i => i.Id).ToList();
         _navigation.ToViewer(new ViewerNavigation(ids, Math.Max(0, ids.IndexOf(item.Id))));
+    }
+
+    [RelayCommand]
+    private async Task RenamePersonAsync()
+    {
+        if (_person is not null && await _people.RenameAsync(_person)) await LoadAsync(_target);
+    }
+
+    [RelayCommand]
+    private async Task ManageFacesAsync()
+    {
+        if (_person is not null && await _people.ManageFacesAsync(_person)) await LoadAsync(_target);
+    }
+
+    [RelayCommand]
+    private async Task MergePersonIntoAsync()
+    {
+        if (_person is not null && await _people.MergeIntoAsync(_person)) _navigation.ToPeople();
+    }
+
+    [RelayCommand]
+    private async Task DeletePersonAsync()
+    {
+        if (_person is not null && await _people.DeleteAsync(_person)) _navigation.ToPeople();
+    }
+
+    /// <summary>Selected photos leave People: their faces and descriptors are deleted and they are not analysed again.</summary>
+    [RelayCommand]
+    private async Task ExcludeFromPeopleAsync()
+    {
+        if (SelectedIds.Count == 0) return;
+        await _people.People.ExcludeAsync(SelectedIds.ToList(), CancellationToken.None);
+        if (IsPerson) await ReloadAsync();
     }
 
     [RelayCommand] private Task FavoriteAsync() => _actions.SetFavoriteAsync(SelectedIds, true);

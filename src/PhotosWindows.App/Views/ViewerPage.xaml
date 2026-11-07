@@ -106,6 +106,16 @@
                 <TextBlock x:Uid="Info_AlbumsHeader" AutomationProperties.AutomationId="Info_AlbumsHeader" Text="Albums" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
                 <TextBlock Text="{x:Bind ViewModel.AlbumsText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" />
 
+                <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.ShowPeople, Mode=OneWay}">
+                    <TextBlock x:Uid="Info_PeopleHeader" AutomationProperties.AutomationId="Info_PeopleHeader" Text="People" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                    <TextBlock AutomationProperties.AutomationId="Info_People" Text="{x:Bind ViewModel.PeopleText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Uid="Info_ExcludeFromPeople" AutomationProperties.AutomationId="Info_ExcludeFromPeople" Content="Exclude from People" Command="{x:Bind ViewModel.ExcludeFromPeopleCommand}" Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsExcludedFromPeople), Mode=OneWay}" />
+                        <Button x:Uid="Info_IncludeInPeople" AutomationProperties.AutomationId="Info_IncludeInPeople" Content="Include in People" Command="{x:Bind ViewModel.IncludeInPeopleCommand}" Visibility="{x:Bind ViewModel.IsExcludedFromPeople, Mode=OneWay}" />
+                        <Button x:Uid="Info_AnalyzePeopleAgain" AutomationProperties.AutomationId="Info_AnalyzePeopleAgain" Content="Analyse again" Command="{x:Bind ViewModel.AnalyzePeopleAgainCommand}" Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsExcludedFromPeople), Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+
                 <TextBlock x:Uid="Info_Details" AutomationProperties.AutomationId="Info_Details" Text="Details" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
                 <ItemsRepeater ItemsSource="{x:Bind ViewModel.Details}" AutomationProperties.AutomationId="Info_DetailsList">
                     <ItemsRepeater.Layout><StackLayout Spacing="6" /></ItemsRepeater.Layout>
