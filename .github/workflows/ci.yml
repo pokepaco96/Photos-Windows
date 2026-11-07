@@ -41,7 +41,15 @@ jobs:
       - name: Build (Release, warnings as errors)
         run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
 
+      - name: Cache test assets (face models, public-domain test photos)
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/pw-test-assets
+          key: pw-test-assets-${{ hashFiles('src/PhotosWindows.MachineLearning/FaceModelCatalog.cs', 'tests/PhotosWindows.Integration.Tests/Support/RealModelAssets.cs') }}
+
       - name: Test
+        env:
+          PW_TEST_ASSETS: ${{ runner.temp }}/pw-test-assets
         run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults
 
       - name: Upload test results
@@ -74,7 +82,15 @@ jobs:
       - name: Build core (Release)
         run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
 
+      - name: Cache test assets (face models, public-domain test photos)
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/pw-test-assets
+          key: pw-test-assets-${{ hashFiles('src/PhotosWindows.MachineLearning/FaceModelCatalog.cs', 'tests/PhotosWindows.Integration.Tests/Support/RealModelAssets.cs') }}
+
       - name: Test
+        env:
+          PW_TEST_ASSETS: ${{ runner.temp }}/pw-test-assets
         run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults --blame-hang-timeout 5m
 
       # Fixed: TRX filenames may contain brackets [1].
@@ -89,14 +105,14 @@ jobs:
             "No TRX test results found." >> $env:GITHUB_STEP_SUMMARY
           }
           else {
-            "| Test file | Total | Passed | Failed |" >> $env:GITHUB_STEP_SUMMARY
-            "|---|---:|---:|---:|" >> $env:GITHUB_STEP_SUMMARY
+            "| Test file | Total | Passed | Failed | Not executed (blocked) |" >> $env:GITHUB_STEP_SUMMARY
+            "|---|---:|---:|---:|---:|" >> $env:GITHUB_STEP_SUMMARY
 
             foreach ($f in $files) {
               [xml]$x = Get-Content -LiteralPath $f.FullName -Raw
               $c = $x.TestRun.ResultSummary.Counters
 
-              "| $($f.Name) | $($c.total) | $($c.passed) | $($c.failed) |" >> $env:GITHUB_STEP_SUMMARY
+              "| $($f.Name) | $($c.total) | $($c.passed) | $($c.failed) | $($c.notExecuted) |" >> $env:GITHUB_STEP_SUMMARY
             }
           }
 
