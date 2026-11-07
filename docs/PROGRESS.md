@@ -2,7 +2,7 @@
 
 Estados: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `DONE` (solo con criterio de salida cumplido y evidencia de pruebas).
 
-> **Validación de la interfaz:** el desarrollo se hace en un contenedor Linux sin escritorio. Desde la fase de QA automatizado, la app publicada **se usa de verdad a través de su interfaz** en el escritorio interactivo de `windows-latest` (Windows Server 2025) con la suite `tests/PhotosWindows.UIAutomation.Tests` (FlaUI/UIA): en la última ejecución (#17) 26 de 28 escenarios superados, 2 fallidos, 0 bloqueados. Ver [`QA_AUTOMATION.md`](QA_AUTOMATION.md). Sigue pendiente la prueba manual en Windows 11 con archivos reales de cámaras y teléfonos, Narrador, escalado 200 % y contraste alto (`QA_CHECKLIST.md`), por eso las fases siguen en `IN PROGRESS`.
+> **Validación de la interfaz:** el desarrollo se hace en un contenedor Linux sin escritorio. Desde la fase de QA automatizado, la app publicada **se usa de verdad a través de su interfaz** en el escritorio interactivo de `windows-latest` (Windows Server 2025) con la suite `tests/PhotosWindows.UIAutomation.Tests` (FlaUI/UIA): en la última ejecución (#22) 28 de 28 escenarios superados, 0 fallidos, 0 bloqueados. Ver [`QA_AUTOMATION.md`](QA_AUTOMATION.md). Sigue pendiente la prueba manual en Windows 11 con archivos reales de cámaras y teléfonos, Narrador, escalado 200 % y contraste alto (`QA_CHECKLIST.md`), por eso las fases siguen en `IN PROGRESS`.
 
 | Fase | Estado | Evidencia / pendiente |
 |---|---|---|
@@ -20,4 +20,4 @@ Estados: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `DONE` (solo con criteri
 
 Pruebas automáticas (última ejecución local, Linux, .NET SDK 10.0.403): Domain 36/36, Imaging 30/30, Integration 87/87 (incluye 2 de rendimiento).
 
-UI automatizada (Windows Server 2025, `windows-latest`): en la última ejecución (#17) 26 de 28 escenarios superados, 2 fallidos, 0 bloqueados. 18 errores de la app encontrados y corregidos con prueba de regresión (lista en `QA_AUTOMATION.md`).
+UI automatizada (Windows Server 2025, `windows-latest`): en la última ejecución (#22) 28 de 28 escenarios superados, 0 fallidos, 0 bloqueados. 18 errores de la app encontrados y corregidos con prueba de regresión (lista en `QA_AUTOMATION.md`).

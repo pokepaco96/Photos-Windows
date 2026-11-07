@@ -63,7 +63,7 @@ No uses el ratón ni el teclado durante la ejecución (≈5-10 min): las pruebas
 
 ## Resultados
 
-Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest`, ventana 1400×900 en pantalla 1920×1080, 100 % DPI, `en-US`). Cada una está en el artefacto `ui-automation-evidence` de su ejecución del workflow; la última se conserva también en [`artifacts/qa/evidence/`](../artifacts/qa/evidence/).
+Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest`, ventana 1400×900 en pantalla 1920×1080, 100 % DPI, `en-US`). Cada una está en el artefacto `ui-automation-evidence` de su ejecución del workflow; la #22 se conserva también en [`artifacts/qa/evidence/`](../artifacts/qa/evidence/). Las ejecuciones #18 y #19 repitieron código ya probado (#19 se canceló al llegar #20).
 
 | Ejecución | Superados | Fallidos | Bloqueados | Qué cambió |
 |---|---|---|---|---|
@@ -75,7 +75,10 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | #12, #13 | 10 | 5 | 13 | Bugs 8–13. |
 | #14, #15 | 24 | 4 | 0 | Bugs 14–16; revisión visual → bugs 17–18. #15 confirma 14 y 16. |
 | #16 | 25 | 3 | 0 | Bugs 17–18 corregidos y comprobados. |
-| #17 | 26 | 2 | 0 | Escape en el visor corregido; queda la flecha izquierda tras clic en la foto (bug 15b). |
+| #17 | 26 | 2 | 0 | Escape en el visor corregido salvo tras el zoom; la flecha izquierda tras un clic en la foto sigue fallando. |
+| #20 | 27 | 1 | 0 | Flecha izquierda tras clic corregida; restauración con los mismos recuentos. |
+| #21 | 27 | 1 | 0 | Escape tras el zoom corregido; S15 falla por el arnés (miniatura no realizada por la virtualización). |
+| **#22** | **28** | **0** | **0** | **Todos los escenarios superados** (commit `f2f3315`). Evidencias en [`artifacts/qa/evidence/2026-11-07-run22`](../artifacts/qa/evidence/2026-11-07-run22/). |
 
 ### Errores encontrados y corregidos
 
@@ -97,12 +100,12 @@ Todos se encontraron usando la app real a través de la interfaz; cada correcci�
 | 12 | Al pasar el ratón por cualquier parte aparecía «Ctrl+Shift+I» | Atajos globales en la raíz con tooltip automático | Varias capturas (#12) | S25 comprueba que no aparece |
 | 13 | «1 photos», «1 videos» | Una sola cadena para singular y plural | `FAIL_12` (#12) | S12 comprueba «1 photo · 0 videos» |
 | 14 | Tras «Siguiente» la foto se dibujaba más grande que el visor | Se calculaba el tamaño con la foto anterior | `FAIL_09` (#14) | S09 comprueba que cabe y está centrada |
-| 15 | En el visor las flechas y Escape no hacían nada en ciertos casos | La página no podía recibir el foco (`Page` no es tab stop) y el `ScrollViewer` consumía flechas y clics | `FAIL_09/11/19` (#14–#17) | S09, S11, S19 |
+| 15 | En el visor las flechas y Escape no hacían nada en ciertos casos (tras un clic en la foto, al volver del editor, tras el zoom) | La página no podía recibir el foco (`Page` no es tab stop), el `ScrollViewer` consumía flechas y clics y un botón de la barra consumía Escape. Ahora la página toma el foco, las flechas se atienden en `PreviewKeyDown` y Escape es un `KeyboardAccelerator` | `FAIL_09/10/11/19` (#14–#21) | S09, S10, S11, S19 |
 | 16 | Los vídeos no tenían miniatura en Windows Server | El shell no tiene generador de miniaturas MP4 aunque el vídeo se reproduce | `FAIL_11` (#14) | S11 mide el color de la miniatura |
 | 17 | Editor: «Reset crop» cortado en el borde del panel | Fila horizontal sin ajuste | `17_editor_mono_exposure` (#14, revisión visual) | S17 comprueba que cabe |
 | 18 | Tarjetas de álbum con un número suelto («1») en vez de «1 item(s)» | Se reutilizaba la cadena de los encabezados de fecha | `27_page_albums` (#14, revisión visual) | S12 |
 
-Además se corrigieron fallos del propio arnés (no de la app): diálogo de carpetas como hijo de la ventana, elementos virtualizados o fuera de pantalla, lectura de nombres que cambian, teclas que no se soltaban (`Keyboard.Press`), informe que no se escribía si fallaba el cierre.
+Además se corrigieron fallos del propio arnés (no de la app): diálogo de carpetas como hijo de la ventana, elementos virtualizados o fuera de pantalla, lectura de nombres que cambian, teclas que no se soltaban (`Keyboard.Press`), miniaturas no realizadas por la virtualización, informe que no se escribía si fallaba el cierre.
 
 ### Revisión visual
 Revisadas en las capturas reales de la ejecución #14 (y siguientes): bienvenida, biblioteca vacía y con fotos, importación (opciones, progreso, informe), duplicados, visor con información, vídeo, álbumes, álbum inteligente, ocultos, búsqueda con y sin resultados, editor, exportación, copia de seguridad, borrado (confirmación y plan), ajustes, temas claro y oscuro y la biblioteca restaurada. Las incidencias encontradas son los bugs 3, 6, 7, 10, 12, 17 y 18.

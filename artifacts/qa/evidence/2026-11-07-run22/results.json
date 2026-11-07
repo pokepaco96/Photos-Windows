@@ -1,0 +1,322 @@
+{
+  "environment": {
+    "Date (UTC)": "2026-11-07 18:54:32Z",
+    "OS": "Microsoft Windows 10.0.26100",
+    "Machine": "runnervmm7ud1",
+    "User interactive": "True",
+    "Session id": "2",
+    "Culture": "en-US",
+    "Commit": "f2f3315cc55ea45c5806908e828af232a1eebbac",
+    "Executable": "D:\\a\\Photos-Windows\\Photos-Windows\\artifacts\\PhotosWindows-win-x64\\PhotosWindows.exe",
+    "Work folder": "D:\\a\\_temp\\pwqa",
+    "Screen": "1920\u00D71080",
+    "Window": "1400\u00D7900 at 260,66",
+    "Library counts at backup": "9 photos, 1 videos, 2 albums",
+    "Backup": "PhotosWindows-Backup-Biblioteca QA-20261107-185258",
+    "Library counts after restore": "9 photos, 1 videos, 2 albums"
+  },
+  "results": [
+    {
+      "Number": 1,
+      "Name": "First launch shows the welcome page",
+      "Status": 0,
+      "Seconds": 2,
+      "Error": null,
+      "Files": [
+        "screenshots/001_01_welcome.png",
+        "trees/002_01_welcome.txt"
+      ]
+    },
+    {
+      "Number": 2,
+      "Name": "Create a library (name dialog \u002B real folder picker)",
+      "Status": 0,
+      "Seconds": 5,
+      "Error": null,
+      "Files": [
+        "screenshots/003_02_create_library_dialog.png",
+        "screenshots/004_02_empty_library.png"
+      ]
+    },
+    {
+      "Number": 3,
+      "Name": "Close and reopen the library from the welcome page",
+      "Status": 0,
+      "Seconds": 3,
+      "Error": null,
+      "Files": [
+        "screenshots/005_03_welcome_with_recent.png"
+      ]
+    },
+    {
+      "Number": 4,
+      "Name": "Import a folder with Copy to the library",
+      "Status": 0,
+      "Seconds": 12.1,
+      "Error": null,
+      "Files": [
+        "screenshots/006_import-options-dialog.png",
+        "screenshots/007_04_import_copy_done.png",
+        "screenshots/008_04_library_with_photos.png"
+      ]
+    },
+    {
+      "Number": 5,
+      "Name": "Import a folder with Add without moving",
+      "Status": 0,
+      "Seconds": 9.8,
+      "Error": null,
+      "Files": [
+        "screenshots/009_import-options-dialog.png",
+        "screenshots/010_05_library_after_second_import.png"
+      ]
+    },
+    {
+      "Number": 6,
+      "Name": "Duplicates are reported and not imported",
+      "Status": 0,
+      "Seconds": 11,
+      "Error": null,
+      "Files": [
+        "screenshots/011_06_import_report.png",
+        "screenshots/012_06_duplicates_page.png"
+      ]
+    },
+    {
+      "Number": 7,
+      "Name": "Corrupt, empty and disguised files are reported",
+      "Status": 0,
+      "Seconds": 10.2,
+      "Error": null,
+      "Files": [
+        "screenshots/013_07_unsupported_files.png"
+      ]
+    },
+    {
+      "Number": 8,
+      "Name": "Open a photo in the viewer",
+      "Status": 0,
+      "Seconds": 6.8,
+      "Error": null,
+      "Files": [
+        "screenshots/014_08_viewer_with_info.png"
+      ]
+    },
+    {
+      "Number": 9,
+      "Name": "Navigate with Next/Previous and arrow keys",
+      "Status": 0,
+      "Seconds": 1.9,
+      "Error": null,
+      "Files": []
+    },
+    {
+      "Number": 10,
+      "Name": "Zoom in and out in the viewer",
+      "Status": 0,
+      "Seconds": 1.4,
+      "Error": null,
+      "Files": [
+        "screenshots/015_10_viewer_zoomed.png"
+      ]
+    },
+    {
+      "Number": 11,
+      "Name": "Open and play a video",
+      "Status": 0,
+      "Seconds": 9.7,
+      "Error": null,
+      "Files": [
+        "screenshots/016_11_video_tile.png",
+        "screenshots/017_11_video_playing.png"
+      ]
+    },
+    {
+      "Number": 12,
+      "Name": "Create albums and folders; add and remove photos",
+      "Status": 0,
+      "Seconds": 14.8,
+      "Error": null,
+      "Files": [
+        "screenshots/018_12_albums_empty.png",
+        "screenshots/019_12_albums_page.png",
+        "screenshots/020_12_album_content.png"
+      ]
+    },
+    {
+      "Number": 13,
+      "Name": "Add and remove favorites",
+      "Status": 0,
+      "Seconds": 9,
+      "Error": null,
+      "Files": [
+        "screenshots/021_13_favorites.png",
+        "screenshots/022_13_favorites_empty.png"
+      ]
+    },
+    {
+      "Number": 14,
+      "Name": "Create a smart album (Favorite is true)",
+      "Status": 0,
+      "Seconds": 6,
+      "Error": null,
+      "Files": [
+        "screenshots/023_14_smart_album_dialog.png",
+        "screenshots/024_14_smart_album.png"
+      ]
+    },
+    {
+      "Number": 15,
+      "Name": "Hide a photo and show it again",
+      "Status": 0,
+      "Seconds": 11.8,
+      "Error": null,
+      "Files": [
+        "screenshots/025_15_hidden.png"
+      ]
+    },
+    {
+      "Number": 16,
+      "Name": "Search by keyword, year and type",
+      "Status": 0,
+      "Seconds": 7.4,
+      "Error": null,
+      "Files": [
+        "screenshots/026_16_search_beach.png",
+        "screenshots/027_16_search_no_results.png"
+      ]
+    },
+    {
+      "Number": 17,
+      "Name": "Edit a photo (exposure \u002B Mono style)",
+      "Status": 0,
+      "Seconds": 9.3,
+      "Error": null,
+      "Files": [
+        "screenshots/028_17_editor_open.png",
+        "screenshots/029_17_editor_mono_exposure.png"
+      ]
+    },
+    {
+      "Number": 18,
+      "Name": "Undo and redo in the editor (buttons and Ctrl\u002BZ / Ctrl\u002BY)",
+      "Status": 0,
+      "Seconds": 5.4,
+      "Error": null,
+      "Files": [
+        "screenshots/030_18_viewer_edited.png"
+      ]
+    },
+    {
+      "Number": 19,
+      "Name": "Restart the app: library reopens and edits persist; original unchanged",
+      "Status": 0,
+      "Seconds": 7.7,
+      "Error": null,
+      "Files": []
+    },
+    {
+      "Number": 20,
+      "Name": "Export the original (byte-identical)",
+      "Status": 0,
+      "Seconds": 7.8,
+      "Error": null,
+      "Files": [
+        "screenshots/031_20_export_dialog.png"
+      ]
+    },
+    {
+      "Number": 21,
+      "Name": "Export the edited copy",
+      "Status": 0,
+      "Seconds": 7.1,
+      "Error": null,
+      "Files": []
+    },
+    {
+      "Number": 22,
+      "Name": "Create a verified backup",
+      "Status": 0,
+      "Seconds": 7,
+      "Error": null,
+      "Files": [
+        "screenshots/032_22_settings.png",
+        "screenshots/033_22_backup_done.png"
+      ]
+    },
+    {
+      "Number": 23,
+      "Name": "Delete to Recently deleted, recover, and delete permanently",
+      "Status": 0,
+      "Seconds": 14.7,
+      "Error": null,
+      "Files": [
+        "screenshots/034_23_delete_confirmation.png",
+        "screenshots/035_23_recently_deleted.png",
+        "screenshots/036_23_delete_permanently_plan.png"
+      ]
+    },
+    {
+      "Number": 24,
+      "Name": "Switch light and dark theme",
+      "Status": 0,
+      "Seconds": 18.1,
+      "Error": null,
+      "Files": [
+        "screenshots/037_24_settings_dark.png",
+        "screenshots/038_24_library_dark.png",
+        "screenshots/039_24_viewer_dark.png",
+        "screenshots/040_24_settings_light.png",
+        "screenshots/041_24_library_light.png"
+      ]
+    },
+    {
+      "Number": 25,
+      "Name": "Keyboard navigation (arrows, Enter, Escape, Ctrl\u002BF)",
+      "Status": 0,
+      "Seconds": 9.1,
+      "Error": null,
+      "Files": []
+    },
+    {
+      "Number": 26,
+      "Name": "Restore the backup as a new library",
+      "Status": 0,
+      "Seconds": 12.2,
+      "Error": null,
+      "Files": [
+        "screenshots/042_26_restored_library_settings.png"
+      ]
+    },
+    {
+      "Number": 27,
+      "Name": "Visual pass of every page \u002B accessible names",
+      "Status": 0,
+      "Seconds": 36.6,
+      "Error": null,
+      "Files": [
+        "screenshots/043_27_page_all.png",
+        "screenshots/044_27_page_videos.png",
+        "screenshots/045_27_page_favorites.png",
+        "screenshots/046_27_page_recent.png",
+        "screenshots/047_27_page_edited.png",
+        "screenshots/048_27_page_located.png",
+        "screenshots/049_27_page_albums.png",
+        "screenshots/050_27_page_duplicates.png",
+        "screenshots/051_27_page_hidden.png",
+        "screenshots/052_27_page_trash.png",
+        "screenshots/053_27_page_imports.png",
+        "screenshots/054_27_page_settings.png",
+        "trees/055_27_settings_tree.txt"
+      ]
+    },
+    {
+      "Number": 28,
+      "Name": "Originals unchanged (SHA-256) and clean exit",
+      "Status": 0,
+      "Seconds": 0.6,
+      "Error": null,
+      "Files": []
+    }
+  ]
+}

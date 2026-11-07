@@ -6,7 +6,7 @@ Importa, cataloga, busca, organiza, edita sin destruir, exporta y protege tu col
 > «Photos Windows» es un nombre de trabajo. El proyecto no está afiliado a Apple y no utiliza su código, marcas ni recursos.
 
 ## Estado
-En desarrollo activo. El núcleo (biblioteca, importación, catálogo, búsqueda, edición, exportación, copias, verificación) está implementado y cubierto por pruebas automáticas en Linux y Windows. La aplicación WinUI 3 se compila y publica en CI (`windows-latest`) y una suite de UI Automation la usa de verdad a través de su interfaz en un escritorio de Windows (26 de 28 escenarios superados en la última ejecución; ver [`docs/QA_AUTOMATION.md`](docs/QA_AUTOMATION.md)). La prueba manual en Windows 11 con archivos reales sigue pendiente (ver [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md)). Detalle en [`docs/PROGRESS.md`](docs/PROGRESS.md) y [`docs/ROADMAP.md`](docs/ROADMAP.md).
+En desarrollo activo. El núcleo (biblioteca, importación, catálogo, búsqueda, edición, exportación, copias, verificación) está implementado y cubierto por pruebas automáticas en Linux y Windows. La aplicación WinUI 3 se compila y publica en CI (`windows-latest`) y una suite de UI Automation la usa de verdad a través de su interfaz en un escritorio de Windows (28 de 28 escenarios superados en la última ejecución; ver [`docs/QA_AUTOMATION.md`](docs/QA_AUTOMATION.md)). La prueba manual en Windows 11 con archivos reales sigue pendiente (ver [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md)). Detalle en [`docs/PROGRESS.md`](docs/PROGRESS.md) y [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Probar la aplicación
 1. Descarga el artefacto `PhotosWindows-win-x64` de la última ejecución correcta de GitHub Actions (pestaña *Actions* › *CI*).

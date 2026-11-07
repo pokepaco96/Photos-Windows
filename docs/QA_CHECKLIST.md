@@ -6,7 +6,7 @@ La columna **UI automatizada** recoge el resultado real de la suite `tests/Photo
 
 Preparación: una carpeta `QA-media` con JPEG con GPS, un HEIC de iPhone + su `.MOV`, un RAW+JPEG de cámara, un MP4 largo, un PNG, un archivo `.jpg` que en realidad sea texto, y una copia idéntica de un JPEG en otra subcarpeta.
 
-| # | Paso | Resultado esperado | UI automatizada (ejecución #17) | Estado manual |
+| # | Paso | Resultado esperado | UI automatizada (ejecución #22, 28/28) | Estado manual |
 |---|---|---|---|---|
 | 1 | Instalar el paquete (Fase 10) | Arranca desde el menú Inicio; aparece la pantalla de bienvenida | ◐ Arranque del ejecutable publicado (carpeta portátil) y bienvenida: S01 ✅ y smoke de CI. Sin instalador (ADR-0009) | ☐ No ejecutado |
 | 2 | Crear biblioteca en `Imágenes` | Se crea `Nombre.pwlibrary` con `library.json`, `catalog.db`, `originals`, `cache`, `backups` | ✅ S02 (diálogo de nombre + selector de carpetas real) | ☐ |
