@@ -136,8 +136,8 @@ public sealed partial class ViewerPage : Page
     }
 
     /// <summary>
-    /// Navigation keys are taken before child controls see them: the photo's ScrollViewer consumed Left/Right
-    /// and a focused toolbar button consumed Escape, so neither reached <see cref="OnKeyDown"/> (UI run #14).
+    /// Arrow keys are taken before child controls see them: the photo's ScrollViewer consumed Left/Right, so they
+    /// never reached <see cref="OnKeyDown"/> (UI run #14).
     /// When zoomed in, arrows keep panning the photo.
     /// </summary>
     private void OnPreviewKeyDown(object sender, KeyRoutedEventArgs e)
@@ -148,7 +148,6 @@ public sealed partial class ViewerPage : Page
         {
             case VirtualKey.Left when !zoomed:
             case VirtualKey.Right when !zoomed:
-            case VirtualKey.Escape:
                 OnKeyDown(sender, e);
                 break;
         }
@@ -169,12 +168,17 @@ public sealed partial class ViewerPage : Page
             case VirtualKey.M: ViewModel.CompareCommand.Execute(null); break;
             case (VirtualKey)190: ViewModel.ToggleFavoriteCommand.Execute(null); break; // '.' key
             case VirtualKey.Delete: ViewModel.DeleteCommand.Execute(null); break;
-            case VirtualKey.Escape:
-                if (App.Services.GetRequiredService<WindowContext>().IsFullScreen) ViewModel.ExitFullScreen();
-                else Frame.GoBack();
-                break;
-            default: e.Handled = false; break;
+            default: e.Handled = false; break; // Escape: see OnEscapeInvoked
         }
+    }
+
+    private void OnEscapeInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (FocusManager.GetFocusedElement(XamlRoot) is TextBox) return; // Escape while typing a keyword
+        if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot).Count > 0) return; // a dialog or menu closes first
+        args.Handled = true;
+        if (App.Services.GetRequiredService<WindowContext>().IsFullScreen) ViewModel.ExitFullScreen();
+        else if (Frame.CanGoBack) Frame.GoBack();
     }
 
     private void OnKeywordKeyDown(object sender, KeyRoutedEventArgs e)

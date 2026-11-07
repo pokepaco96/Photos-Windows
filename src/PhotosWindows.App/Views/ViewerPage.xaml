@@ -7,7 +7,14 @@
     IsTabStop="True"
     UseSystemFocusVisuals="False"
     KeyDown="OnKeyDown"
-    PreviewKeyDown="OnPreviewKeyDown">
+    PreviewKeyDown="OnPreviewKeyDown"
+    KeyboardAcceleratorPlacementMode="Hidden">
+
+    <!-- Escape leaves the viewer wherever keyboard focus is: after zooming with a double-click, focus was no longer
+         inside the page and Escape did nothing (UI run #20). An accelerator does not depend on focus. -->
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="OnEscapeInvoked" />
+    </Page.KeyboardAccelerators>
 
     <Grid Background="{ThemeResource ViewerBackgroundBrush}">
         <Grid.RowDefinitions>
