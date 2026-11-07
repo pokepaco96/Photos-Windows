@@ -99,13 +99,13 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
     private static bool IsRingIdle(AutomationElement ring) => ring.Properties.IsOffscreen.ValueOrDefault || ring.BoundingRectangle.IsEmpty;
 
     /// <summary>
-    /// A grid tile, scrolled into view. Tiles below the fold are realized but offscreen (UI run #11: the
-    /// "Days" grouping shows ~3 tiles at 1400×900), so look them up without the visibility filter first.
+    /// A grid tile, scrolled into view. Tiles below the fold are realized but offscreen (UI run #11) or, further
+    /// down, not realized at all by the virtualized grid (UI run #21: Nieve_2019.jpg), so scroll to find them.
     /// </summary>
     private AutomationElement Tile(string fileName, TimeSpan? timeout = null)
     {
         var id = "Tile_" + fileName;
-        var tile = App.WaitFor(() => App.TryFindById(id), $"tile '{fileName}'", timeout);
+        var tile = App.WaitFor(() => App.TryFindById(id) ?? ScanGrid(id, restoreTop: false), $"tile '{fileName}'", timeout);
         if (tile.Properties.IsOffscreen.ValueOrDefault)
         {
             tile.Patterns.ScrollItem.PatternOrDefault?.ScrollIntoView();
@@ -115,31 +115,37 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
         return App.Find(id, TimeSpan.FromSeconds(5));
     }
 
-    /// <summary>
-    /// True if the tile is in the grid, on or off screen. The grid virtualizes: tiles far from the viewport are
-    /// not realized at all (UI run #12: 1 of 10), so scroll through the grid before concluding it is absent.
-    /// </summary>
+    /// <summary>True if the tile is in the grid, on or off screen (scrolls through a virtualized grid if needed).</summary>
     private bool TileExists(string fileName)
     {
         var id = "Tile_" + fileName;
-        if (App.TryFindById(id) is not null) return true;
+        return App.TryFindById(id) is not null || ScanGrid(id, restoreTop: true) is not null;
+    }
+
+    /// <summary>Scrolls the grid top to bottom until the element is realized.</summary>
+    private AutomationElement? ScanGrid(string id, bool restoreTop)
+    {
         var scroll = App.TryFindById("AssetsGrid")?.Patterns.Scroll.PatternOrDefault;
-        if (scroll is null || !scroll.VerticallyScrollable.ValueOrDefault) return false;
+        if (scroll is null || !scroll.VerticallyScrollable.ValueOrDefault) return null;
+        AutomationElement? found = null;
         try
         {
-            for (var percent = 0d; percent <= 100; percent += 20)
+            for (var percent = 0d; percent <= 100 && found is null; percent += 20)
             {
                 scroll.SetScrollPercent(-1, percent);
                 Thread.Sleep(200);
-                if (App.TryFindById(id) is not null) return true;
+                found = App.TryFindById(id);
             }
 
-            return false;
+            return found;
         }
         finally
         {
-            scroll.SetScrollPercent(-1, 0);
-            Thread.Sleep(100);
+            if (restoreTop || found is null)
+            {
+                scroll.SetScrollPercent(-1, 0);
+                Thread.Sleep(100);
+            }
         }
     }
 
