@@ -41,6 +41,8 @@ public sealed class QaFixture : IDisposable
         Evidence.Log($"Executable: {ExePath}");
         Dataset.Generate();
         if (!Dataset.HasVideo) Note("No MP4 could be generated (" + Dataset.VideoNote + "); video scenarios are blocked.");
+        if (Dataset.HasPeople) Achieve("people-dataset");
+        else Note("No People test photos (" + Dataset.PeopleNote + "); People scenarios are blocked.");
         Evidence.Log($"Dataset: {Dataset.Hashes.Count} files");
     }
 

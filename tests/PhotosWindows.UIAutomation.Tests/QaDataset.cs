@@ -23,12 +23,31 @@ public sealed class QaDataset
         Root = root;
         CopyFolder = Path.Combine(root, "copy");
         InPlaceFolder = Path.Combine(root, "inplace");
+        PeopleFolder = Path.Combine(root, "people");
     }
 
     public string Root { get; }
     public string CopyFolder { get; }
     public string InPlaceFolder { get; }
     public bool HasVideo { get; private set; }
+
+    /// <summary>Public-domain NASA portraits for People (downloaded, checksum-verified); false when unavailable.</summary>
+    public bool HasPeople { get; private set; }
+    public string? PeopleNote { get; private set; }
+    public string PeopleFolder { get; }
+
+    /// <summary>
+    /// Works of the US federal government (NASA), public domain. Two photos of Mark C. Lee (1984, 1993), Eugene A.
+    /// Cernan alone (1964) and with Thomas P. Stafford (1966), and Kathryn C. Thornton (1992).
+    /// </summary>
+    public static readonly (string Name, string Url, string Sha256)[] PeoplePhotos =
+    [
+        ("lee_1984.jpg", "https://images-assets.nasa.gov/image/S84-40242/S84-40242~medium.jpg", "04174570dbdaefce63e17002486a7bd784186b875b187a9a7766c7db78407a26"),
+        ("lee_1993.jpg", "https://images-assets.nasa.gov/image/S93-48446/S93-48446~medium.jpg", "44b2a3be6d243a1bdaa66b7c8cf71be4c46c2ae8eca620b25323232afc00f26e"),
+        ("cernan_1964.jpg", "https://images-assets.nasa.gov/image/s64-31845/s64-31845~medium.jpg", "2e6f22935d79525080ec9d217ccab80d520c0b61d01758415be5456bc23159cd"),
+        ("gemini9_crew.jpg", "https://images-assets.nasa.gov/image/s66-15621/s66-15621~medium.jpg", "a87f1c698d3b3ef65b6b316339c60fd2dce3077cf2aa01e1b17159b642016d98"),
+        ("thornton_1992.jpg", "https://images-assets.nasa.gov/image/S92-42897/S92-42897~medium.jpg", "0753e8912a68b3e6d5870008b1df41dba272ef675e43bfffb1d47eae2bc8f51e"),
+    ];
     public string? VideoNote { get; private set; }
     public IReadOnlyDictionary<string, string> Hashes { get; private set; } = new Dictionary<string, string>();
 
@@ -69,6 +88,7 @@ public sealed class QaDataset
         File.WriteAllText(Path.Combine(InPlaceFolder, "notas.txt"), "not a media file");
 
         (HasVideo, VideoNote) = Video(Path.Combine(InPlaceFolder, "clip.mp4"));
+        (HasPeople, PeopleNote) = DownloadPeople();
 
         Hashes = Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories)
             .ToDictionary(f => Path.GetRelativePath(Root, f), Sha256);
@@ -123,6 +143,33 @@ public sealed class QaDataset
         paint.Color = SKColors.White;
         canvas.DrawText($"QA #{seed}", w * 0.05f, h * 0.9f, SKTextAlign.Left, font, paint);
         return bmp;
+    }
+
+    private (bool, string?) DownloadPeople()
+    {
+        Directory.CreateDirectory(PeopleFolder);
+        try
+        {
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(2) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("PhotosWindows-qa/0.1");
+            foreach (var (name, url, sha) in PeoplePhotos)
+            {
+                var bytes = http.GetByteArrayAsync(new Uri(url)).GetAwaiter().GetResult();
+                if (Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes)) != sha)
+                {
+                    return (false, $"{name}: unexpected checksum");
+                }
+
+                File.WriteAllBytes(Path.Combine(PeopleFolder, name), bytes);
+            }
+
+            return (true, null);
+        }
+        catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException or IOException)
+        {
+            foreach (var f in Directory.EnumerateFiles(PeopleFolder)) File.Delete(f);
+            return (false, "people photos could not be downloaded: " + ex.Message);
+        }
     }
 
     /// <summary>Creates a short H.264/AAC MP4 with ffmpeg when available (the workflow installs it).</summary>
