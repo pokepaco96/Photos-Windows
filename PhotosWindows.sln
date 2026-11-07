@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotosWindows.Platform.Wind
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotosWindows.App", "src\PhotosWindows.App\PhotosWindows.App.csproj", "{E0673481-A343-4F44-8B1F-4AC64083B8DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotosWindows.UIAutomation.Tests", "tests\PhotosWindows.UIAutomation.Tests\PhotosWindows.UIAutomation.Tests.csproj", "{4B6FF541-2AAC-4EA4-956C-56C39A915223}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +145,18 @@ Global
 		{E0673481-A343-4F44-8B1F-4AC64083B8DD}.Release|x64.Build.0 = Release|x64
 		{E0673481-A343-4F44-8B1F-4AC64083B8DD}.Release|x86.ActiveCfg = Release|x64
 		{E0673481-A343-4F44-8B1F-4AC64083B8DD}.Release|x86.Build.0 = Release|x64
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Debug|x64.Build.0 = Debug|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Debug|x86.Build.0 = Debug|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Release|x64.ActiveCfg = Release|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Release|x64.Build.0 = Release|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Release|x86.ActiveCfg = Release|Any CPU
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,5 +171,6 @@ Global
 		{9560B87F-E5F4-4620-A568-AED1C65EB479} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{7E66B333-9869-40F2-9357-38ADC476F200} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E0673481-A343-4F44-8B1F-4AC64083B8DD} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{4B6FF541-2AAC-4EA4-956C-56C39A915223} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
