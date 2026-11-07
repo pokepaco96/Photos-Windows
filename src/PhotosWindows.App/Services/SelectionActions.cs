@@ -181,7 +181,7 @@ public sealed class SelectionActions(
 
         await activity.RunAsync(Loc.Get("Export_Activity"), async (progress, ct) =>
         {
-            var exportProgress = new Progress<ExportProgress>(p => progress.Report(new ActivityProgress((double)p.Done / Math.Max(1, p.Total), Loc.Format("Export_Progress", p.Done, p.Total, p.Current))));
+            var exportProgress = new InlineProgress<ExportProgress>(p => progress.Report(new ActivityProgress((double)p.Done / Math.Max(1, p.Total), Loc.Format("Export_Progress", p.Done, p.Total, p.Current))));
             var results = await export.ExportAsync(ids, folder, options, exportProgress, ct);
             var failed = results.Count(r => r.Error is not null);
             return new ActivityOutcome(

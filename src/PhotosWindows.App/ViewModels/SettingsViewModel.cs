@@ -113,7 +113,7 @@ public sealed partial class SettingsViewModel(
         var includeOriginals = IncludeOriginalsInBackup == true;
         await activity.RunAsync(Loc.Get("Backup_Activity"), async (progress, ct) =>
         {
-            var p = new Progress<BackupProgress>(b => progress.Report(new ActivityProgress(b.Total > 0 && b.Stage == "originals" ? (double)b.Done / b.Total : null, Loc.Get("BackupStage_" + b.Stage))));
+            var p = new InlineProgress<BackupProgress>(b => progress.Report(new ActivityProgress(b.Total > 0 && b.Stage == "originals" ? (double)b.Done / b.Total : null, Loc.Get("BackupStage_" + b.Stage))));
             var path = await backup.CreateBackupAsync(folder, includeOriginals, p, ct);
             return new ActivityOutcome(Loc.Format("Backup_Done", path), InfoBarSeverity.Success, Loc.Get("Export_OpenFolder"), () => _ = LaunchFolderAsync(path));
         });
@@ -175,7 +175,7 @@ public sealed partial class SettingsViewModel(
         var hashes = VerifyHashes == true;
         await activity.RunAsync(Loc.Get("Verify_Activity"), async (progress, ct) =>
         {
-            var p = new Progress<VerificationProgress>(v => progress.Report(new ActivityProgress((double)v.Done / Math.Max(1, v.Total), Loc.Format("Verify_Progress", v.Done, v.Total))));
+            var p = new InlineProgress<VerificationProgress>(v => progress.Report(new ActivityProgress((double)v.Done / Math.Max(1, v.Total), Loc.Format("Verify_Progress", v.Done, v.Total))));
             var report = await maintenance.VerifyAsync(hashes, p, ct);
             _lastReport = report;
             var summary = report.IsHealthy

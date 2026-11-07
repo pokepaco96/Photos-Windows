@@ -10,6 +10,15 @@ public readonly record struct ActivityProgress(double? Fraction, string Message)
 public sealed record ActivityOutcome(string Message, InfoBarSeverity Severity, string? ActionText = null, Action? Action = null);
 
 /// <summary>
+/// Forwards reports synchronously on the reporting thread. Unlike <see cref="Progress{T}"/> created off the UI
+/// thread, it does not hop through the thread pool, so reports keep their order.
+/// </summary>
+public sealed class InlineProgress<T>(Action<T> handler) : IProgress<T>
+{
+    public void Report(T value) => handler(value);
+}
+
+/// <summary>
 /// Shows one long-running operation (import, export, backup, verification) in the shell's status bar with real
 /// progress and a Cancel button. Operations run off the UI thread; progress is marshalled back.
 /// </summary>
@@ -17,6 +26,7 @@ public sealed partial class ActivityCenter(UiThread ui, ILogger<ActivityCenter> 
 {
     private CancellationTokenSource? _cts;
     private Action? _action;
+    private int _run;
 
     [ObservableProperty] public partial bool IsOpen { get; set; }
     [ObservableProperty] public partial bool IsBusy { get; set; }
@@ -43,8 +53,11 @@ public sealed partial class ActivityCenter(UiThread ui, ILogger<ActivityCenter> 
         Percent = 0;
         Severity = InfoBarSeverity.Informational;
         HasAction = false;
+        var run = ++_run;
         var progress = new Progress<ActivityProgress>(p => ui.Post(() =>
         {
+            // A report can be delivered after the run finished; it must not overwrite the outcome (UI run #10).
+            if (run != _run || !IsBusy) return;
             Message = p.Message;
             IsIndeterminate = p.Fraction is null;
             Percent = (p.Fraction ?? 0) * 100;

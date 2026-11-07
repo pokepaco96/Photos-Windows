@@ -491,6 +491,8 @@ public sealed partial class EndToEndTests
 
         Theme("Dark");
         App.Screenshot("24_settings_dark");
+        // Regression (UI run #10): caption buttons stayed dark on the dark theme and were nearly invisible.
+        if (App.CaptionButtonLuminance().Max < 150) throw new InvalidOperationException("Caption buttons are not light on the dark theme.");
         Nav("Nav_All");
         Thread.Sleep(1500);
         App.Screenshot("24_library_dark");
@@ -499,6 +501,7 @@ public sealed partial class EndToEndTests
         BackToLibrary();
         Theme("Light");
         App.Screenshot("24_settings_light");
+        if (App.CaptionButtonLuminance().Min > 110) throw new InvalidOperationException("Caption buttons are not dark on the light theme.");
         Nav("Nav_All");
         Thread.Sleep(1500);
         App.Screenshot("24_library_light");
@@ -522,7 +525,7 @@ public sealed partial class EndToEndTests
         App.WaitUntil(() => App.Exists("AssetsGrid"), "Escape to go back to the grid");
         AppSession.Keys(VirtualKeyShort.CONTROL, VirtualKeyShort.KEY_F);
         var focused = App.Automation.FocusedElement();
-        qa.Evidence.Log($"focused after Ctrl+F: {focused.ControlType} '{focused.Name}' id={focused.Properties.AutomationId.ValueOrDefault}");
+        qa.Evidence.Log($"focused after Ctrl+F: {focused.ControlType} '{focused.Properties.Name.ValueOrDefault}' id={focused.Properties.AutomationId.ValueOrDefault}");
         if (focused.ControlType != ControlType.Edit) throw new InvalidOperationException("Ctrl+F did not focus the search box.");
         AppSession.Keys(VirtualKeyShort.ESCAPE);
     });

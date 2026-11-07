@@ -81,10 +81,12 @@ public sealed class ImportCoordinator(
     {
         await activity.RunAsync(Loc.Get("Import_Title"), async (progress, ct) =>
         {
-            var importProgress = new Progress<ImportProgress>(p => progress.Report(new ActivityProgress(
+            var importProgress = new InlineProgress<ImportProgress>(p => progress.Report(new ActivityProgress(
                 p.Total == 0 ? null : p.Fraction,
                 Loc.Format("Import_Progress", p.Processed, p.Total, p.Imported, p.Duplicates, p.Failed + p.Skipped,
-                    p.EstimatedRemaining is { } eta ? Loc.Format("Import_Eta", Math.Ceiling(eta.TotalMinutes)) : string.Empty))));
+                    p.Processed < p.Total && p.EstimatedRemaining is { TotalSeconds: > 0 } eta
+                        ? Loc.Format("Import_Eta", Math.Ceiling(eta.TotalMinutes))
+                        : string.Empty))));
             var result = await run(importProgress, ct);
             background.Signal();
             var severity = result.Status switch

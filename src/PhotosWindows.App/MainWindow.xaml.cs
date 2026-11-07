@@ -22,6 +22,13 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
+        if (Content is FrameworkElement root)
+        {
+            // The system draws the caption buttons with the OS theme; follow the app theme instead (UI run #10).
+            root.ActualThemeChanged += (sender, _) => ApplyCaptionButtonColors(sender.ActualTheme);
+            ApplyCaptionButtonColors(root.ActualTheme);
+        }
+
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
         FitToDisplay();
         _navigation.Attach(ContentFrame);
@@ -29,6 +36,21 @@ public sealed partial class MainWindow : Window
     }
 
     public ShellViewModel ViewModel { get; }
+
+    private void ApplyCaptionButtonColors(ElementTheme theme)
+    {
+        var bar = AppWindow.TitleBar;
+        var dark = theme == ElementTheme.Dark;
+        byte fg = dark ? (byte)255 : (byte)0;
+        bar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonForegroundColor = Windows.UI.Color.FromArgb(255, fg, fg, fg);
+        bar.ButtonHoverForegroundColor = Windows.UI.Color.FromArgb(255, fg, fg, fg);
+        bar.ButtonPressedForegroundColor = Windows.UI.Color.FromArgb(255, fg, fg, fg);
+        bar.ButtonInactiveForegroundColor = dark ? Windows.UI.Color.FromArgb(255, 0x9A, 0x9A, 0x9A) : Windows.UI.Color.FromArgb(255, 0x6E, 0x6E, 0x6E);
+        bar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(0x18, fg, fg, fg);
+        bar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x10, fg, fg, fg);
+    }
 
     /// <summary>Initial size: 1400×900, or 90 % of the work area on smaller displays, centred.</summary>
     private void FitToDisplay()

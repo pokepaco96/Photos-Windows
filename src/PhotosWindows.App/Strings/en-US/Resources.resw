@@ -201,7 +201,7 @@
   <data name="ImportStatus_Running" xml:space="preserve"><value>In progress</value></data>
   <data name="Import_AlreadyRunning" xml:space="preserve"><value>Another operation is running. Wait for it to finish or cancel it.</value></data>
   <data name="Import_DropCaption" xml:space="preserve"><value>Import into the library</value></data>
-  <data name="Import_Eta" xml:space="preserve"><value>about {0} min left</value></data>
+  <data name="Import_Eta" xml:space="preserve"><value> · about {0} min left</value></data>
   <data name="Import_FromFiles" xml:space="preserve"><value>Import files…</value></data>
   <data name="Import_FromFolder" xml:space="preserve"><value>Import folder or drive…</value></data>
   <data name="Import_IncludeDuplicates" xml:space="preserve"><value>Import identical copies of files already in the library</value></data>
@@ -210,7 +210,7 @@
   <data name="Import_ModeCopy" xml:space="preserve"><value>Copy to the library</value></data>
   <data name="Import_ModeCopyHelp" xml:space="preserve"><value>Copies go to the library's originals folder (by year and month). The source files are not deleted.</value></data>
   <data name="Import_OriginalsSafe" xml:space="preserve"><value>Your original files are never modified or deleted by importing.</value></data>
-  <data name="Import_Progress" xml:space="preserve"><value>{0} of {1} · {2} imported · {3} duplicates · {4} skipped or failed {5}</value></data>
+  <data name="Import_Progress" xml:space="preserve"><value>{0} of {1} · {2} imported · {3} duplicate(s) · {4} skipped or failed{5}</value></data>
   <data name="Import_SourcesCount" xml:space="preserve"><value>{0} selected items</value></data>
   <data name="Import_Start" xml:space="preserve"><value>Import</value></data>
   <data name="Import_Subfolders" xml:space="preserve"><value>Include subfolders</value></data>

@@ -231,16 +231,17 @@ public sealed class AppSession : IDisposable
     {
         if (e.Patterns.Value.IsSupported) return e.Patterns.Value.Pattern.Value.ValueOrDefault ?? string.Empty;
         if (e.Patterns.Text.IsSupported) return e.Patterns.Text.Pattern.DocumentRange.GetText(-1);
-        return e.Name ?? string.Empty;
+        return e.Properties.Name.ValueOrDefault ?? string.Empty;
     }
 
     /// <summary>All visible text inside an element (InfoBar messages, dialogs...).</summary>
     public static string AllText(AutomationElement e)
     {
-        var sb = new StringBuilder(e.Name);
+        // Elements can vanish or change while the text is read (e.g. an InfoBar updating): never throw here.
+        var sb = new StringBuilder(e.Properties.Name.ValueOrDefault);
         foreach (var t in e.FindAllDescendants(cf => cf.ByControlType(ControlType.Text)))
         {
-            sb.Append(" | ").Append(t.Name);
+            sb.Append(" | ").Append(t.Properties.Name.ValueOrDefault);
         }
 
         return sb.ToString();
@@ -310,7 +311,7 @@ public sealed class AppSession : IDisposable
     {
         Directory.CreateDirectory(folder);
         var dialog = WaitFor(FindFileDialog, "the folder picker dialog", TimeSpan.FromSeconds(30));
-        _evidence.Log($"folder dialog '{dialog.Name}' → {folder}");
+        _evidence.Log($"folder dialog '{dialog.Properties.Name.ValueOrDefault}' → {folder}");
         var edits = dialog.FindAllDescendants(cf => cf.ByControlType(ControlType.Edit));
         var box = edits.FirstOrDefault(e => e.AutomationId is "1152" or "1148" or "1001")
                   ?? edits.LastOrDefault(e => !e.Properties.IsOffscreen.ValueOrDefault)
@@ -376,6 +377,34 @@ public sealed class AppSession : IDisposable
             var text = TryFindById("DialogMessage") is { } m ? TextOf(m) : string.Empty;
             throw new InvalidOperationException("The app reported an unexpected error: " + text);
         }
+    }
+
+    /// <summary>
+    /// Darkest and brightest luminance (0-255) around the system Close caption button (top-right of the window).
+    /// Used to check that the caption glyphs contrast with the app theme (WinUI draws them with the OS theme
+    /// unless the app sets the title bar button colours).
+    /// </summary>
+    public (int Min, int Max) CaptionButtonLuminance()
+    {
+        MainWindow.SetForeground();
+        Thread.Sleep(300);
+        var r = MainWindow.BoundingRectangle;
+        using var image = Capture.Rectangle(new System.Drawing.Rectangle(r.Right - 44, r.Top + 6, 38, 20));
+        var bitmap = image.Bitmap;
+        int min = 255, max = 0;
+        for (var x = 0; x < bitmap.Width; x++)
+        {
+            for (var y = 0; y < bitmap.Height; y++)
+            {
+                var c = bitmap.GetPixel(x, y);
+                var l = (int)Math.Round(0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B);
+                min = Math.Min(min, l);
+                max = Math.Max(max, l);
+            }
+        }
+
+        _evidence.Log($"caption button luminance: min {min}, max {max}");
+        return (min, max);
     }
 
     public string Screenshot(string name)
