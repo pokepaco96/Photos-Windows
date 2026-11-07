@@ -97,7 +97,15 @@ public sealed class QaFixture : IDisposable
 
     public void Dispose()
     {
-        CloseApp();
+        try
+        {
+            CloseApp();
+        }
+        catch (Exception ex)
+        {
+            Evidence.Log("CloseApp failed during cleanup: " + ex.Message);
+        }
+
         var appLogs = Path.Combine(Profile, "logs");
         if (Directory.Exists(appLogs))
         {

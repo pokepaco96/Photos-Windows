@@ -309,7 +309,7 @@ public sealed class AppSession : IDisposable
     public void PickFolder(string folder)
     {
         Directory.CreateDirectory(folder);
-        var dialog = WaitFor(() => Roots().FirstOrDefault(w => w.ClassName == "#32770"), "the folder picker dialog", TimeSpan.FromSeconds(30));
+        var dialog = WaitFor(FindFileDialog, "the folder picker dialog", TimeSpan.FromSeconds(30));
         _evidence.Log($"folder dialog '{dialog.Name}' → {folder}");
         var edits = dialog.FindAllDescendants(cf => cf.ByControlType(ControlType.Edit));
         var box = edits.FirstOrDefault(e => e.AutomationId is "1152" or "1148" or "1001")
@@ -320,14 +320,43 @@ public sealed class AppSession : IDisposable
         else Keyboard.Type(folder);
         Keyboard.Press(VirtualKeyShort.RETURN);
         Thread.Sleep(1200);
-        if (Roots().Any(w => w.ClassName == "#32770"))
+        if (FindFileDialog() is not null)
         {
             var ok = dialog.FindFirstDescendant(cf => cf.ByAutomationId("1").And(cf.ByControlType(ControlType.Button)));
             if (ok is not null) ok.Patterns.Invoke.Pattern.Invoke();
         }
 
-        WaitUntil(() => !Roots().Any(w => w.ClassName == "#32770"), "the folder picker to close", TimeSpan.FromSeconds(20));
+        WaitUntil(() => FindFileDialog() is null, "the folder picker to close", TimeSpan.FromSeconds(20));
         Thread.Sleep(500);
+    }
+
+    /// <summary>The Windows common file dialog (#32770). It is owned by the main window, so it may appear as its child.</summary>
+    public AutomationElement? FindFileDialog() =>
+        Roots().FirstOrDefault(w => w.ClassName == "#32770")
+        ?? TryFind(cf => cf.ByClassName("#32770").And(cf.ByControlType(ControlType.Window)));
+
+    /// <summary>Best-effort return to a usable state after a failed scenario: cancel OS dialogs and app dialogs.</summary>
+    public void Recover()
+    {
+        for (var i = 0; i < 3 && !App.HasExited; i++)
+        {
+            if (FindFileDialog() is { } dialog && dialog.FindFirstDescendant(cf => cf.ByAutomationId("2").And(cf.ByControlType(ControlType.Button))) is { } cancel)
+            {
+                cancel.Patterns.Invoke.PatternOrDefault?.Invoke();
+                Thread.Sleep(800);
+                continue;
+            }
+
+            if (TryFindById("CloseButton") is { } close && !close.Properties.IsOffscreen.ValueOrDefault && close.Patterns.Invoke.IsSupported)
+            {
+                close.Patterns.Invoke.Pattern.Invoke();
+                Thread.Sleep(600);
+                continue;
+            }
+
+            Keyboard.Press(VirtualKeyShort.ESCAPE);
+            Thread.Sleep(400);
+        }
     }
 
     // ---------------- Health & evidence ----------------
@@ -412,8 +441,10 @@ public sealed class AppSession : IDisposable
                 App.Kill();
             }
         }
-        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        catch (Exception ex)
         {
+            // Closing can fail while a modal dialog disables the window; never let cleanup fail the run.
+            _evidence.Log($"Close failed ({ex.GetType().Name}); killing the app.");
             if (!App.HasExited) App.Kill();
         }
     }

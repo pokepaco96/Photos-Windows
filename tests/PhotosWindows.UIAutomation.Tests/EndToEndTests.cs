@@ -41,6 +41,7 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
             {
                 s.Screenshot($"FAIL_{number:00}_{name}");
                 s.DumpTree($"FAIL_{number:00}_{name}");
+                s.Recover();
             }
             else
             {
