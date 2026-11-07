@@ -25,7 +25,7 @@ public sealed partial class MainWindow : Window
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
         FitToDisplay();
         _navigation.Attach(ContentFrame);
-        _navigation.Navigated += (_, page) => SyncSelection(page);
+        _navigation.Navigated += (_, e) => SyncSelection(e.Page, e.Parameter);
     }
 
     public ShellViewModel ViewModel { get; }
@@ -75,15 +75,20 @@ public sealed partial class MainWindow : Window
         menu.ShowAt(anchor);
     }
 
-    private void SyncSelection(Type page)
+    private void SyncSelection(Type page, object? parameter)
     {
         // Keep the sidebar highlight in sync when navigating back or from inside pages.
         string? tag = page == typeof(SettingsPage) ? null
             : page == typeof(AlbumsPage) ? "Albums"
             : page == typeof(DuplicatesPage) ? "Duplicates"
             : page == typeof(ImportsPage) ? "Imports"
-            : page == typeof(LibraryPage) && ContentFrame.Content is LibraryPage { Target: { AlbumId: null, SearchText: null } t } ? t.Scope.ToString()
-            : page == typeof(LibraryPage) ? "Albums"
+            // Use the navigation parameter: the page's own state is not set yet when Navigated fires.
+            : page == typeof(LibraryPage) ? (parameter as LibraryNavigation ?? LibraryNavigation.AllPhotos) switch
+            {
+                { SearchText: not null } => null, // search results: no sidebar section
+                { AlbumId: not null } => "Albums",
+                var t => t.Scope.ToString(),
+            }
             : null;
         if (page == typeof(SettingsPage))
         {

@@ -74,6 +74,13 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
         WaitLibraryIdle();
     }
 
+    /// <summary>Regression (UI run #9): the sidebar must highlight the section that is actually shown.</summary>
+    private void AssertNavSelected(string id)
+    {
+        App.WaitUntil(() => App.Find(id).Patterns.SelectionItem.PatternOrDefault?.IsSelected.ValueOrDefault == true,
+            $"sidebar item {id} to be selected", TimeSpan.FromSeconds(5));
+    }
+
     private void OpenSettings()
     {
         var item = App.WaitFor(() => App.TryFind(cf => cf.ByAutomationId("SettingsItem").Or(cf.ByName("Settings").And(cf.ByControlType(ControlType.ListItem)))), "the Settings item");

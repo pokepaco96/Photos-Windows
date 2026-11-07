@@ -25,7 +25,7 @@
             <AppBarButton x:Uid="Albums_NewFolderButton" AutomationProperties.AutomationId="Albums_NewFolderButton" Label="New folder" Icon="NewFolder" Command="{x:Bind ViewModel.NewFolderCommand}" />
         </CommandBar>
 
-        <GridView x:Name="Cards" AutomationProperties.AutomationId="AlbumsGrid" Grid.Row="2" ItemsSource="{x:Bind ViewModel.Items}" IsItemClickEnabled="True" SelectionMode="None" ItemClick="OnItemClick" AutomationProperties.Name="Albums">
+        <GridView x:Name="Cards" AutomationProperties.AutomationId="AlbumsGrid" ContainerContentChanging="OnCardContainerChanging" Grid.Row="2" ItemsSource="{x:Bind ViewModel.Items}" IsItemClickEnabled="True" SelectionMode="None" ItemClick="OnItemClick" AutomationProperties.Name="Albums">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="vm:AlbumCardViewModel">
                     <StackPanel Width="190" Spacing="6" AutomationProperties.Name="{x:Bind Name}">

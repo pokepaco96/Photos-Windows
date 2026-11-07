@@ -39,7 +39,8 @@ public sealed partial class EndToEndTests
         App.PickFolder(qa.Inside(qa.Libraries));
         App.Find("AssetsGrid", TimeSpan.FromSeconds(30));
         WaitLibraryIdle();
-        App.Find("EmptyState");
+        App.Find("EmptyTitle");
+        AssertNavSelected("Nav_All");
         if (!File.Exists(Path.Combine(qa.LibraryRoot, "library.json"))) throw new InvalidOperationException("library.json was not created at " + qa.LibraryRoot);
         App.Screenshot("02_empty_library");
     });
@@ -55,6 +56,7 @@ public sealed partial class EndToEndTests
         App.Find("AssetsGrid", TimeSpan.FromSeconds(30));
         WaitLibraryIdle();
         if (!App.TextOf("PageTitle").Contains("All photos", StringComparison.Ordinal)) throw new InvalidOperationException("Did not land on All photos: " + App.TextOf("PageTitle"));
+        AssertNavSelected("Nav_All");
     });
 
     [Fact, Step(4)]
@@ -212,11 +214,11 @@ public sealed partial class EndToEndTests
         App.Click("Albums_NewAlbumButton");
         App.SetText("PromptTextBox", "Viaje QA");
         App.DialogButton("PrimaryButton");
-        App.FindByName("Viaje QA");
+        App.Find("AlbumCard_Viaje QA");
         App.Click("Albums_NewFolderButton");
         App.SetText("PromptTextBox", "Carpeta QA");
         App.DialogButton("PrimaryButton");
-        App.FindByName("Carpeta QA");
+        App.Find("AlbumCard_Carpeta QA");
 
         Nav("Nav_All");
         SelectTiles("IMG_0001.jpg", "IMG_0002.jpg");
@@ -227,7 +229,7 @@ public sealed partial class EndToEndTests
         Nav("Nav_Albums");
         Thread.Sleep(1000);
         App.Screenshot("12_albums_page");
-        App.MouseClick(App.FindByName("Viaje QA"));
+        App.MouseClick(App.Find("AlbumCard_Viaje QA"));
         App.WaitUntil(() => App.TextOf("PageTitle") == "Viaje QA", "the album to open");
         WaitLibraryIdle();
         App.WaitUntil(() => TileExists("IMG_0001.jpg") && TileExists("IMG_0002.jpg"), "album content");
@@ -250,7 +252,7 @@ public sealed partial class EndToEndTests
         SelectTiles("IMG_0003.jpg");
         Command("Cmd_Unfavorite");
         App.WaitUntil(() => !TileExists("IMG_0003.jpg"), "IMG_0003 to leave Favorites");
-        App.Find("EmptyState");
+        App.Find("EmptyTitle");
         App.Screenshot("13_favorites_empty");
         // Leave one favourite for the smart album scenario.
         Nav("Nav_All");
@@ -268,7 +270,7 @@ public sealed partial class EndToEndTests
         App.SetText("Smart_Value_0", "true");
         App.Screenshot("14_smart_album_dialog");
         App.DialogButton("PrimaryButton");
-        App.MouseClick(App.FindByName("Favoritas QA"));
+        App.MouseClick(App.Find("AlbumCard_Favoritas QA"));
         App.WaitUntil(() => App.TextOf("PageTitle") == "Favoritas QA", "the smart album to open");
         WaitLibraryIdle();
         App.WaitUntil(() => TileExists("GPS_Madrid.jpg"), "the favourite in the smart album");
@@ -316,7 +318,7 @@ public sealed partial class EndToEndTests
         var year = VisibleTiles();
         if (year.Count != 1 || year[0] != "Nieve_2019.jpg") throw new InvalidOperationException("Year search returned: " + string.Join(", ", year));
         Search("zzznothing");
-        App.Find("EmptyState");
+        App.Find("EmptyTitle");
         App.Screenshot("16_search_no_results");
         if (qa.Dataset.HasVideo)
         {
