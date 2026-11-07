@@ -42,6 +42,8 @@ public sealed record AssetQuery
     public string? Format { get; init; }
     public IReadOnlyList<string> Keywords { get; init; } = [];
     public long? AlbumId { get; init; }
+    /// <summary>Only photos with a face in this group (People).</summary>
+    public long? PersonId { get; init; }
     public int? MinRating { get; init; }
     /// <summary>Optional bounding box: (minLat, minLon, maxLat, maxLon).</summary>
     public (double MinLat, double MinLon, double MaxLat, double MaxLon)? Area { get; init; }
