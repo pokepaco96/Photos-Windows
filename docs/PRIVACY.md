@@ -10,9 +10,15 @@
 | Ajustes de la app y bibliotecas recientes | `%LOCALAPPDATA%\PhotosWindows\settings.json` | No |
 | Registros de diagnóstico | `%LOCALAPPDATA%\PhotosWindows\logs` (7 días) | No (el usuario puede abrirlos y compartirlos manualmente) |
 | Coordenadas GPS | Catálogo | No. Al exportar, la ubicación **no** se incluye salvo que el usuario lo active |
+| Personas: rostros (posición), descriptores numéricos (128 valores por rostro), grupos y nombres | Catálogo (`faces`, `people`, `face_analysis`) | No. Fuera de las copias de seguridad salvo que el usuario lo marque |
+| Miniaturas de rostros | `cache/faces/` de la biblioteca | No |
+| Modelos de rostros (YuNet, SFace) | `%LOCALAPPDATA%\PhotosWindows\models` | Se **descargan** solo si el usuario lo pide (ver abajo) |
 
 ## Funciones inteligentes
-Todas locales y opt-in. Actualmente solo existe el hash perceptual (dHash) para sugerir fotos similares; no identifica personas ni contenido. El reconocimiento facial (futuro) se activará explícitamente, procesará en el dispositivo y tendrá un botón para borrar todos los datos derivados.
+Todas locales y opt-in.
+- **Fotos similares:** hash perceptual (dHash); no identifica personas ni contenido.
+- **Personas** ([ADR-0010](decisions/0010-people-local-face-grouping.md)): desactivada hasta que el usuario la activa en una biblioteca tras un diálogo que explica qué se procesa, qué se guarda y cómo borrarlo. Detecta rostros y agrupa los parecidos **en el equipo**. Los grupos son sugerencias: los nombres solo los escribe el usuario; la app nunca deduce quién es alguien, no consulta contactos, redes ni servicios, y no infiere atributos (edad, sexo, origen, emociones…). Se puede excluir cualquier foto, corregir o borrar grupos y **borrar todos los datos de reconocimiento facial** (Ajustes › Personas), que se eliminan físicamente del catálogo (`secure_delete`, WAL vaciado, `VACUUM`) junto con las miniaturas de rostros.
+- **Descarga de modelos:** la única conexión de red de la app. La inicia el usuario tras ver proveedor (réplica oficial de OpenCV Model Zoo en Hugging Face), tamaño y licencias. Es una petición HTTP GET de dos archivos con un agente genérico; no se envía ninguna foto, rostro, nombre, identificador ni dato de la biblioteca. Los archivos se comprueban con SHA-256 y después todo funciona sin conexión. También se pueden instalar desde archivos sin red.
 
 ## Registros
-Los logs registran nombres de archivo y errores, no contenido de imágenes ni metadatos personales. No se incluyen miniaturas en ningún informe.
+Los logs registran nombres de archivo y errores, no contenido de imágenes ni metadatos personales. No se incluyen miniaturas en ningún informe. El análisis de Personas solo registra recuentos y el tipo de error: nunca rostros, posiciones, descriptores ni nombres.

@@ -24,6 +24,17 @@ Extrapolación: 100.000 elementos ≈ 18 MB de filas en memoria y ~0,5 s para ca
 
 Los límites de la prueba son techos generosos (1,5 s por cada 10.000 elementos) para detectar regresiones en CI.
 
+## Personas: inferencia local (medido)
+Prueba `End_to_end_groups_the_same_people_and_measures_speed`: 5 retratos de la NASA (~1024×1280), 6 rostros, decodificación a 1600 px + detección YuNet a dos escalas + descriptor SFace por rostro, 2 trabajadores, CPU.
+
+| Entorno | Tiempo por foto (todo incluido) |
+|---|---|
+| CI `windows-latest`, 2 vCPU, 2026-11-07 | 164 ms |
+| CI `ubuntu-latest`, 2 vCPU, 2026-11-07 | 281 ms |
+| Contenedor Linux, 4 vCPU, 2026-11-07 | 140 ms |
+
+Extrapolación lineal de lo medido, no una medida: 10.000 fotos ≈ 25–50 min con 2 vCPU. Falta medirlo en un PC con Windows 11 y con una biblioteca grande. La agrupación (en memoria, 128 valores por rostro) y la base de datos no son el cuello de botella con estas cantidades; falta medir 10.000 rostros sintéticos (pendiente).
+
 ## Pendiente de medir en Windows (QA manual)
 - Importación de 1.000 JPEG reales (copiar y sin mover) en SSD y HDD.
 - Generación de miniaturas por segundo con `MaxBackgroundWorkers` 1, 2 y 4.
