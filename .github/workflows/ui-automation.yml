@@ -95,10 +95,11 @@ jobs:
       - name: Publish app (x64, self-contained)
         run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
 
-      - name: List published resources
+      - name: Start-up smoke (published and build output)
         shell: pwsh
         run: |
-          Get-ChildItem artifacts/PhotosWindows-win-x64 -Filter *.pri | ForEach-Object { "- published PRI: $($_.Name) ($($_.Length) bytes)" } | Tee-Object -Append -FilePath $env:GITHUB_STEP_SUMMARY
+          $build = Get-ChildItem src/PhotosWindows.App/bin -Recurse -Filter PhotosWindows.exe | Select-Object -First 1 -ExpandProperty FullName
+          ./tests/PhotosWindows.UIAutomation.Tests/scripts/startup-smoke.ps1 -Exe "artifacts/PhotosWindows-win-x64/PhotosWindows.exe", $build -Output artifacts/qa/run/logs
 
       - name: Build UI tests
         run: dotnet build tests/PhotosWindows.UIAutomation.Tests -c Release
