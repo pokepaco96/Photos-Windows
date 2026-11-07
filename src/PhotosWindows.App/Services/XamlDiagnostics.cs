@@ -20,6 +20,19 @@ public static partial class XamlDiagnostics
 
     public static string Explain(string xamlFile)
     {
+        try
+        {
+            return ExplainCore(xamlFile);
+        }
+        catch (Exception ex)
+        {
+            // Diagnostics must never take the app down; report what happened instead.
+            return $"Diagnosis of {xamlFile} failed: {ex.GetType().Name}: {ex.Message}";
+        }
+    }
+
+    private static string ExplainCore(string xamlFile)
+    {
         var assembly = typeof(XamlDiagnostics).Assembly;
         var name = assembly.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("." + xamlFile, StringComparison.OrdinalIgnoreCase) || n.EndsWith("/" + xamlFile, StringComparison.OrdinalIgnoreCase));
         if (name is null) return $"No embedded source for {xamlFile}.";
@@ -42,9 +55,9 @@ public static partial class XamlDiagnostics
             XamlReader.Load(clone.ToString());
             results.Add($"{xamlFile}: the sanitised source parses correctly (problem is in x:Bind, events or x:Class).");
         }
-        catch (Exception ex) when (ex is XamlParseException or System.Runtime.InteropServices.COMException or ArgumentException)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            results.Add($"{xamlFile}: {ex.Message}");
+            results.Add($"{xamlFile}: {ex.GetType().Name}: {ex.Message}");
             // Narrow down: try each direct child on its own.
             foreach (var child in AllElements(clone).Take(400))
             {
@@ -55,11 +68,11 @@ public static partial class XamlDiagnostics
                 {
                     XamlReader.Load(probe.ToString());
                 }
-                catch (Exception inner) when (inner is XamlParseException or System.Runtime.InteropServices.COMException or ArgumentException)
+                catch (Exception inner) when (inner is not OutOfMemoryException)
                 {
                     if (!probe.Elements().Any(e => !e.Name.LocalName.Contains('.', StringComparison.Ordinal)) || probe.Descendants().Count() < 3)
                     {
-                        results.Add($"  failing element <{child.Name.LocalName}> (source line {((System.Xml.IXmlLineInfo)child).LineNumber}): {inner.Message}");
+                        results.Add($"  failing element <{child.Name.LocalName}> (source line {((System.Xml.IXmlLineInfo)child).LineNumber}): {inner.GetType().Name}: {inner.Message}");
                     }
                 }
             }
