@@ -67,13 +67,13 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 
 | Ejecución | Superados | Fallidos | Bloqueados | Qué cambió |
 |---|---|---|---|---|
-| #1–#7 | 0 | – | – | La app publicada no arrancaba (ver bug 1). |
-| #8 | 1 | 1 | 26 | Primer arranque real; el selector de carpetas de Windows no se encontraba (arnés). |
-| #9 | 1 | 1 | 26 | Biblioteca creada con el selector real; bug 3 detectado en la captura. |
+| #1, #3–#7 | 0 | 1 | 27 | La app publicada no arrancaba (bug 1). #2 se canceló por redundante. |
+| #8 | 1 | 2 | 25 | Primer arranque real; el selector de carpetas de Windows no se encontraba (arnés) y el informe no se escribió (cifras del `run.log`). |
+| #9 | 2 | 1 | 25 | Biblioteca creada con el selector real; bug 3 detectado en la captura. |
 | #10 | 5 | 1 | 22 | Importación real; bugs 5 y 6. |
 | #11 | 5 | 1 | 22 | Bug 7 (captura de Ajustes). |
-| #12 | 10 | 5 | 13 | Bugs 8–13. |
-| #14 | 24 | 4 | 0 | Bugs 14–16; revisión visual → bugs 17–18. |
+| #12, #13 | 10 | 5 | 13 | Bugs 8–13. |
+| #14, #15 | 24 | 4 | 0 | Bugs 14–16; revisión visual → bugs 17–18. #15 confirma 14 y 16. |
 | #16 | 25 | 3 | 0 | Bugs 17–18 corregidos y comprobados. |
 | #17 | 26 | 2 | 0 | Escape en el visor corregido; queda la flecha izquierda tras clic en la foto (bug 15b). |
 
