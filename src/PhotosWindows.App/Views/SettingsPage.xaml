@@ -33,7 +33,7 @@
                             <!-- Every cell gets the size of the first one: a wrapped label pushed the value out of the card (UI run #11). -->
                             <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7"
                                        TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Label}" />
-                            <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind Label}" Style="{StaticResource BodyStrongTextBlockStyle}"
+                            <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind AccessibleText}" Style="{StaticResource BodyStrongTextBlockStyle}"
                                        TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </DataTemplate>

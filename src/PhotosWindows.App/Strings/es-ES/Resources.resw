@@ -250,7 +250,11 @@
   <data name="Info_TitleBox.Header" xml:space="preserve"><value>Título</value></data>
   <data name="Keywords_AddTitle" xml:space="preserve"><value>Añadir palabras clave a {0} elemento(s)</value></data>
   <data name="Keywords_Placeholder" xml:space="preserve"><value>playa, familia, verano</value></data>
-  <data name="Library_Counts" xml:space="preserve"><value>{0} fotos · {1} vídeos</value></data>
+  <data name="Library_Counts" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Library_PhotoOne" xml:space="preserve"><value>{0} foto</value></data>
+  <data name="Library_PhotoMany" xml:space="preserve"><value>{0} fotos</value></data>
+  <data name="Library_VideoOne" xml:space="preserve"><value>{0} vídeo</value></data>
+  <data name="Library_VideoMany" xml:space="preserve"><value>{0} vídeos</value></data>
   <data name="Library_ImportButton.Content" xml:space="preserve"><value>Importar fotos…</value></data>
   <data name="Library_Unavailable" xml:space="preserve"><value>No se pudo abrir la biblioteca</value></data>
   <data name="Library_Zoom.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Tamaño de las miniaturas</value></data>

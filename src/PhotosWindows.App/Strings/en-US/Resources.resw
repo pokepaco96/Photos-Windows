@@ -250,7 +250,11 @@
   <data name="Info_TitleBox.Header" xml:space="preserve"><value>Title</value></data>
   <data name="Keywords_AddTitle" xml:space="preserve"><value>Add keywords to {0} item(s)</value></data>
   <data name="Keywords_Placeholder" xml:space="preserve"><value>beach, family, summer</value></data>
-  <data name="Library_Counts" xml:space="preserve"><value>{0} photos · {1} videos</value></data>
+  <data name="Library_Counts" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Library_PhotoOne" xml:space="preserve"><value>{0} photo</value></data>
+  <data name="Library_PhotoMany" xml:space="preserve"><value>{0} photos</value></data>
+  <data name="Library_VideoOne" xml:space="preserve"><value>{0} video</value></data>
+  <data name="Library_VideoMany" xml:space="preserve"><value>{0} videos</value></data>
   <data name="Library_ImportButton.Content" xml:space="preserve"><value>Import photos…</value></data>
   <data name="Library_Unavailable" xml:space="preserve"><value>The library could not be opened</value></data>
   <data name="Library_Zoom.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Thumbnail size</value></data>

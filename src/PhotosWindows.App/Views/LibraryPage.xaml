@@ -114,7 +114,7 @@
             SelectionChanged="OnSelectionChanged"
             DoubleTapped="OnDoubleTapped"
             RightTapped="OnRightTapped"
-            KeyDown="OnGridKeyDown"
+            PreviewKeyDown="OnGridKeyDown"
             DragItemsCompleted="OnDragItemsCompleted"
             AutomationProperties.Name="Photos">
             <GridView.ItemContainerStyle>

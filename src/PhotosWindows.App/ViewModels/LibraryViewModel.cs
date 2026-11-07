@@ -143,7 +143,10 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             }
 
             var photos = rows.Count(r => r.MediaType == MediaType.Photo);
-            Subtitle = Loc.Format("Library_Counts", photos, rows.Count - photos);
+            var videos = rows.Count - photos;
+            Subtitle = Loc.Format("Library_Counts",
+                Loc.Format(photos == 1 ? "Library_PhotoOne" : "Library_PhotoMany", photos),
+                Loc.Format(videos == 1 ? "Library_VideoOne" : "Library_VideoMany", videos));
             IsEmpty = rows.Count == 0;
             (EmptyTitle, EmptyMessage) = EmptyTexts();
             ShowImportHint = IsEmpty && _target.Scope == LibraryScope.All && _target.SearchText is null && MediaFilterIndex == 0 && FavoritesOnly != true;

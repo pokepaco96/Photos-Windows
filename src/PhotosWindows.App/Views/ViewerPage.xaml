@@ -55,7 +55,7 @@
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                           Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsVideo), Mode=OneWay}"
                           DoubleTapped="OnImageDoubleTapped">
-                <Image x:Name="Photo" AutomationProperties.AutomationId="Viewer_Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" RenderTransformOrigin="0.5,0.5"
+                <Image x:Name="Photo" AutomationProperties.AutomationId="Viewer_Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" ImageOpened="OnPhotoOpened" RenderTransformOrigin="0.5,0.5"
                        AutomationProperties.Name="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}">
                     <Image.RenderTransform>
                         <RotateTransform Angle="{x:Bind ViewModel.RotationAngle, Mode=OneWay}" />
@@ -103,7 +103,7 @@
                         <DataTemplate x:DataType="vm:InfoRow">
                             <StackPanel>
                                 <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.6" />
-                                <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind Label}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind AccessibleText}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
                             </StackPanel>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
