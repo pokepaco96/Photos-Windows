@@ -6,11 +6,8 @@ name: UI automation (Windows)
 # - For a dedicated machine use a self-hosted runner labelled [self-hosted, windows, ui] running as a
 #   logged-on user (not as a service). See docs/QA_AUTOMATION.md.
 on:
-  # TEMPORARY bootstrap: GitHub only accepts workflow_dispatch for workflows present on the default branch.
-  # Until this file is merged there, pushes to the QA branch run it. Remove this block once merged.
-  push:
-    branches: [claude/ui-automation-qa]
-    paths-ignore: ['docs/**', '**/*.md', 'artifacts/**']
+  # Manual. GitHub accepts workflow_dispatch only for workflows on the default branch; to run it from another
+  # branch before that, add a temporary `push` trigger limited to that branch (see docs/QA_AUTOMATION.md).
   workflow_dispatch:
     inputs:
       runner:
@@ -65,7 +62,7 @@ jobs:
           if ($proc.SessionId -eq 0) { Write-Warning "Session 0: no interactive desktop. UI tests will fail (reported, never skipped)." }
 
       - name: Request screen resolution (hosted runners)
-        if: inputs.resolution != '' || github.event_name == 'push'
+        if: inputs.resolution != ''
         continue-on-error: true
         shell: pwsh
         run: |
