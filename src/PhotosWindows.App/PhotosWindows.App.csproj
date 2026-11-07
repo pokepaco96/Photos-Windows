@@ -14,6 +14,8 @@
     <!-- Unpackaged, self-contained Windows App SDK: runs from a folder without installing the runtime (ADR-0009). -->
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- Required for unpackaged apps so the app's resources.pri (compiled XAML + strings) is produced and published. -->
+    <EnableMsixTooling>true</EnableMsixTooling>
     <DefaultLanguage>en-US</DefaultLanguage>
     <!-- Unpackaged apps look up resources.pri (then <exe>.pri); without this the file is named after the project and x:Uid lookups fail at runtime. -->
     <ProjectPriFileName>resources.pri</ProjectPriFileName>
@@ -42,4 +44,15 @@
     <!-- XAML sources embedded for XamlDiagnostics (precise errors if a compiled page fails to load). -->
     <EmbeddedResource Include="**\*.xaml" Exclude="bin\**;obj\**" LogicalName="xaml/%(Filename)%(Extension)" />
   </ItemGroup>
+  <!--
+    Safety net: the published app cannot start without its resources.pri and compiled XAML (.xbf); WinUI only reports
+    "XAML parsing failed". Copy them from the build output if the publish pipeline left them out.
+  -->
+  <Target Name="EnsureXamlResourcesInPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_PwXamlRuntimeFiles Include="$(OutDir)resources.pri;$(OutDir)**\*.xbf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PwXamlRuntimeFiles)" DestinationFiles="@(_PwXamlRuntimeFiles->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" Condition="'@(_PwXamlRuntimeFiles)' != ''" />
+    <Error Condition="!Exists('$(PublishDir)resources.pri')" Text="resources.pri is missing from the publish folder; the app would fail to start (XAML parsing failed)." />
+  </Target>
 </Project>

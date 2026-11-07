@@ -25,7 +25,8 @@ foreach ($path in $Exe) {
     "  files: " + ((Get-ChildItem $dir -File | Where-Object { $_.Extension -in '.pri', '.xbf', '.winmd' -or $_.Name -like 'Microsoft.UI.Xaml*' -or $_.Name -like 'PhotosWindows*' } |
         ForEach-Object { "$($_.Name) ($($_.Length))" }) -join ', ') | Add-Content $report
     "  xbf files (recursive): " + ((Get-ChildItem $dir -Recurse -Filter *.xbf | ForEach-Object { $_.FullName.Substring($dir.Length + 1) }) -join ', ') | Add-Content $report
-    $profile = Join-Path $env:RUNNER_TEMP "smoke-profile-$i"
+    $tempRoot = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [System.IO.Path]::GetTempPath() }
+    $profile = Join-Path $tempRoot "smoke-profile-$i"
     New-Item -ItemType Directory -Force -Path $profile | Out-Null
     $psi = New-Object System.Diagnostics.ProcessStartInfo $path
     $psi.UseShellExecute = $false
