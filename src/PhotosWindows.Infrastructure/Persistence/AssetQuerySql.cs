@@ -39,6 +39,11 @@ internal sealed class AssetQuerySql
         if (!string.IsNullOrWhiteSpace(query.Lens)) b._where.Add($"a.lens LIKE {b.Param(Like(query.Lens!))} ESCAPE '\\'");
         if (!string.IsNullOrWhiteSpace(query.Format)) b._where.Add($"a.format = {b.Param(query.Format!)} COLLATE NOCASE");
         if (query.MinRating is { } rating) b._where.Add($"a.rating >= {b.Param(rating)}");
+        if (query.PersonId is { } personId)
+        {
+            b._where.Add($"EXISTS (SELECT 1 FROM faces pf WHERE pf.asset_id = a.id AND pf.person_id = {b.Param(personId)})");
+        }
+
         if (query.Area is { } area)
         {
             b._where.Add($"a.latitude BETWEEN {b.Param(area.MinLat)} AND {b.Param(area.MaxLat)}");

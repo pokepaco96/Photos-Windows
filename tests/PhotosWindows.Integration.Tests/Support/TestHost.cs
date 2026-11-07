@@ -30,7 +30,7 @@ public sealed class TestHost : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
 
-    public TestHost()
+    public TestHost(Action<IServiceCollection>? configure = null)
     {
         Root = Path.Combine(Path.GetTempPath(), "pw-it-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Root);
@@ -41,6 +41,7 @@ public sealed class TestHost : IAsyncDisposable
         services.AddPhotosWindowsCore(new DefaultAppPaths(Path.Combine(Root, "appdata")));
         services.AddSingleton<IClock>(Clock);
         services.AddPhotosWindowsImaging();
+        configure?.Invoke(services);
         _provider = services.BuildServiceProvider();
     }
 

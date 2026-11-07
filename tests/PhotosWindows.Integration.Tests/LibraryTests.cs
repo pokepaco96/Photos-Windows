@@ -40,7 +40,8 @@ public class LibraryTests
         await c.OpenAsync();
         Assert.Equal(host.Get<ICatalogStore>().CurrentSchemaVersion, await c.ExecuteScalarAsync<long>("PRAGMA user_version"));
         Assert.Equal("wal", await c.ExecuteScalarAsync<string>("PRAGMA journal_mode"));
-        Assert.Equal(1, await c.ExecuteScalarAsync<long>("SELECT count(*) FROM schema_migrations"));
+        // One row per migration (versions are consecutive from 1).
+        Assert.Equal(host.Get<ICatalogStore>().CurrentSchemaVersion, await c.ExecuteScalarAsync<long>("SELECT count(*) FROM schema_migrations"));
         Assert.Equal(1, await c.ExecuteScalarAsync<long>("SELECT count(*) FROM sqlite_master WHERE name = 'assets_fts'"));
         Assert.Empty(await host.Get<ICatalogStore>().CheckIntegrityAsync(CancellationToken.None));
     }
