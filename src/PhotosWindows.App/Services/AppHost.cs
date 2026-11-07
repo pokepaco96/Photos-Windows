@@ -13,9 +13,14 @@ namespace PhotosWindows.App.Services;
 /// <summary>Composition root: the only place that knows every implementation.</summary>
 public static class AppHost
 {
+    /// <summary>Environment variable that points the app to an alternate profile folder (portable use, isolated QA runs).</summary>
+    public const string DataDirVariable = "PHOTOSWINDOWS_DATA_DIR";
+
     public static IServiceProvider Build(DispatcherQueue dispatcher)
     {
-        var paths = new DefaultAppPaths();
+        // Optional portable/alternate profile (settings, recent libraries, logs). Default: %LOCALAPPDATA%\PhotosWindows.
+        var dataDir = Environment.GetEnvironmentVariable(DataDirVariable);
+        var paths = new DefaultAppPaths(string.IsNullOrWhiteSpace(dataDir) ? null : Path.GetFullPath(dataDir));
         var services = new ServiceCollection();
         services.AddLogging(b =>
         {

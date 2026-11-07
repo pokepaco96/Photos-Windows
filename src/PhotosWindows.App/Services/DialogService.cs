@@ -44,6 +44,8 @@ public sealed class DialogService(WindowContext window, ILogger<DialogService> l
     public async Task<string?> PromptAsync(string title, string placeholder, string? initial = null, string? primary = null)
     {
         var box = new TextBox { PlaceholderText = placeholder, Text = initial ?? string.Empty, MaxLength = 200, AcceptsReturn = false };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(box, "PromptTextBox");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, title);
         box.SelectAll();
         var dialog = new ContentDialog
         {
@@ -71,5 +73,10 @@ public sealed class DialogService(WindowContext window, ILogger<DialogService> l
         });
     }
 
-    private static TextBlock Wrap(string text) => new() { Text = text, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+    private static TextBlock Wrap(string text)
+    {
+        var block = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(block, "DialogMessage");
+        return block;
+    }
 }

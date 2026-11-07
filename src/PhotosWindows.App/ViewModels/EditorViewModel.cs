@@ -8,7 +8,10 @@ using PhotosWindows.Domain;
 
 namespace PhotosWindows.App.ViewModels;
 
-public sealed record PresetItem(string Name, string DisplayName);
+public sealed record PresetItem(string Name, string DisplayName)
+{
+    public string AutomationId => "Preset_" + Name;
+}
 
 public sealed record AspectItem(string Key, string DisplayName, double? Ratio);
 

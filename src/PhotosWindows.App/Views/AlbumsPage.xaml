@@ -12,30 +12,30 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Command="{x:Bind ViewModel.UpCommand}" Visibility="{x:Bind ViewModel.IsInFolder, Mode=OneWay}" AutomationProperties.Name="Up" x:Uid="Albums_Up" ToolTipService.ToolTip="Up one level">
+            <Button Command="{x:Bind ViewModel.UpCommand}" Visibility="{x:Bind ViewModel.IsInFolder, Mode=OneWay}" AutomationProperties.Name="Up" x:Uid="Albums_Up" AutomationProperties.AutomationId="Albums_Up" ToolTipService.ToolTip="Up one level">
                 <FontIcon Glyph="&#xE74A;" FontSize="14" />
             </Button>
-            <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock AutomationProperties.AutomationId="PageTitle" Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource PageTitleStyle}" />
         </StackPanel>
         <CommandBar Grid.Row="1" HorizontalAlignment="Left" DefaultLabelPosition="Right" Margin="-8,4,0,8">
-            <AppBarButton x:Uid="Albums_NewAlbumButton" Label="New album" Icon="Add" Command="{x:Bind ViewModel.NewAlbumCommand}" />
-            <AppBarButton x:Uid="Albums_NewSmartButton" Label="New smart album" Command="{x:Bind ViewModel.NewSmartAlbumCommand}">
+            <AppBarButton x:Uid="Albums_NewAlbumButton" AutomationProperties.AutomationId="Albums_NewAlbumButton" Label="New album" Icon="Add" Command="{x:Bind ViewModel.NewAlbumCommand}" />
+            <AppBarButton x:Uid="Albums_NewSmartButton" AutomationProperties.AutomationId="Albums_NewSmartButton" Label="New smart album" Command="{x:Bind ViewModel.NewSmartAlbumCommand}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE945;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Albums_NewFolderButton" Label="New folder" Icon="NewFolder" Command="{x:Bind ViewModel.NewFolderCommand}" />
+            <AppBarButton x:Uid="Albums_NewFolderButton" AutomationProperties.AutomationId="Albums_NewFolderButton" Label="New folder" Icon="NewFolder" Command="{x:Bind ViewModel.NewFolderCommand}" />
         </CommandBar>
 
-        <GridView x:Name="Cards" Grid.Row="2" ItemsSource="{x:Bind ViewModel.Items}" IsItemClickEnabled="True" SelectionMode="None" ItemClick="OnItemClick" AutomationProperties.Name="Albums">
+        <GridView x:Name="Cards" AutomationProperties.AutomationId="AlbumsGrid" Grid.Row="2" ItemsSource="{x:Bind ViewModel.Items}" IsItemClickEnabled="True" SelectionMode="None" ItemClick="OnItemClick" AutomationProperties.Name="Albums">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="vm:AlbumCardViewModel">
                     <StackPanel Width="190" Spacing="6" AutomationProperties.Name="{x:Bind Name}">
                         <StackPanel.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Uid="Common_RenameMenu" Text="Rename…" Click="OnRename" Tag="{x:Bind}" />
-                                <MenuFlyoutItem x:Uid="Albums_EditRules" Text="Edit rules…" Click="OnEditRules" Tag="{x:Bind}" />
-                                <MenuFlyoutItem x:Uid="Albums_MoveMenu" Text="Move to folder…" Click="OnMove" Tag="{x:Bind}" />
+                                <MenuFlyoutItem x:Uid="Common_RenameMenu" AutomationProperties.AutomationId="Common_RenameMenu" Text="Rename…" Click="OnRename" Tag="{x:Bind}" />
+                                <MenuFlyoutItem x:Uid="Albums_EditRules" AutomationProperties.AutomationId="Albums_EditRules" Text="Edit rules…" Click="OnEditRules" Tag="{x:Bind}" />
+                                <MenuFlyoutItem x:Uid="Albums_MoveMenu" AutomationProperties.AutomationId="Albums_MoveMenu" Text="Move to folder…" Click="OnMove" Tag="{x:Bind}" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="Common_DeleteMenu" Text="Delete" Click="OnDelete" Tag="{x:Bind}" />
+                                <MenuFlyoutItem x:Uid="Common_DeleteMenu" AutomationProperties.AutomationId="Common_DeleteMenu" Text="Delete" Click="OnDelete" Tag="{x:Bind}" />
                             </MenuFlyout>
                         </StackPanel.ContextFlyout>
                         <Grid Height="190" CornerRadius="8" Background="{ThemeResource TilePlaceholderBrush}">
@@ -51,8 +51,8 @@
 
         <StackPanel Grid.Row="2" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
             <FontIcon Glyph="&#xE8B9;" FontSize="48" Opacity="0.4" />
-            <TextBlock x:Uid="Albums_EmptyTitle" Text="No albums yet" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" />
-            <TextBlock x:Uid="Albums_EmptyText" Text="Albums group photos without copying them. Select photos in the library and choose Add to album, or create one here." TextWrapping="Wrap" TextAlignment="Center" Opacity="0.75" />
+            <TextBlock x:Uid="Albums_EmptyTitle" AutomationProperties.AutomationId="Albums_EmptyTitle" Text="No albums yet" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" />
+            <TextBlock x:Uid="Albums_EmptyText" AutomationProperties.AutomationId="Albums_EmptyText" Text="Albums group photos without copying them. Select photos in the library and choose Add to album, or create one here." TextWrapping="Wrap" TextAlignment="Center" Opacity="0.75" />
         </StackPanel>
     </Grid>
 </Page>

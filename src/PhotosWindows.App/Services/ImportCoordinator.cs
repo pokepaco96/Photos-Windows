@@ -45,6 +45,10 @@ public sealed class ImportCoordinator(
         var copy = new RadioButton { Content = Loc.Get("Import_ModeCopy"), GroupName = "mode", IsChecked = current.DefaultImportMode == ImportMode.CopyToLibrary };
         var duplicates = new CheckBox { Content = Loc.Get("Import_IncludeDuplicates"), IsChecked = current.ImportDuplicates };
         var recursive = new CheckBox { Content = Loc.Get("Import_Subfolders"), IsChecked = true };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(addInPlace, "Import_ModeAddRadio");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(copy, "Import_ModeCopyRadio");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(duplicates, "Import_DuplicatesCheck");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(recursive, "Import_SubfoldersCheck");
         var panel = new StackPanel { Spacing = 8, MaxWidth = 460 };
         panel.Children.Add(new TextBlock { Text = sources.Count == 1 ? sources[0] : Loc.Format("Import_SourcesCount", sources.Count), TextWrapping = TextWrapping.Wrap, Opacity = 0.8 });
         panel.Children.Add(addInPlace);

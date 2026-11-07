@@ -23,12 +23,21 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
-        AppWindow.Resize(new Windows.Graphics.SizeInt32(1400, 900));
+        FitToDisplay();
         _navigation.Attach(ContentFrame);
         _navigation.Navigated += (_, page) => SyncSelection(page);
     }
 
     public ShellViewModel ViewModel { get; }
+
+    /// <summary>Initial size: 1400×900, or 90 % of the work area on smaller displays, centred.</summary>
+    private void FitToDisplay()
+    {
+        var area = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(AppWindow.Id, Microsoft.UI.Windowing.DisplayAreaFallback.Primary).WorkArea;
+        var width = Math.Min(1400, (int)(area.Width * 0.9));
+        var height = Math.Min(900, (int)(area.Height * 0.9));
+        AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(area.X + (area.Width - width) / 2, area.Y + (area.Height - height) / 2, width, height));
+    }
 
     public async Task InitializeAsync()
     {
@@ -57,8 +66,12 @@ public sealed partial class MainWindow : Window
     private void ShowImportMenu(FrameworkElement anchor)
     {
         var menu = new MenuFlyout();
-        menu.Items.Add(new MenuFlyoutItem { Text = Loc.Get("Import_FromFolder"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFolderCommand });
-        menu.Items.Add(new MenuFlyoutItem { Text = Loc.Get("Import_FromFiles"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFilesCommand });
+        var folder = new MenuFlyoutItem { Text = Loc.Get("Import_FromFolder"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFolderCommand };
+        var files = new MenuFlyoutItem { Text = Loc.Get("Import_FromFiles"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFilesCommand };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(folder, "Import_FromFolder");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(files, "Import_FromFiles");
+        menu.Items.Add(folder);
+        menu.Items.Add(files);
         menu.ShowAt(anchor);
     }
 

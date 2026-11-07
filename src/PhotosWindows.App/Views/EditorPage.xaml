@@ -25,50 +25,50 @@
         <CommandBar Grid.ColumnSpan="2" DefaultLabelPosition="Right" HorizontalAlignment="Stretch" Background="Transparent">
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="12,12,0,0">
-                    <TextBlock x:Uid="Editor_Title" Text="Edit" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="Editor_Title" AutomationProperties.AutomationId="Editor_Title" Text="Edit" Style="{StaticResource BodyStrongTextBlockStyle}" />
                     <TextBlock Text="{x:Bind ViewModel.FileName, Mode=OneWay}" Opacity="0.6" />
                     <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="16" Height="16" />
                 </StackPanel>
             </CommandBar.Content>
-            <AppBarButton x:Uid="Editor_Undo" Label="Undo" Icon="Undo" Command="{x:Bind ViewModel.UndoCommand}" IsEnabled="{x:Bind ViewModel.CanUndo, Mode=OneWay}" />
-            <AppBarButton x:Uid="Editor_Redo" Label="Redo" Icon="Redo" Command="{x:Bind ViewModel.RedoCommand}" IsEnabled="{x:Bind ViewModel.CanRedo, Mode=OneWay}" />
-            <AppBarToggleButton x:Uid="Editor_Compare" Label="Before / after" Checked="OnCompareChecked" Unchecked="OnCompareUnchecked">
+            <AppBarButton x:Uid="Editor_Undo" AutomationProperties.AutomationId="Editor_Undo" Label="Undo" Icon="Undo" Command="{x:Bind ViewModel.UndoCommand}" IsEnabled="{x:Bind ViewModel.CanUndo, Mode=OneWay}" />
+            <AppBarButton x:Uid="Editor_Redo" AutomationProperties.AutomationId="Editor_Redo" Label="Redo" Icon="Redo" Command="{x:Bind ViewModel.RedoCommand}" IsEnabled="{x:Bind ViewModel.CanRedo, Mode=OneWay}" />
+            <AppBarToggleButton x:Uid="Editor_Compare" AutomationProperties.AutomationId="Editor_Compare" Label="Before / after" Checked="OnCompareChecked" Unchecked="OnCompareUnchecked">
                 <AppBarToggleButton.Icon><FontIcon Glyph="&#xE7B3;" /></AppBarToggleButton.Icon>
             </AppBarToggleButton>
-            <AppBarToggleButton x:Uid="Editor_Crop" Label="Crop" IsChecked="{x:Bind ViewModel.IsCropMode, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleCropCommand}">
+            <AppBarToggleButton x:Uid="Editor_Crop" AutomationProperties.AutomationId="Editor_Crop" Label="Crop" IsChecked="{x:Bind ViewModel.IsCropMode, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleCropCommand}">
                 <AppBarToggleButton.Icon><FontIcon Glyph="&#xE7A8;" /></AppBarToggleButton.Icon>
             </AppBarToggleButton>
             <AppBarSeparator />
-            <AppBarButton x:Uid="Editor_Cancel" Label="Cancel" Icon="Cancel" Command="{x:Bind ViewModel.CancelCommand}" />
-            <AppBarButton x:Uid="Editor_Done" Label="Done" Icon="Accept" Command="{x:Bind ViewModel.SaveCommand}" />
+            <AppBarButton x:Uid="Editor_Cancel" AutomationProperties.AutomationId="Editor_Cancel" Label="Cancel" Icon="Cancel" Command="{x:Bind ViewModel.CancelCommand}" />
+            <AppBarButton x:Uid="Editor_Done" AutomationProperties.AutomationId="Editor_Done" Label="Done" Icon="Accept" Command="{x:Bind ViewModel.SaveCommand}" />
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:Uid="Editor_ResetAll" Label="Reset all adjustments" Command="{x:Bind ViewModel.ResetAllCommand}" />
-                <AppBarButton x:Uid="Editor_RevertOriginal" Label="Revert to original" Command="{x:Bind ViewModel.RevertToOriginalCommand}" />
+                <AppBarButton x:Uid="Editor_ResetAll" AutomationProperties.AutomationId="Editor_ResetAll" Label="Reset all adjustments" Command="{x:Bind ViewModel.ResetAllCommand}" />
+                <AppBarButton x:Uid="Editor_RevertOriginal" AutomationProperties.AutomationId="Editor_RevertOriginal" Label="Revert to original" Command="{x:Bind ViewModel.RevertToOriginalCommand}" />
             </CommandBar.SecondaryCommands>
         </CommandBar>
 
         <Grid x:Name="PreviewHost" Grid.Row="1" Margin="16" SizeChanged="OnPreviewSizeChanged">
-            <Image x:Name="PreviewImage" Source="{x:Bind ViewModel.Preview, Mode=OneWay}" Stretch="Uniform" AutomationProperties.Name="Preview" />
-            <views:CropOverlay x:Name="Crop" Visibility="{x:Bind ViewModel.IsCropMode, Mode=OneWay}" />
-            <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Error" VerticalAlignment="Top" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+            <Image x:Name="PreviewImage" AutomationProperties.AutomationId="Editor_Preview" Source="{x:Bind ViewModel.Preview, Mode=OneWay}" Stretch="Uniform" AutomationProperties.Name="Preview" />
+            <views:CropOverlay x:Name="Crop" AutomationProperties.AutomationId="Editor_CropOverlay" Visibility="{x:Bind ViewModel.IsCropMode, Mode=OneWay}" />
+            <InfoBar AutomationProperties.AutomationId="Editor_Error" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Error" VerticalAlignment="Top" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
         </Grid>
 
         <ScrollViewer x:Name="Adjustments" Grid.Row="1" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
             <StackPanel Padding="16" Spacing="8">
-                <Expander x:Uid="Edit_PresetsHeader" Header="Styles" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                <Expander x:Uid="Edit_PresetsHeader" AutomationProperties.AutomationId="Edit_PresetsHeader" Header="Styles" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.Presets}">
                         <ItemsRepeater.Layout><UniformGridLayout MinItemWidth="88" MinItemHeight="32" MinColumnSpacing="6" MinRowSpacing="6" ItemsStretch="Fill" /></ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:PresetItem">
-                                <Button Content="{x:Bind DisplayName}" HorizontalAlignment="Stretch" Click="OnPresetClick" Tag="{x:Bind}" />
+                                <Button Content="{x:Bind DisplayName}" HorizontalAlignment="Stretch" Click="OnPresetClick" Tag="{x:Bind}" AutomationProperties.AutomationId="{x:Bind AutomationId}" />
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
                 </Expander>
 
-                <Expander x:Uid="Edit_CropHeader" Header="Crop and rotate" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                <Expander x:Uid="Edit_CropHeader" AutomationProperties.AutomationId="Edit_CropHeader" Header="Crop and rotate" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <StackPanel Spacing="8">
-                        <ComboBox x:Uid="Edit_Aspect" Header="Aspect ratio" ItemsSource="{x:Bind ViewModel.Aspects}" SelectedItem="{x:Bind ViewModel.SelectedAspectItem, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                        <ComboBox x:Uid="Edit_Aspect" AutomationProperties.AutomationId="Edit_Aspect" Header="Aspect ratio" ItemsSource="{x:Bind ViewModel.Aspects}" SelectedItem="{x:Bind ViewModel.SelectedAspectItem, Mode=TwoWay}" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="vm:AspectItem">
                                     <TextBlock Text="{x:Bind DisplayName}" />
@@ -77,121 +77,121 @@
                         </ComboBox>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Straighten" Header="Straighten" Minimum="-45" Maximum="45" StepFrequency="0.1" Value="{x:Bind ViewModel.Straighten, Mode=TwoWay}" AutomationProperties.Name="Straighten" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="StraightenDegrees" AutomationProperties.Name="Reset straighten">
+                            <Slider x:Uid="Edit_Straighten" AutomationProperties.AutomationId="Edit_Straighten" Header="Straighten" Minimum="-45" Maximum="45" StepFrequency="0.1" Value="{x:Bind ViewModel.Straighten, Mode=TwoWay}" AutomationProperties.Name="Straighten" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="StraightenDegrees" AutomationProperties.AutomationId="Reset_StraightenDegrees" AutomationProperties.Name="Reset straighten">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Button Command="{x:Bind ViewModel.RotateLeftCommand}" x:Uid="Edit_RotateLeft" ToolTipService.ToolTip="Rotate left" AutomationProperties.Name="Rotate left"><FontIcon Glyph="&#xE7AD;" /></Button>
-                            <Button Command="{x:Bind ViewModel.RotateRightCommand}" x:Uid="Edit_RotateRight" ToolTipService.ToolTip="Rotate right" AutomationProperties.Name="Rotate right"><FontIcon Glyph="&#xE7AD;" RenderTransformOrigin="0.5,0.5"><FontIcon.RenderTransform><ScaleTransform ScaleX="-1" /></FontIcon.RenderTransform></FontIcon></Button>
-                            <Button Command="{x:Bind ViewModel.FlipHorizontalCommand}" x:Uid="Edit_FlipH" ToolTipService.ToolTip="Flip horizontally" AutomationProperties.Name="Flip horizontally"><FontIcon Glyph="&#xE8AB;" /></Button>
-                            <Button Command="{x:Bind ViewModel.FlipVerticalCommand}" x:Uid="Edit_FlipV" ToolTipService.ToolTip="Flip vertically" AutomationProperties.Name="Flip vertically"><FontIcon Glyph="&#xE8AB;" RenderTransformOrigin="0.5,0.5"><FontIcon.RenderTransform><RotateTransform Angle="90" /></FontIcon.RenderTransform></FontIcon></Button>
-                            <Button Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Crop" x:Uid="Edit_ResetCrop" Content="Reset crop" />
+                            <Button Command="{x:Bind ViewModel.RotateLeftCommand}" x:Uid="Edit_RotateLeft" AutomationProperties.AutomationId="Edit_RotateLeft" ToolTipService.ToolTip="Rotate left" AutomationProperties.Name="Rotate left"><FontIcon Glyph="&#xE7AD;" /></Button>
+                            <Button Command="{x:Bind ViewModel.RotateRightCommand}" x:Uid="Edit_RotateRight" AutomationProperties.AutomationId="Edit_RotateRight" ToolTipService.ToolTip="Rotate right" AutomationProperties.Name="Rotate right"><FontIcon Glyph="&#xE7AD;" RenderTransformOrigin="0.5,0.5"><FontIcon.RenderTransform><ScaleTransform ScaleX="-1" /></FontIcon.RenderTransform></FontIcon></Button>
+                            <Button Command="{x:Bind ViewModel.FlipHorizontalCommand}" x:Uid="Edit_FlipH" AutomationProperties.AutomationId="Edit_FlipH" ToolTipService.ToolTip="Flip horizontally" AutomationProperties.Name="Flip horizontally"><FontIcon Glyph="&#xE8AB;" /></Button>
+                            <Button Command="{x:Bind ViewModel.FlipVerticalCommand}" x:Uid="Edit_FlipV" AutomationProperties.AutomationId="Edit_FlipV" ToolTipService.ToolTip="Flip vertically" AutomationProperties.Name="Flip vertically"><FontIcon Glyph="&#xE8AB;" RenderTransformOrigin="0.5,0.5"><FontIcon.RenderTransform><RotateTransform Angle="90" /></FontIcon.RenderTransform></FontIcon></Button>
+                            <Button Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Crop" x:Uid="Edit_ResetCrop" AutomationProperties.AutomationId="Edit_ResetCrop" Content="Reset crop" />
                         </StackPanel>
                     </StackPanel>
                 </Expander>
 
-                <Expander x:Uid="Edit_LightHeader" Header="Light" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                <Expander x:Uid="Edit_LightHeader" AutomationProperties.AutomationId="Edit_LightHeader" Header="Light" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <StackPanel Spacing="2">
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Exposure" Header="Exposure" Minimum="-3" Maximum="3" StepFrequency="0.05" Value="{x:Bind ViewModel.Exposure, Mode=TwoWay}" AutomationProperties.Name="Exposure" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Exposure" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Exposure">
+                            <Slider x:Uid="Edit_Exposure" AutomationProperties.AutomationId="Edit_Exposure" Header="Exposure" Minimum="-3" Maximum="3" StepFrequency="0.05" Value="{x:Bind ViewModel.Exposure, Mode=TwoWay}" AutomationProperties.Name="Exposure" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Exposure" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Exposure" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Exposure">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Brightness" Header="Brightness" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Brightness, Mode=TwoWay}" AutomationProperties.Name="Brightness" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Brightness" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Brightness">
+                            <Slider x:Uid="Edit_Brightness" AutomationProperties.AutomationId="Edit_Brightness" Header="Brightness" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Brightness, Mode=TwoWay}" AutomationProperties.Name="Brightness" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Brightness" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Brightness" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Brightness">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Contrast" Header="Contrast" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Contrast, Mode=TwoWay}" AutomationProperties.Name="Contrast" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Contrast" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Contrast">
+                            <Slider x:Uid="Edit_Contrast" AutomationProperties.AutomationId="Edit_Contrast" Header="Contrast" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Contrast, Mode=TwoWay}" AutomationProperties.Name="Contrast" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Contrast" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Contrast" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Contrast">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Highlights" Header="Highlights" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Highlights, Mode=TwoWay}" AutomationProperties.Name="Highlights" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Highlights" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Highlights">
+                            <Slider x:Uid="Edit_Highlights" AutomationProperties.AutomationId="Edit_Highlights" Header="Highlights" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Highlights, Mode=TwoWay}" AutomationProperties.Name="Highlights" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Highlights" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Highlights" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Highlights">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Shadows" Header="Shadows" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Shadows, Mode=TwoWay}" AutomationProperties.Name="Shadows" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Shadows" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Shadows">
+                            <Slider x:Uid="Edit_Shadows" AutomationProperties.AutomationId="Edit_Shadows" Header="Shadows" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Shadows, Mode=TwoWay}" AutomationProperties.Name="Shadows" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Shadows" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Shadows" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Shadows">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                     </StackPanel>
                 </Expander>
 
-                <Expander x:Uid="Edit_ColorHeader" Header="Colour" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                <Expander x:Uid="Edit_ColorHeader" AutomationProperties.AutomationId="Edit_ColorHeader" Header="Colour" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <StackPanel Spacing="2">
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Saturation" Header="Saturation" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Saturation, Mode=TwoWay}" AutomationProperties.Name="Saturation" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Saturation" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Saturation">
+                            <Slider x:Uid="Edit_Saturation" AutomationProperties.AutomationId="Edit_Saturation" Header="Saturation" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Saturation, Mode=TwoWay}" AutomationProperties.Name="Saturation" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Saturation" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Saturation" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Saturation">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Vibrance" Header="Vibrance" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Vibrance, Mode=TwoWay}" AutomationProperties.Name="Vibrance" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Vibrance" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Vibrance">
+                            <Slider x:Uid="Edit_Vibrance" AutomationProperties.AutomationId="Edit_Vibrance" Header="Vibrance" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Vibrance, Mode=TwoWay}" AutomationProperties.Name="Vibrance" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Vibrance" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Vibrance" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Vibrance">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Temperature" Header="Warmth" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Temperature, Mode=TwoWay}" AutomationProperties.Name="Warmth" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Temperature" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Warmth">
+                            <Slider x:Uid="Edit_Temperature" AutomationProperties.AutomationId="Edit_Temperature" Header="Warmth" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Temperature, Mode=TwoWay}" AutomationProperties.Name="Warmth" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Temperature" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Temperature" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Warmth">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Tint" Header="Tint" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Tint, Mode=TwoWay}" AutomationProperties.Name="Tint" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Tint" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Tint">
+                            <Slider x:Uid="Edit_Tint" AutomationProperties.AutomationId="Edit_Tint" Header="Tint" Minimum="-100" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Tint, Mode=TwoWay}" AutomationProperties.Name="Tint" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Tint" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Tint" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Tint">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_BlackAndWhite" Header="Black &amp; white" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.BlackAndWhite, Mode=TwoWay}" AutomationProperties.Name="Black &amp; white" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="BlackAndWhite" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Black &amp; white">
+                            <Slider x:Uid="Edit_BlackAndWhite" AutomationProperties.AutomationId="Edit_BlackAndWhite" Header="Black &amp; white" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.BlackAndWhite, Mode=TwoWay}" AutomationProperties.Name="Black &amp; white" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="BlackAndWhite" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_BlackAndWhite" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Black &amp; white">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                     </StackPanel>
                 </Expander>
 
-                <Expander x:Uid="Edit_EffectsHeader" Header="Effects" IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                <Expander x:Uid="Edit_EffectsHeader" AutomationProperties.AutomationId="Edit_EffectsHeader" Header="Effects" IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <StackPanel Spacing="2">
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Vignette" Header="Vignette" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Vignette, Mode=TwoWay}" AutomationProperties.Name="Vignette" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Vignette" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Vignette">
+                            <Slider x:Uid="Edit_Vignette" AutomationProperties.AutomationId="Edit_Vignette" Header="Vignette" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Vignette, Mode=TwoWay}" AutomationProperties.Name="Vignette" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Vignette" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Vignette" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Vignette">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                         <Grid ColumnSpacing="4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <Slider x:Uid="Edit_Sharpness" Header="Sharpness" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Sharpness, Mode=TwoWay}" AutomationProperties.Name="Sharpness" />
-                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Sharpness" x:Uid="Edit_ResetOne" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Sharpness">
+                            <Slider x:Uid="Edit_Sharpness" AutomationProperties.AutomationId="Edit_Sharpness" Header="Sharpness" Minimum="0" Maximum="100" StepFrequency="1" Value="{x:Bind ViewModel.Sharpness, Mode=TwoWay}" AutomationProperties.Name="Sharpness" />
+                            <Button Grid.Column="1" VerticalAlignment="Bottom" Padding="6" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.ResetAdjustmentCommand}" CommandParameter="Sharpness" x:Uid="Edit_ResetOne" AutomationProperties.AutomationId="Reset_Sharpness" ToolTipService.ToolTip="Reset" AutomationProperties.Name="Reset Sharpness">
                                 <FontIcon Glyph="&#xE7A7;" FontSize="12" />
                             </Button>
                         </Grid>
                     </StackPanel>
                 </Expander>
 
-                <TextBlock x:Uid="Editor_OriginalSafe" Text="Edits are stored in the catalogue. The original file is never modified." TextWrapping="Wrap" Opacity="0.6" FontSize="12" Margin="0,8,0,0" />
+                <TextBlock x:Uid="Editor_OriginalSafe" AutomationProperties.AutomationId="Editor_OriginalSafe" Text="Edits are stored in the catalogue. The original file is never modified." TextWrapping="Wrap" Opacity="0.6" FontSize="12" Margin="0,8,0,0" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

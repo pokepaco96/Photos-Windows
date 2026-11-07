@@ -13,29 +13,29 @@
             <ColumnDefinition Width="380" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <TextBlock x:Uid="Imports_Title" Text="Imports" Style="{StaticResource PageTitleStyle}" Grid.ColumnSpan="2" />
+        <TextBlock x:Uid="Imports_Title" AutomationProperties.AutomationId="Imports_Title" Text="Imports" Style="{StaticResource PageTitleStyle}" Grid.ColumnSpan="2" />
 
-        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Jobs}" SelectedItem="{x:Bind ViewModel.SelectedJobItem, Mode=TwoWay}" SelectionMode="Single" AutomationProperties.Name="Import history">
+        <ListView Grid.Row="1" AutomationProperties.AutomationId="Imports_Jobs" ItemsSource="{x:Bind ViewModel.Jobs}" SelectedItem="{x:Bind ViewModel.SelectedJobItem, Mode=TwoWay}" SelectionMode="Single" AutomationProperties.Name="Import history">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ImportJobRow">
                     <StackPanel Padding="0,8" Spacing="2">
                         <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" />
                         <TextBlock Text="{x:Bind StatusText}" Style="{StaticResource CaptionTextBlockStyle}" />
                         <TextBlock Text="{x:Bind Counts}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" TextWrapping="Wrap" />
-                        <Button x:Uid="Imports_Resume" Content="Resume" Visibility="{x:Bind CanResume}" Click="OnResume" Tag="{x:Bind}" Margin="0,4,0,0" />
+                        <Button x:Uid="Imports_Resume" AutomationProperties.AutomationId="Imports_Resume" Content="Resume" Visibility="{x:Bind CanResume}" Click="OnResume" Tag="{x:Bind}" Margin="0,4,0,0" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <TextBlock Grid.Row="1" x:Uid="Imports_Empty" Text="No imports yet." Opacity="0.7" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}" />
+        <TextBlock Grid.Row="1" x:Uid="Imports_Empty" AutomationProperties.AutomationId="Imports_Empty" Text="No imports yet." Opacity="0.7" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}" />
 
         <Grid Grid.Row="1" Grid.Column="1" RowSpacing="8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <ToggleSwitch x:Uid="Imports_ProblemsOnly" Header="Show only problems" IsOn="{x:Bind ViewModel.ProblemsOnly, Mode=TwoWay}" />
-            <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Items}" SelectionMode="None" AutomationProperties.Name="Import report">
+            <ToggleSwitch x:Uid="Imports_ProblemsOnly" AutomationProperties.AutomationId="Imports_ProblemsOnly" Header="Show only problems" IsOn="{x:Bind ViewModel.ProblemsOnly, Mode=TwoWay}" />
+            <ListView Grid.Row="1" AutomationProperties.AutomationId="Imports_Items" ItemsSource="{x:Bind ViewModel.Items}" SelectionMode="None" AutomationProperties.Name="Import report">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ImportItemRow">
                         <StackPanel Padding="0,6" Spacing="2">

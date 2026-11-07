@@ -77,6 +77,9 @@ public sealed partial class LibraryPage : Page
     private void OnContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
     {
         if (args.Item is not AssetItemViewModel item) return;
+        // Accessible name/id on the container itself, so screen readers and UI automation can identify each tile.
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(args.ItemContainer, item.AutomationName);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(args.ItemContainer, "Tile_" + item.Summary.FileName);
         if (args.InRecycleQueue)
         {
             item.Unload();
