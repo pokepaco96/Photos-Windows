@@ -98,9 +98,25 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
 
     private static bool IsRingIdle(AutomationElement ring) => ring.Properties.IsOffscreen.ValueOrDefault || ring.BoundingRectangle.IsEmpty;
 
-    private AutomationElement Tile(string fileName, TimeSpan? timeout = null) => App.Find("Tile_" + fileName, timeout);
+    /// <summary>
+    /// A grid tile, scrolled into view. Tiles below the fold are realized but offscreen (UI run #11: the
+    /// "Days" grouping shows ~3 tiles at 1400×900), so look them up without the visibility filter first.
+    /// </summary>
+    private AutomationElement Tile(string fileName, TimeSpan? timeout = null)
+    {
+        var id = "Tile_" + fileName;
+        var tile = App.WaitFor(() => App.TryFindById(id), $"tile '{fileName}'", timeout);
+        if (tile.Properties.IsOffscreen.ValueOrDefault)
+        {
+            tile.Patterns.ScrollItem.PatternOrDefault?.ScrollIntoView();
+            Thread.Sleep(400);
+        }
 
-    private bool TileExists(string fileName) => App.Exists("Tile_" + fileName);
+        return App.Find(id, TimeSpan.FromSeconds(5));
+    }
+
+    /// <summary>True if the tile is in the grid, on or off screen.</summary>
+    private bool TileExists(string fileName) => App.TryFindById("Tile_" + fileName) is not null;
 
     private IReadOnlyList<string> VisibleTiles() =>
         App.FindAll(cf => cf.ByControlType(ControlType.ListItem))
@@ -181,7 +197,6 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
     private void OpenInViewer(string fileName)
     {
         var tile = Tile(fileName);
-        tile.Patterns.ScrollItem.PatternOrDefault?.ScrollIntoView();
         tile.DoubleClick();
         App.WaitUntil(() => App.Exists("Viewer_FileName") && App.TextOf("Viewer_FileName") == fileName, $"the viewer showing {fileName}", TimeSpan.FromSeconds(30));
         Thread.Sleep(1500);
