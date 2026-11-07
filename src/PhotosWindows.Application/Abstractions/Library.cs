@@ -50,6 +50,12 @@ public interface ICatalogStore
     /// <summary>Consistent copy of any catalog file (used before migrations, when no library is open yet).</summary>
     Task BackupDatabaseAsync(string sourceDatabasePath, string destinationPath, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Physically removes People data (faces, descriptors, groups, names, analysis state and consent) from a catalog
+    /// copy, e.g. a backup that should not contain biometric data.
+    /// </summary>
+    Task RemoveFaceDataAsync(string databasePath, CancellationToken cancellationToken);
+
     /// <summary>Closes pooled connections so files can be replaced (restore) or moved.</summary>
     void ReleaseConnections();
 }

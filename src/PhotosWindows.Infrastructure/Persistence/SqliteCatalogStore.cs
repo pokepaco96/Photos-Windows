@@ -94,6 +94,20 @@ public sealed class SqliteCatalogStore : ICatalogStore
         }
     }
 
+    public async Task RemoveFaceDataAsync(string databasePath, CancellationToken cancellationToken)
+    {
+        await using var connection = await SqliteDb.OpenAsync(databasePath, cancellationToken, pooled: false).ConfigureAwait(false);
+        var hasPeople = await connection.ExecuteScalarAsync<long>("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'faces'").ConfigureAwait(false) > 0;
+        await connection.ExecuteAsync("PRAGMA secure_delete = ON;").ConfigureAwait(false);
+        if (hasPeople)
+        {
+            await connection.ExecuteAsync("DELETE FROM faces; DELETE FROM people; DELETE FROM face_analysis;").ConfigureAwait(false);
+        }
+
+        await connection.ExecuteAsync("DELETE FROM library_info WHERE key LIKE 'people.%';").ConfigureAwait(false);
+        await connection.ExecuteAsync("VACUUM;").ConfigureAwait(false);
+    }
+
     public void ReleaseConnections() => SqliteConnection.ClearAllPools();
 }
 
