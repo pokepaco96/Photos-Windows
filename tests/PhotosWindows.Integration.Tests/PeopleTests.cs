@@ -341,6 +341,37 @@ public sealed class PeopleTests : IAsyncLifetime
         Assert.Equal(2, (await People.GetPeopleAsync(CancellationToken.None)).Count);
     }
 
+    [Fact]
+    public async Task Backups_leave_face_data_out_unless_asked_and_say_so()
+    {
+        await ImportStandardSetAsync();
+        await EnableAndAnalyzeAsync();
+        await People.RenameAsync((await People.GetPeopleAsync(CancellationToken.None))[0].Id, "Zzyzx-Backup-Name", CancellationToken.None);
+        var backups = Path.Combine(_host.Root, "backups");
+
+        var without = await _host.Backup.CreateBackupAsync(backups, false, null, CancellationToken.None);
+        _host.Clock.UtcNow = _host.Clock.UtcNow.AddMinutes(1);
+        var with = await _host.Backup.CreateBackupAsync(backups, false, null, CancellationToken.None, includeFaceData: true);
+
+        var plain = await _host.Backup.VerifyAsync(without, CancellationToken.None);
+        var full = await _host.Backup.VerifyAsync(with, CancellationToken.None);
+        Assert.True(plain.IsValid);
+        Assert.True(full.IsValid);
+        Assert.False(plain.Manifest!.IncludesFaceData);
+        Assert.True(full.Manifest!.IncludesFaceData);
+
+        SqliteConnection.ClearAllPools();
+        Assert.Equal(-1, File.ReadAllBytes(Path.Combine(without, "catalog.db")).AsSpan().IndexOf("Zzyzx-Backup-Name"u8));
+        Assert.NotEqual(-1, File.ReadAllBytes(Path.Combine(with, "catalog.db")).AsSpan().IndexOf("Zzyzx-Backup-Name"u8));
+
+        // Restoring the plain backup gives a library without People data that asks for consent again.
+        var restored = await _host.Backup.RestoreAsNewLibraryAsync(without, Path.Combine(_host.Root, "restored"), CancellationToken.None);
+        await _host.Libs.OpenAsync(restored.RootPath, CancellationToken.None);
+        Assert.False(await People.IsEnabledAsync(CancellationToken.None));
+        Assert.Empty(await People.GetPeopleAsync(CancellationToken.None));
+        Assert.Equal(4, (await _host.AllAsync()).Count);
+    }
+
     private sealed class SyncProgress<T>(Action<T> handler) : IProgress<T>
     {
         public void Report(T value) => handler(value);
