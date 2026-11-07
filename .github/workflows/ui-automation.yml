@@ -10,6 +10,7 @@ on:
   # Until this file is merged there, pushes to the QA branch run it. Remove this block once merged.
   push:
     branches: [claude/ui-automation-qa]
+    paths-ignore: ['docs/**', '**/*.md', 'artifacts/**']
   workflow_dispatch:
     inputs:
       runner:
