@@ -22,6 +22,12 @@ public sealed record BackupManifest
     public Guid LibraryId { get; init; }
     public string LibraryName { get; init; } = string.Empty;
     public bool IncludesManagedOriginals { get; init; }
+
+    /// <summary>
+    /// True when the copied catalog keeps People data (faces, descriptors, groups and names). Older backups have no
+    /// such data and read as false.
+    /// </summary>
+    public bool IncludesFaceData { get; init; }
     public int AssetCount { get; init; }
     public IReadOnlyList<BackupFileEntry> Files { get; init; } = [];
 }
@@ -58,7 +64,11 @@ public sealed class BackupService
 
     public static string AppVersion => typeof(BackupService).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
-    public async Task<string> CreateBackupAsync(string destinationFolder, bool includeManagedOriginals, IProgress<BackupProgress>? progress, CancellationToken ct)
+    /// <param name="includeFaceData">
+    /// Keep People data (biometric descriptors, groups, names) in the copy. Off by default: the copy is scrubbed and
+    /// the restored library asks for consent again.
+    /// </param>
+    public async Task<string> CreateBackupAsync(string destinationFolder, bool includeManagedOriginals, IProgress<BackupProgress>? progress, CancellationToken ct, bool includeFaceData = false)
     {
         var library = _context.RequireCurrent();
         var destination = Path.GetFullPath(destinationFolder);
@@ -78,6 +88,11 @@ public sealed class BackupService
         {
             progress?.Report(new BackupProgress("catalog", 0, 1));
             await _catalog.BackupToAsync(Path.Combine(workDir, LibraryManager.DatabaseFileName), ct).ConfigureAwait(false);
+            if (!includeFaceData)
+            {
+                await _catalog.RemoveFaceDataAsync(Path.Combine(workDir, LibraryManager.DatabaseFileName), ct).ConfigureAwait(false);
+            }
+
             File.Copy(Path.Combine(library.RootPath, LibraryManifest.FileName), Path.Combine(workDir, LibraryManifest.FileName));
 
             if (includeManagedOriginals && Directory.Exists(library.OriginalsPath))
@@ -113,6 +128,7 @@ public sealed class BackupService
                 LibraryId = library.Id,
                 LibraryName = library.Name,
                 IncludesManagedOriginals = includeManagedOriginals,
+                IncludesFaceData = includeFaceData,
                 AssetCount = stats.PhotoCount + stats.VideoCount,
                 Files = entries,
             };
