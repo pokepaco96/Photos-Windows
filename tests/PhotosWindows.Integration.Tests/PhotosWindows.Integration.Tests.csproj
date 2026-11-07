@@ -5,9 +5,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PhotosWindows.Infrastructure\PhotosWindows.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\PhotosWindows.Imaging\PhotosWindows.Imaging.csproj" />
+    <ProjectReference Include="..\..\src\PhotosWindows.MachineLearning\PhotosWindows.MachineLearning.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Condition="!$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
+    <!-- MS-PL, test only: lets real-model tests report "skipped (blocked)" when the models cannot be downloaded. -->
+    <PackageReference Include="Xunit.SkippableFact" />
   </ItemGroup>
 </Project>
