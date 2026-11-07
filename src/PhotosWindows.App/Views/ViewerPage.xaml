@@ -4,6 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:PhotosWindows.App.ViewModels"
     xmlns:conv="using:PhotosWindows.App.Converters"
+    IsTabStop="True"
+    UseSystemFocusVisuals="False"
     KeyDown="OnKeyDown"
     PreviewKeyDown="OnPreviewKeyDown">
 

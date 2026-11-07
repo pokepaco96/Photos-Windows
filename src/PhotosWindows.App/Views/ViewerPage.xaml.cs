@@ -20,6 +20,9 @@ public sealed partial class ViewerPage : Page
         ViewModel = App.Services.GetRequiredService<ViewerViewModel>();
         InitializeComponent();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Loaded += (_, _) => TakeFocus();
+        // Clicking the photo (not focusable itself) keeps the viewer's shortcuts working.
+        Stage.PointerPressed += (_, _) => TakeFocus();
     }
 
     public ViewerViewModel ViewModel { get; }
@@ -27,7 +30,17 @@ public sealed partial class ViewerPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         if (e.Parameter is ViewerNavigation target) await ViewModel.LoadAsync(target);
-        Focus(FocusState.Programmatic);
+        TakeFocus();
+    }
+
+    /// <summary>
+    /// Keyboard focus must be inside the viewer or its keys (arrows, Escape, F, I…) are never seen. Focus used to
+    /// stay outside after opening from a click or returning from the editor: a Page is not a tab stop by default,
+    /// so Focus() silently failed (UI run #15). The page is now a tab stop and takes focus once loaded.
+    /// </summary>
+    private void TakeFocus()
+    {
+        if (IsLoaded) Focus(FocusState.Programmatic);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
