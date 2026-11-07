@@ -45,6 +45,7 @@ public partial class App : Microsoft.UI.Xaml.Application
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or Microsoft.UI.Xaml.Markup.XamlParseException)
         {
             _logger.LogCritical(ex, "The main window could not be created");
+            _logger.LogCritical("XAML diagnosis: {Details}", XamlDiagnostics.Explain("MainWindow.xaml"));
             FatalStartupError(ex);
             return;
         }

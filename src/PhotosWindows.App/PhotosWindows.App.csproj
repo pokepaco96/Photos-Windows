@@ -39,5 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- XAML sources embedded for XamlDiagnostics (precise errors if a compiled page fails to load). -->
+    <EmbeddedResource Include="**\*.xaml" Exclude="bin\**;obj\**" LogicalName="xaml/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
