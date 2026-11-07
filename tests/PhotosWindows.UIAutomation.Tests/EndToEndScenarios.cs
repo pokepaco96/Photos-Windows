@@ -185,6 +185,7 @@ public sealed partial class EndToEndTests
         App.Click("Viewer_Next");
         App.WaitUntil(() => App.TextOf("Viewer_Position") != first, "the position to change after Next");
         var second = App.TextOf("Viewer_Position");
+        CheckPhotoFitsAndCentred(); // regression (UI run #14): the next photo was sized with the previous one's box
         App.Find("Viewer_Photo").Click();
         AppSession.Keys(VirtualKeyShort.LEFT);
         App.WaitUntil(() => App.TextOf("Viewer_Position") == first, "Left arrow to go back");
@@ -209,8 +210,18 @@ public sealed partial class EndToEndTests
     public void S11_Video_playback() => Run(11, "Open and play a video", qa.Dataset.HasVideo ? ["imported-inplace"] : ["video-dataset"], null, () =>
     {
         Nav("Nav_Videos");
+        // Regression (UI run #14): the video tile kept the grey placeholder on Windows Server (no shell thumbnail).
+        App.WaitUntil(() =>
+        {
+            var r = Tile("clip.mp4").BoundingRectangle;
+            var stats = App.PixelStats(new System.Drawing.Rectangle(r.X + 8, r.Y + 8, r.Width - 16, r.Height / 2));
+            qa.Evidence.Log($"video tile max saturation {stats.MaxSaturation}");
+            return stats.MaxSaturation > 120;
+        }, "the video tile to show a frame of the video", TimeSpan.FromSeconds(20));
+        App.Screenshot("11_video_tile");
         OpenInViewer("clip.mp4");
-        App.Find("Viewer_Player");
+        // MediaPlayerElement has no UIA peer of its own; its transport controls are exposed.
+        App.Find("ProgressSlider", TimeSpan.FromSeconds(20));
         Thread.Sleep(4000);
         if (App.TryFind(cf => cf.ByName("Cannot play video")) is not null)
         {

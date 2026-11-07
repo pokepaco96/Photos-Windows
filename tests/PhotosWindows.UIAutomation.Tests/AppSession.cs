@@ -408,12 +408,20 @@ public sealed class AppSession : IDisposable
     /// </summary>
     public (int Min, int Max) CaptionButtonLuminance()
     {
+        var r = MainWindow.BoundingRectangle;
+        var stats = PixelStats(new System.Drawing.Rectangle(r.Right - 44, r.Top + 6, 38, 20));
+        _evidence.Log($"caption button luminance: min {stats.MinLuminance}, max {stats.MaxLuminance}");
+        return (stats.MinLuminance, stats.MaxLuminance);
+    }
+
+    /// <summary>Luminance range and highest saturation (0-255) of a screen rectangle.</summary>
+    public (int MinLuminance, int MaxLuminance, int MaxSaturation) PixelStats(System.Drawing.Rectangle area)
+    {
         MainWindow.SetForeground();
         Thread.Sleep(300);
-        var r = MainWindow.BoundingRectangle;
-        using var image = Capture.Rectangle(new System.Drawing.Rectangle(r.Right - 44, r.Top + 6, 38, 20));
+        using var image = Capture.Rectangle(area);
         var bitmap = image.Bitmap;
-        int min = 255, max = 0;
+        int min = 255, max = 0, sat = 0;
         for (var x = 0; x < bitmap.Width; x++)
         {
             for (var y = 0; y < bitmap.Height; y++)
@@ -422,11 +430,11 @@ public sealed class AppSession : IDisposable
                 var l = (int)Math.Round(0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B);
                 min = Math.Min(min, l);
                 max = Math.Max(max, l);
+                sat = Math.Max(sat, Math.Max(c.R, Math.Max(c.G, c.B)) - Math.Min(c.R, Math.Min(c.G, c.B)));
             }
         }
 
-        _evidence.Log($"caption button luminance: min {min}, max {max}");
-        return (min, max);
+        return (min, max, sat);
     }
 
     public string Screenshot(string name)
