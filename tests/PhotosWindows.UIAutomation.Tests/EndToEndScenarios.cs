@@ -273,6 +273,8 @@ public sealed partial class EndToEndTests
         SelectTiles("IMG_0002.jpg");
         Command("Cmd_RemoveFromAlbum");
         App.WaitUntil(() => !TileExists("IMG_0002.jpg"), "the photo to leave the album");
+        // Regression (UI run #12): "1 photos".
+        App.WaitUntil(() => App.TextOf("LibrarySubtitle") == "1 photo · 0 videos", "the subtitle '1 photo · 0 videos'", TimeSpan.FromSeconds(5));
         if (!File.Exists(ManagedCopy("IMG_0002.jpg"))) throw new InvalidOperationException("Removing from album deleted the file.");
     });
 
@@ -477,6 +479,7 @@ public sealed partial class EndToEndTests
     {
         OpenSettings();
         App.Screenshot("22_settings");
+        qa.Extra["Library counts at backup"] = StorageCounts();
         App.SetChecked("Settings_IncludeOriginals", true);
         App.Click("Settings_CreateBackup");
         App.PickFolder(qa.Inside(qa.Backups));
@@ -572,6 +575,18 @@ public sealed partial class EndToEndTests
         }
     }
 
+    /// <summary>Photos, videos and albums as shown on the Settings storage cards (accessible name "Label: value").</summary>
+    private string StorageCounts()
+    {
+        string Value(string label) => App.WaitFor(
+            () => App.FindAll(cf => cf.ByControlType(ControlType.Text))
+                .Select(e => e.Properties.Name.ValueOrDefault ?? string.Empty)
+                .FirstOrDefault(n => n.StartsWith(label + ": ", StringComparison.Ordinal)),
+            $"the '{label}' storage card")[(label.Length + 2)..];
+
+        return $"{Value("Photos")} photos, {Value("Videos")} videos, {Value("Albums")} albums";
+    }
+
     [Fact, Step(25)]
     public void S25_Keyboard_navigation() => Run(25, "Keyboard navigation (arrows, Enter, Escape, Ctrl+F)", ["imported-copy"], null, () =>
     {
@@ -623,6 +638,9 @@ public sealed partial class EndToEndTests
         App.WaitUntil(() => TileExists("IMG_0001.jpg"), "photos in the restored library");
         OpenSettings();
         if (!App.TextOf("Settings_LibraryPath").Contains("(restored)", StringComparison.Ordinal)) throw new InvalidOperationException("The restored library is not the one open.");
+        var restored = StorageCounts();
+        qa.Extra["Library counts after restore"] = restored;
+        if (restored != qa.Extra["Library counts at backup"]) throw new InvalidOperationException($"Restored library has {restored}; the backed-up one had {qa.Extra["Library counts at backup"]}.");
         App.Screenshot("26_restored_library_settings");
         DismissActivity();
     });
