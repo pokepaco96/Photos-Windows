@@ -9,6 +9,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IImageRenderer, SkiaImageRenderer>();
         services.AddSingleton<IPerceptualHasher, PerceptualHasher>();
+        services.AddSingleton<PhotosWindows.Application.Places.IMapRenderer, Maps.SkiaMapRenderer>();
         return services;
     }
 }

@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ThumbnailService>();
         services.AddSingleton<OrganizationService>();
         services.AddSingleton<SearchService>();
+        services.AddSingleton<PhotosWindows.Application.Places.PlacesService>();
         services.AddSingleton<EditingService>();
         services.AddSingleton<ExportService>();
         services.AddSingleton<DuplicateService>();
