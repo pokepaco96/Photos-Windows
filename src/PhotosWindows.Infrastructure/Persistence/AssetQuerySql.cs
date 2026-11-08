@@ -41,8 +41,12 @@ internal sealed class AssetQuerySql
         if (query.MinRating is { } rating) b._where.Add($"a.rating >= {b.Param(rating)}");
         if (query.Area is { } area)
         {
-            b._where.Add($"a.latitude BETWEEN {b.Param(area.MinLat)} AND {b.Param(area.MaxLat)}");
-            b._where.Add($"a.longitude BETWEEN {b.Param(area.MinLon)} AND {b.Param(area.MaxLon)}");
+            // MinLon > MaxLon means the box crosses the antimeridian (e.g. 170°E to 175°W): BETWEEN alone found nothing.
+            var bounds = GeoBounds.From(area.MinLat, area.MinLon, area.MaxLat, area.MaxLon);
+            b._where.Add($"a.latitude BETWEEN {b.Param(bounds.MinLat)} AND {b.Param(bounds.MaxLat)}");
+            b._where.Add(bounds.CrossesAntimeridian
+                ? $"(a.longitude >= {b.Param(bounds.MinLon)} OR a.longitude <= {b.Param(bounds.MaxLon)})"
+                : $"a.longitude BETWEEN {b.Param(bounds.MinLon)} AND {b.Param(bounds.MaxLon)}");
         }
 
         foreach (var keyword in query.Keywords.Where(k => !string.IsNullOrWhiteSpace(k)))
