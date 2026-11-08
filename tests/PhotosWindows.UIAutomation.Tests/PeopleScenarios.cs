@@ -128,6 +128,7 @@ public sealed partial class EndToEndTests
     /// <summary>Opens the group that contains <paramref name="file"/> and names it.</summary>
     private void NameGroupContaining(string file, string name)
     {
+        OpenPeople(); // count the cards on the People page, not on a person's page
         foreach (var index in Enumerable.Range(0, PersonCards().Count))
         {
             OpenPeople();
