@@ -6,7 +6,7 @@ Pruebas end-to-end que **usan la aplicación real** (`PhotosWindows.exe`) a trav
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| Proyecto de pruebas | `tests/PhotosWindows.UIAutomation.Tests` | xUnit + [FlaUI](https://github.com/FlaUI/FlaUI) 5.0 (UIA3, licencia MIT). 28 escenarios ordenados (`EndToEndScenarios.cs`). |
+| Proyecto de pruebas | `tests/PhotosWindows.UIAutomation.Tests` | xUnit + [FlaUI](https://github.com/FlaUI/FlaUI) 5.0 (UIA3, licencia MIT). 37 escenarios ordenados: 28 generales (`EndToEndScenarios.cs`, el 28 —SHA-256 y cierre— siempre el último) y 9 de Personas (`PeopleScenarios.cs`, S29–S37). |
 | Sesión de app | `AppSession.cs` | Lanza el ejecutable con un perfil aislado, espera la ventana, busca controles por `AutomationId`/nombre en todas las ventanas del proceso (ventana principal, menús emergentes, diálogos), hace clics/teclado/texto, maneja el selector de carpetas de Windows, detecta cierres inesperados y el diálogo de error de la app, hace capturas y vuelca el árbol de accesibilidad. |
 | Dataset | `QaDataset.cs` | Genera datos sintéticos reproducibles (semillas fijas) y un manifiesto SHA-256. |
 | Evidencias | `Evidence.cs` | `screenshots/`, `trees/`, `logs/` (log de la ejecución + logs de la app), `results.json`, `report.md`. |
@@ -27,6 +27,8 @@ Todos los controles interactivos tienen `AutomationProperties.AutomationId` (igu
 |---|---|---|
 | `copy/` | 5 JPEG con EXIF (fechas 2020-2024, zona horaria, cámara ficticia «QA Labs QA Cam 1»), 1 JPEG con GPS ficticio (Madrid), 1 PNG, nombre con caracteres especiales (`Fiesta ñandú #1 (copia).jpg`), par RAW+JPEG (`RAW_0100.CR2` simulado), duplicado exacto en subcarpeta | Importación «Copiar a la biblioteca» |
 | `inplace/` | 2 JPEG (uno con GPS), duplicado de un archivo ya importado, `corrupto.jpg` (texto), `vacio.png` (0 bytes), `png-disfrazado.jpg` (PNG con extensión JPG), `notas.txt`, `clip.mp4` (H.264/AAC, 6 s, generado con ffmpeg) | Importación «Añadir sin mover» |
+
+| `people/` | 5 retratos de la NASA de dominio público (Mark Lee 1984 y 1993, Eugene Cernan 1964 y con Thomas Stafford 1966, Kathryn Thornton 1992), descargados con SHA-256 fijado; sin ellos los escenarios de Personas quedan bloqueados | Personas (S31–S36) |
 
 HEIC y RAW reales no se generan: no hay codificador libre fiable en el runner y los runners Windows Server no incluyen las extensiones HEIF/RAW de Microsoft Store (ver limitaciones).
 
@@ -79,6 +81,9 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | #20 | 27 | 1 | 0 | Flecha izquierda tras clic corregida; restauración con los mismos recuentos. |
 | #21 | 27 | 1 | 0 | Escape tras el zoom corregido; S15 falla por el arnés (miniatura no realizada por la virtualización). |
 | **#22** | **28** | **0** | **0** | **Todos los escenarios superados** (commit `f2f3315`). Evidencias en [`artifacts/qa/evidence/2026-11-07-run22`](../artifacts/qa/evidence/2026-11-07-run22/). |
+| #23 (Personas) | 28 | 1 | 8 | S29: el id del diálogo de descarga estaba en un `StackPanel` sin par UIA (arnés/accesibilidad); S30–S37 bloqueados. |
+| #24 (Personas) | 32 | 1 | 4 | S29–S31 y S37 superados; S32 contaba las tarjetas fuera de la página de Personas (arnés). |
+| **#25 (Personas)** | **37** | **0** | **0** | **Los 28 anteriores y los 9 de Personas** (commit `93551f9`, rama `claude/smart-people`). Evidencias en [`artifacts/qa/evidence/2026-11-08-run25`](../artifacts/qa/evidence/2026-11-08-run25/). |
 
 ### Errores encontrados y corregidos
 
