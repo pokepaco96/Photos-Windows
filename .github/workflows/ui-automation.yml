@@ -8,10 +8,6 @@ name: UI automation (Windows)
 on:
   # Manual. GitHub accepts workflow_dispatch only for workflows on the default branch; to run it from another
   # branch before that, add a temporary `push` trigger limited to that branch (see docs/QA_AUTOMATION.md).
-  # TEMPORARY: GitHub only dispatches workflows that are on the default branch. Remove before opening the PR.
-  push:
-    branches: [claude/smart-people]
-    paths-ignore: ['docs/**', '**/*.md', 'artifacts/**']
   workflow_dispatch:
     inputs:
       runner:
@@ -66,7 +62,7 @@ jobs:
           if ($proc.SessionId -eq 0) { Write-Warning "Session 0: no interactive desktop. UI tests will fail (reported, never skipped)." }
 
       - name: Request screen resolution (hosted runners)
-        if: inputs.resolution != '' || github.event_name == 'push'
+        if: inputs.resolution != ''
         continue-on-error: true
         shell: pwsh
         run: |
