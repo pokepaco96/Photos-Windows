@@ -9,7 +9,8 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid x:Name="RootGrid" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
+    <!-- Window-wide shortcuts: no automatic tooltip, or hovering anywhere showed "Ctrl+Shift+I" (UI run #12). -->
+    <Grid x:Name="RootGrid" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop" KeyboardAcceleratorPlacementMode="Hidden">
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />
             <RowDefinition Height="*" />
@@ -30,6 +31,7 @@
 
         <NavigationView
             x:Name="NavView"
+            AutomationProperties.AutomationId="NavView"
             Grid.Row="1"
             IsBackButtonVisible="Auto"
             IsBackEnabled="{x:Bind ContentFrame.CanGoBack, Mode=OneWay}"
@@ -43,7 +45,7 @@
             <NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     x:Name="SearchBox"
-                    x:Uid="SearchBox"
+                    x:Uid="SearchBox" AutomationProperties.AutomationId="SearchBox"
                     PlaceholderText="Search photos"
                     QueryIcon="Find"
                     QuerySubmitted="OnSearchSubmitted"
@@ -51,48 +53,48 @@
             </NavigationView.AutoSuggestBox>
 
             <NavigationView.MenuItems>
-                <NavigationViewItemHeader x:Uid="Nav_LibraryHeader" Content="Library" />
-                <NavigationViewItem x:Uid="Nav_All" Content="All photos" Tag="All" IsSelected="True">
+                <NavigationViewItemHeader x:Uid="Nav_LibraryHeader" AutomationProperties.AutomationId="Nav_LibraryHeader" Content="Library" />
+                <NavigationViewItem x:Uid="Nav_All" AutomationProperties.AutomationId="Nav_All" Content="All photos" Tag="All" IsSelected="True">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE91B;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Videos" Content="Videos" Tag="Videos">
+                <NavigationViewItem x:Uid="Nav_Videos" AutomationProperties.AutomationId="Nav_Videos" Content="Videos" Tag="Videos">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE714;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Favorites" Content="Favorites" Tag="Favorites">
+                <NavigationViewItem x:Uid="Nav_Favorites" AutomationProperties.AutomationId="Nav_Favorites" Content="Favorites" Tag="Favorites">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xEB51;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_RecentlyAdded" Content="Recently added" Tag="RecentlyAdded">
+                <NavigationViewItem x:Uid="Nav_RecentlyAdded" AutomationProperties.AutomationId="Nav_RecentlyAdded" Content="Recently added" Tag="RecentlyAdded">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE823;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Edited" Content="Edited" Tag="Edited">
+                <NavigationViewItem x:Uid="Nav_Edited" AutomationProperties.AutomationId="Nav_Edited" Content="Edited" Tag="Edited">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE70F;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Located" Content="With location" Tag="WithLocation">
+                <NavigationViewItem x:Uid="Nav_Located" AutomationProperties.AutomationId="Nav_Located" Content="With location" Tag="WithLocation">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE707;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItemHeader x:Uid="Nav_AlbumsHeader" Content="Albums" />
-                <NavigationViewItem x:Uid="Nav_Albums" Content="My albums" Tag="Albums">
+                <NavigationViewItemHeader x:Uid="Nav_AlbumsHeader" AutomationProperties.AutomationId="Nav_AlbumsHeader" Content="Albums" />
+                <NavigationViewItem x:Uid="Nav_Albums" AutomationProperties.AutomationId="Nav_Albums" Content="My albums" Tag="Albums">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE8B9;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItemHeader x:Uid="Nav_UtilitiesHeader" Content="Utilities" />
-                <NavigationViewItem x:Uid="Nav_Duplicates" Content="Duplicates" Tag="Duplicates">
+                <NavigationViewItemHeader x:Uid="Nav_UtilitiesHeader" AutomationProperties.AutomationId="Nav_UtilitiesHeader" Content="Utilities" />
+                <NavigationViewItem x:Uid="Nav_Duplicates" AutomationProperties.AutomationId="Nav_Duplicates" Content="Duplicates" Tag="Duplicates">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE8C8;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Hidden" Content="Hidden" Tag="Hidden">
+                <NavigationViewItem x:Uid="Nav_Hidden" AutomationProperties.AutomationId="Nav_Hidden" Content="Hidden" Tag="Hidden">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xED1A;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Trash" Content="Recently deleted" Tag="RecentlyDeleted">
+                <NavigationViewItem x:Uid="Nav_Trash" AutomationProperties.AutomationId="Nav_Trash" Content="Recently deleted" Tag="RecentlyDeleted">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE74D;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Nav_Imports" Content="Imports" Tag="Imports">
+                <NavigationViewItem x:Uid="Nav_Imports" AutomationProperties.AutomationId="Nav_Imports" Content="Imports" Tag="Imports">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem x:Uid="Nav_Import" Content="Import…" Tag="Import" SelectsOnInvoked="False">
+                <NavigationViewItem x:Uid="Nav_Import" AutomationProperties.AutomationId="Nav_Import" Content="Import…" Tag="Import" SelectsOnInvoked="False">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE8B5;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
@@ -104,6 +106,7 @@
                 </Grid.RowDefinitions>
 
                 <InfoBar
+                    AutomationProperties.AutomationId="ActivityBar"
                     Margin="12,4,12,0"
                     IsOpen="{x:Bind ViewModel.Activity.IsOpen, Mode=OneWay}"
                     IsClosable="{x:Bind conv:Bind.Not(ViewModel.Activity.IsBusy), Mode=OneWay}"
@@ -114,18 +117,19 @@
                     <InfoBar.Content>
                         <StackPanel Spacing="8" Margin="0,0,0,12">
                             <ProgressBar
+                                AutomationProperties.AutomationId="ActivityProgress"
                                 Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}"
                                 IsIndeterminate="{x:Bind ViewModel.Activity.IsIndeterminate, Mode=OneWay}"
                                 Value="{x:Bind ViewModel.Activity.Percent, Mode=OneWay}" />
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button x:Uid="Common_CancelButton" Content="Cancel" Command="{x:Bind ViewModel.Activity.CancelCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}" />
-                                <Button Content="{x:Bind ViewModel.Activity.ActionText, Mode=OneWay}" Command="{x:Bind ViewModel.Activity.InvokeActionCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.HasAction), Mode=OneWay}" />
+                                <Button x:Uid="Common_CancelButton" AutomationProperties.AutomationId="Common_CancelButton" Content="Cancel" Command="{x:Bind ViewModel.Activity.CancelCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.IsBusy), Mode=OneWay}" />
+                                <Button AutomationProperties.AutomationId="ActivityAction" Content="{x:Bind ViewModel.Activity.ActionText, Mode=OneWay}" Command="{x:Bind ViewModel.Activity.InvokeActionCommand}" Visibility="{x:Bind conv:Bind.Visible(ViewModel.Activity.HasAction), Mode=OneWay}" />
                             </StackPanel>
                         </StackPanel>
                     </InfoBar.Content>
                 </InfoBar>
 
-                <Frame x:Name="ContentFrame" Grid.Row="1" />
+                <Frame x:Name="ContentFrame" Grid.Row="1" AutomationProperties.AutomationId="ContentFrame" />
             </Grid>
         </NavigationView>
     </Grid>

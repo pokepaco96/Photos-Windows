@@ -1,0 +1,130 @@
+name: UI automation (Windows)
+
+# End-to-end tests that drive the real PhotosWindows.exe through Windows UI Automation.
+# Manual for now. Needs a Windows session with an unlocked, interactive desktop:
+# - "windows-latest" (GitHub-hosted) is tried first; the probe step records whether the session is interactive.
+# - For a dedicated machine use a self-hosted runner labelled [self-hosted, windows, ui] running as a
+#   logged-on user (not as a service). See docs/QA_AUTOMATION.md.
+on:
+  # Manual. GitHub accepts workflow_dispatch only for workflows on the default branch; to run it from another
+  # branch before that, add a temporary `push` trigger limited to that branch (see docs/QA_AUTOMATION.md).
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner labels as JSON, e.g. "windows-latest" or ["self-hosted","windows","ui"]'
+        required: true
+        default: '"windows-latest"'
+      resolution:
+        description: 'Screen resolution to request on hosted runners (WIDTHxHEIGHT, empty to keep)'
+        required: false
+        default: '1920x1080'
+
+permissions:
+  contents: read
+
+concurrency:
+  # Never run two UI sessions on the same desktop at once.
+  group: ui-automation
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  ui-tests:
+    name: UI automation
+    runs-on: ${{ fromJSON(inputs.runner || '"windows-latest"') }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Probe desktop session
+        id: probe
+        shell: pwsh
+        run: |
+          $proc = Get-Process -Id $PID
+          $interactive = [Environment]::UserInteractive
+          Add-Type -AssemblyName System.Windows.Forms
+          $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $os = (Get-CimInstance Win32_OperatingSystem).Caption + ' ' + [Environment]::OSVersion.Version
+          "| Probe | Value |" >> $env:GITHUB_STEP_SUMMARY
+          "|---|---|" >> $env:GITHUB_STEP_SUMMARY
+          "| OS | $os |" >> $env:GITHUB_STEP_SUMMARY
+          "| Session id | $($proc.SessionId) |" >> $env:GITHUB_STEP_SUMMARY
+          "| UserInteractive | $interactive |" >> $env:GITHUB_STEP_SUMMARY
+          "| Primary screen | $($screen.Width)x$($screen.Height) |" >> $env:GITHUB_STEP_SUMMARY
+          "| User | $env:USERNAME |" >> $env:GITHUB_STEP_SUMMARY
+          if ($proc.SessionId -eq 0) { Write-Warning "Session 0: no interactive desktop. UI tests will fail (reported, never skipped)." }
+
+      - name: Request screen resolution (hosted runners)
+        if: inputs.resolution != ''
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $res = '${{ inputs.resolution }}'; if (-not $res) { $res = '1920x1080' }
+          $w, $h = $res.Split('x')
+          Set-DisplayResolution -Width $w -Height $h -Force
+          Add-Type -AssemblyName System.Windows.Forms
+          "Screen now: $([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width)x$([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height)"
+
+      - name: Media Foundation (video playback on Windows Server)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          if (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue) {
+            $f = Get-WindowsFeature Server-Media-Foundation
+            if ($f -and -not $f.Installed) { Install-WindowsFeature Server-Media-Foundation | Out-String | Write-Host }
+            else { "Server-Media-Foundation: $($f.InstallState)" }
+          } else { "Client Windows: Media Foundation is built in." }
+
+      - name: ffmpeg (synthetic MP4 for the dataset)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) { choco install ffmpeg -y --no-progress | Out-Null }
+          ffmpeg -version | Select-Object -First 1
+
+      - name: Publish app (x64, self-contained)
+        run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
+
+      - name: Start-up smoke (published and build output)
+        shell: pwsh
+        run: |
+          $build = Get-ChildItem src/PhotosWindows.App/bin -Recurse -Filter PhotosWindows.exe | Select-Object -First 1 -ExpandProperty FullName
+          ./tests/PhotosWindows.UIAutomation.Tests/scripts/startup-smoke.ps1 -Exe "artifacts/PhotosWindows-win-x64/PhotosWindows.exe", $build -Output artifacts/qa/run/logs
+
+      - name: Build UI tests
+        run: dotnet build tests/PhotosWindows.UIAutomation.Tests -c Release
+
+      - name: Run UI automation
+        id: run
+        shell: pwsh
+        env:
+          PW_APP_EXE: ${{ github.workspace }}\artifacts\PhotosWindows-win-x64\PhotosWindows.exe
+          PW_QA_OUTPUT: ${{ github.workspace }}\artifacts\qa\run
+          PW_QA_WORK: ${{ runner.temp }}\pwqa
+        run: |
+          # Refresh PATH so a freshly installed ffmpeg is found.
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          dotnet test tests/PhotosWindows.UIAutomation.Tests -c Release --no-build --logger "trx;LogFileName=ui.trx" --logger "console;verbosity=normal" --results-directory artifacts/qa/run/trx --blame-hang-timeout 10m
+
+      - name: Report
+        if: always()
+        shell: pwsh
+        run: |
+          $report = "artifacts/qa/run/report.md"
+          if (Test-Path $report) { Get-Content $report -Raw >> $env:GITHUB_STEP_SUMMARY }
+          else { "**No UI report was produced** – the run did not reach the test fixture (see logs)." >> $env:GITHUB_STEP_SUMMARY }
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-automation-evidence
+          path: artifacts/qa/run
+          if-no-files-found: warn

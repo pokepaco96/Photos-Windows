@@ -7,86 +7,89 @@
 
     <ScrollViewer>
         <StackPanel MaxWidth="820" Padding="24,8,24,32" Spacing="8" HorizontalAlignment="Left">
-            <TextBlock x:Uid="Settings_Title" Text="Settings" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock x:Uid="Settings_Title" AutomationProperties.AutomationId="Settings_Title" Text="Settings" Style="{StaticResource PageTitleStyle}" />
 
             <!-- Appearance -->
-            <TextBlock x:Uid="Settings_Appearance" Text="Appearance" Style="{StaticResource SectionHeaderStyle}" />
-            <RadioButtons x:Uid="Settings_Theme" Header="Theme" SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}">
+            <TextBlock x:Uid="Settings_Appearance" AutomationProperties.AutomationId="Settings_Appearance" Text="Appearance" Style="{StaticResource SectionHeaderStyle}" />
+            <RadioButtons x:Uid="Settings_Theme" AutomationProperties.AutomationId="Settings_Theme" Header="Theme" SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}">
                 <x:String>System</x:String>
                 <x:String>Light</x:String>
                 <x:String>Dark</x:String>
             </RadioButtons>
 
             <!-- Library -->
-            <TextBlock x:Uid="Settings_Library" Text="Library" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_Library" AutomationProperties.AutomationId="Settings_Library" Text="Library" Style="{StaticResource SectionHeaderStyle}" />
             <TextBlock Text="{x:Bind ViewModel.LibraryName, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Text="{x:Bind ViewModel.LibraryPath, Mode=OneWay}" IsTextSelectionEnabled="True" Opacity="0.75" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.AutomationId="Settings_LibraryPath" Text="{x:Bind ViewModel.LibraryPath, Mode=OneWay}" IsTextSelectionEnabled="True" Opacity="0.75" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Uid="Settings_OpenFolder" Content="Open in Explorer" Command="{x:Bind ViewModel.OpenLibraryFolderCommand}" />
-                <Button x:Uid="Settings_SwitchLibrary" Content="Switch library…" Command="{x:Bind ViewModel.SwitchLibraryCommand}" />
+                <Button x:Uid="Settings_OpenFolder" AutomationProperties.AutomationId="Settings_OpenFolder" Content="Open in Explorer" Command="{x:Bind ViewModel.OpenLibraryFolderCommand}" />
+                <Button x:Uid="Settings_SwitchLibrary" AutomationProperties.AutomationId="Settings_SwitchLibrary" Content="Switch library…" Command="{x:Bind ViewModel.SwitchLibraryCommand}" />
             </StackPanel>
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Storage}" Margin="0,8,0,0">
-                <ItemsRepeater.Layout><UniformGridLayout MinItemWidth="190" MinColumnSpacing="12" MinRowSpacing="8" /></ItemsRepeater.Layout>
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Storage}" AutomationProperties.AutomationId="Settings_Storage" Margin="0,8,0,0">
+                <ItemsRepeater.Layout><UniformGridLayout MinItemWidth="220" MinColumnSpacing="12" MinRowSpacing="8" /></ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:InfoRow">
                         <StackPanel Padding="12,8" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                            <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
-                            <TextBlock Text="{x:Bind Value}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <!-- Every cell gets the size of the first one: a wrapped label pushed the value out of the card (UI run #11). -->
+                            <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Label}" />
+                            <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind AccessibleText}" Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
 
             <!-- Cache -->
-            <TextBlock x:Uid="Settings_Cache" Text="Thumbnail cache" Style="{StaticResource SectionHeaderStyle}" />
-            <TextBlock x:Uid="Settings_CacheHelp" Text="Thumbnails can always be rebuilt. Move the cache to a faster or larger drive if you like." TextWrapping="Wrap" Opacity="0.8" />
+            <TextBlock x:Uid="Settings_Cache" AutomationProperties.AutomationId="Settings_Cache" Text="Thumbnail cache" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_CacheHelp" AutomationProperties.AutomationId="Settings_CacheHelp" Text="Thumbnails can always be rebuilt. Move the cache to a faster or larger drive if you like." TextWrapping="Wrap" Opacity="0.8" />
             <TextBlock Text="{x:Bind ViewModel.CachePath, Mode=OneWay}" IsTextSelectionEnabled="True" Opacity="0.75" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Uid="Settings_ChangeCache" Content="Change location…" Command="{x:Bind ViewModel.ChangeCacheCommand}" />
-                <Button x:Uid="Settings_ResetCache" Content="Use default location" Command="{x:Bind ViewModel.ResetCacheLocationCommand}" />
-                <Button x:Uid="Settings_ClearCacheButton" Content="Clear cache" Command="{x:Bind ViewModel.ClearCacheCommand}" />
+                <Button x:Uid="Settings_ChangeCache" AutomationProperties.AutomationId="Settings_ChangeCache" Content="Change location…" Command="{x:Bind ViewModel.ChangeCacheCommand}" />
+                <Button x:Uid="Settings_ResetCache" AutomationProperties.AutomationId="Settings_ResetCache" Content="Use default location" Command="{x:Bind ViewModel.ResetCacheLocationCommand}" />
+                <Button x:Uid="Settings_ClearCacheButton" AutomationProperties.AutomationId="Settings_ClearCacheButton" Content="Clear cache" Command="{x:Bind ViewModel.ClearCacheCommand}" />
             </StackPanel>
 
             <!-- Backup -->
-            <TextBlock x:Uid="Settings_Backup" Text="Backup and restore" Style="{StaticResource SectionHeaderStyle}" />
-            <TextBlock x:Uid="Settings_BackupHelp" TextWrapping="Wrap" Opacity="0.8"
+            <TextBlock x:Uid="Settings_Backup" AutomationProperties.AutomationId="Settings_Backup" Text="Backup and restore" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_BackupHelp" AutomationProperties.AutomationId="Settings_BackupHelp" TextWrapping="Wrap" Opacity="0.8"
                        Text="A backup contains the catalogue (albums, keywords, edits) and, optionally, the originals copied into the library. Photos added without moving are not included: back up those folders as well." />
-            <CheckBox x:Uid="Settings_IncludeOriginals" Content="Include originals stored in the library" IsChecked="{x:Bind ViewModel.IncludeOriginalsInBackup, Mode=TwoWay}" />
+            <CheckBox x:Uid="Settings_IncludeOriginals" AutomationProperties.AutomationId="Settings_IncludeOriginals" Content="Include originals stored in the library" IsChecked="{x:Bind ViewModel.IncludeOriginalsInBackup, Mode=TwoWay}" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Uid="Settings_CreateBackup" Content="Create backup…" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.CreateBackupCommand}" />
-                <Button x:Uid="Settings_VerifyBackup" Content="Verify a backup…" Command="{x:Bind ViewModel.VerifyBackupCommand}" />
-                <Button x:Uid="Settings_RestoreNew" Content="Restore as new library…" Command="{x:Bind ViewModel.RestoreAsNewCommand}" />
-                <Button x:Uid="Settings_RestoreCatalog" Content="Restore catalogue…" Command="{x:Bind ViewModel.RestoreCatalogCommand}" />
+                <Button x:Uid="Settings_CreateBackup" AutomationProperties.AutomationId="Settings_CreateBackup" Content="Create backup…" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.CreateBackupCommand}" />
+                <Button x:Uid="Settings_VerifyBackup" AutomationProperties.AutomationId="Settings_VerifyBackup" Content="Verify a backup…" Command="{x:Bind ViewModel.VerifyBackupCommand}" />
+                <Button x:Uid="Settings_RestoreNew" AutomationProperties.AutomationId="Settings_RestoreNew" Content="Restore as new library…" Command="{x:Bind ViewModel.RestoreAsNewCommand}" />
+                <Button x:Uid="Settings_RestoreCatalog" AutomationProperties.AutomationId="Settings_RestoreCatalog" Content="Restore catalogue…" Command="{x:Bind ViewModel.RestoreCatalogCommand}" />
             </StackPanel>
 
             <!-- Maintenance -->
-            <TextBlock x:Uid="Settings_Maintenance" Text="Check and repair" Style="{StaticResource SectionHeaderStyle}" />
-            <TextBlock x:Uid="Settings_MaintenanceHelp" TextWrapping="Wrap" Opacity="0.8"
+            <TextBlock x:Uid="Settings_Maintenance" AutomationProperties.AutomationId="Settings_Maintenance" Text="Check and repair" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_MaintenanceHelp" AutomationProperties.AutomationId="Settings_MaintenanceHelp" TextWrapping="Wrap" Opacity="0.8"
                        Text="Checks the catalogue and every file: missing or moved originals, unexpected changes and incomplete copies. Nothing is deleted without asking." />
-            <CheckBox x:Uid="Settings_VerifyHashes" Content="Also verify file contents (slower)" IsChecked="{x:Bind ViewModel.VerifyHashes, Mode=TwoWay}" />
+            <CheckBox x:Uid="Settings_VerifyHashes" AutomationProperties.AutomationId="Settings_VerifyHashes" Content="Also verify file contents (slower)" IsChecked="{x:Bind ViewModel.VerifyHashes, Mode=TwoWay}" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Uid="Settings_Verify" Content="Check library" Command="{x:Bind ViewModel.VerifyLibraryCommand}" />
-                <Button x:Uid="Settings_RebuildIndex" Content="Rebuild search index" Command="{x:Bind ViewModel.RebuildIndexCommand}" />
+                <Button x:Uid="Settings_Verify" AutomationProperties.AutomationId="Settings_Verify" Content="Check library" Command="{x:Bind ViewModel.VerifyLibraryCommand}" />
+                <Button x:Uid="Settings_RebuildIndex" AutomationProperties.AutomationId="Settings_RebuildIndex" Content="Rebuild search index" Command="{x:Bind ViewModel.RebuildIndexCommand}" />
             </StackPanel>
-            <TextBlock Text="{x:Bind ViewModel.VerificationSummary, Mode=OneWay}" TextWrapping="Wrap" Visibility="{x:Bind conv:Bind.VisibleIfText(ViewModel.VerificationSummary), Mode=OneWay}" />
+            <TextBlock AutomationProperties.AutomationId="Settings_VerificationSummary" Text="{x:Bind ViewModel.VerificationSummary, Mode=OneWay}" TextWrapping="Wrap" Visibility="{x:Bind conv:Bind.VisibleIfText(ViewModel.VerificationSummary), Mode=OneWay}" />
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Uid="Settings_Relink" Content="Find moved files in a folder…" Command="{x:Bind ViewModel.RelinkCommand}" Visibility="{x:Bind ViewModel.HasMissing, Mode=OneWay}" />
-                <Button x:Uid="Settings_Adopt" Content="Add uncatalogued copies" Command="{x:Bind ViewModel.AdoptOrphansCommand}" Visibility="{x:Bind ViewModel.HasOrphans, Mode=OneWay}" />
-                <Button x:Uid="Settings_CleanPartials" Content="Remove incomplete copies" Command="{x:Bind ViewModel.CleanPartialsCommand}" Visibility="{x:Bind ViewModel.HasPartials, Mode=OneWay}" />
+                <Button x:Uid="Settings_Relink" AutomationProperties.AutomationId="Settings_Relink" Content="Find moved files in a folder…" Command="{x:Bind ViewModel.RelinkCommand}" Visibility="{x:Bind ViewModel.HasMissing, Mode=OneWay}" />
+                <Button x:Uid="Settings_Adopt" AutomationProperties.AutomationId="Settings_Adopt" Content="Add uncatalogued copies" Command="{x:Bind ViewModel.AdoptOrphansCommand}" Visibility="{x:Bind ViewModel.HasOrphans, Mode=OneWay}" />
+                <Button x:Uid="Settings_CleanPartials" AutomationProperties.AutomationId="Settings_CleanPartials" Content="Remove incomplete copies" Command="{x:Bind ViewModel.CleanPartialsCommand}" Visibility="{x:Bind ViewModel.HasPartials, Mode=OneWay}" />
             </StackPanel>
 
             <!-- Privacy -->
-            <TextBlock x:Uid="Settings_Privacy" Text="Privacy" Style="{StaticResource SectionHeaderStyle}" />
-            <TextBlock x:Uid="Settings_PrivacyText" TextWrapping="Wrap" Opacity="0.8"
+            <TextBlock x:Uid="Settings_Privacy" AutomationProperties.AutomationId="Settings_Privacy" Text="Privacy" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_PrivacyText" AutomationProperties.AutomationId="Settings_PrivacyText" TextWrapping="Wrap" Opacity="0.8"
                        Text="Photos Windows works offline. It has no account, no cloud sync and no telemetry, and it never uploads photos, thumbnails or metadata. Diagnostic logs stay on this PC." />
-            <Button x:Uid="Settings_OpenLogs" Content="Open logs folder" Command="{x:Bind ViewModel.OpenLogsFolderCommand}" />
+            <Button x:Uid="Settings_OpenLogs" AutomationProperties.AutomationId="Settings_OpenLogs" Content="Open logs folder" Command="{x:Bind ViewModel.OpenLogsFolderCommand}" />
 
             <!-- About -->
-            <TextBlock x:Uid="Settings_About" Text="About" Style="{StaticResource SectionHeaderStyle}" />
+            <TextBlock x:Uid="Settings_About" AutomationProperties.AutomationId="Settings_About" Text="About" Style="{StaticResource SectionHeaderStyle}" />
             <TextBlock>
                 <Run Text="Photos Windows " /><Run Text="{x:Bind ViewModel.Version}" />
             </TextBlock>
-            <TextBlock x:Uid="Settings_AboutText" TextWrapping="Wrap" Opacity="0.8"
+            <TextBlock x:Uid="Settings_AboutText" AutomationProperties.AutomationId="Settings_AboutText" TextWrapping="Wrap" Opacity="0.8"
                        Text="Independent project, not affiliated with Apple. Built with .NET, Windows App SDK, SQLite, SkiaSharp, MetadataExtractor, XmpCore, Dapper and CommunityToolkit.Mvvm under their respective open-source licences (see docs/THIRD_PARTY_NOTICES.md)." />
         </StackPanel>
     </ScrollViewer>

@@ -17,6 +17,7 @@
   <data name="Albums_EmptyText.Text" xml:space="preserve"><value>Los álbumes agrupan fotos sin copiarlas. Selecciona fotos en la biblioteca y elige «Añadir a álbum», o crea uno aquí.</value></data>
   <data name="Albums_EmptyTitle.Text" xml:space="preserve"><value>Aún no hay álbumes</value></data>
   <data name="Albums_FolderCount" xml:space="preserve"><value>{0} elemento(s)</value></data>
+  <data name="Albums_ItemCount" xml:space="preserve"><value>{0} elemento(s)</value></data>
   <data name="Albums_FolderName" xml:space="preserve"><value>Nombre de la carpeta</value></data>
   <data name="Albums_MoveMenu.Text" xml:space="preserve"><value>Mover a carpeta…</value></data>
   <data name="Albums_MoveTitle" xml:space="preserve"><value>Mover «{0}» a</value></data>
@@ -201,7 +202,7 @@
   <data name="ImportStatus_Running" xml:space="preserve"><value>En curso</value></data>
   <data name="Import_AlreadyRunning" xml:space="preserve"><value>Hay otra operación en curso. Espera a que termine o cancélala.</value></data>
   <data name="Import_DropCaption" xml:space="preserve"><value>Importar a la biblioteca</value></data>
-  <data name="Import_Eta" xml:space="preserve"><value>quedan unos {0} min</value></data>
+  <data name="Import_Eta" xml:space="preserve"><value> · quedan unos {0} min</value></data>
   <data name="Import_FromFiles" xml:space="preserve"><value>Importar archivos…</value></data>
   <data name="Import_FromFolder" xml:space="preserve"><value>Importar carpeta o unidad…</value></data>
   <data name="Import_IncludeDuplicates" xml:space="preserve"><value>Importar copias idénticas de archivos que ya están en la biblioteca</value></data>
@@ -210,7 +211,7 @@
   <data name="Import_ModeCopy" xml:space="preserve"><value>Copiar a la biblioteca</value></data>
   <data name="Import_ModeCopyHelp" xml:space="preserve"><value>Las copias van a la carpeta de originales de la biblioteca (por año y mes). Los archivos de origen no se eliminan.</value></data>
   <data name="Import_OriginalsSafe" xml:space="preserve"><value>La importación nunca modifica ni elimina tus archivos originales.</value></data>
-  <data name="Import_Progress" xml:space="preserve"><value>{0} de {1} · {2} importados · {3} duplicados · {4} omitidos o con error {5}</value></data>
+  <data name="Import_Progress" xml:space="preserve"><value>{0} de {1} · {2} importados · {3} duplicado(s) · {4} omitidos o con error{5}</value></data>
   <data name="Import_SourcesCount" xml:space="preserve"><value>{0} elementos seleccionados</value></data>
   <data name="Import_Start" xml:space="preserve"><value>Importar</value></data>
   <data name="Import_Subfolders" xml:space="preserve"><value>Incluir subcarpetas</value></data>
@@ -250,7 +251,11 @@
   <data name="Info_TitleBox.Header" xml:space="preserve"><value>Título</value></data>
   <data name="Keywords_AddTitle" xml:space="preserve"><value>Añadir palabras clave a {0} elemento(s)</value></data>
   <data name="Keywords_Placeholder" xml:space="preserve"><value>playa, familia, verano</value></data>
-  <data name="Library_Counts" xml:space="preserve"><value>{0} fotos · {1} vídeos</value></data>
+  <data name="Library_Counts" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Library_PhotoOne" xml:space="preserve"><value>{0} foto</value></data>
+  <data name="Library_PhotoMany" xml:space="preserve"><value>{0} fotos</value></data>
+  <data name="Library_VideoOne" xml:space="preserve"><value>{0} vídeo</value></data>
+  <data name="Library_VideoMany" xml:space="preserve"><value>{0} vídeos</value></data>
   <data name="Library_ImportButton.Content" xml:space="preserve"><value>Importar fotos…</value></data>
   <data name="Library_Unavailable" xml:space="preserve"><value>No se pudo abrir la biblioteca</value></data>
   <data name="Library_Zoom.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Tamaño de las miniaturas</value></data>

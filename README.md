@@ -6,7 +6,7 @@ Importa, cataloga, busca, organiza, edita sin destruir, exporta y protege tu col
 > «Photos Windows» es un nombre de trabajo. El proyecto no está afiliado a Apple y no utiliza su código, marcas ni recursos.
 
 ## Estado
-En desarrollo activo. El núcleo (biblioteca, importación, catálogo, búsqueda, edición, exportación, copias, verificación) está implementado y cubierto por pruebas automáticas en Linux y Windows. La aplicación WinUI 3 se compila y publica en CI (`windows-latest`); la validación manual en un Windows interactivo sigue pendiente (ver [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md)). Detalle en [`docs/PROGRESS.md`](docs/PROGRESS.md) y [`docs/ROADMAP.md`](docs/ROADMAP.md).
+En desarrollo activo. El núcleo (biblioteca, importación, catálogo, búsqueda, edición, exportación, copias, verificación) está implementado y cubierto por pruebas automáticas en Linux y Windows. La aplicación WinUI 3 se compila y publica en CI (`windows-latest`) y una suite de UI Automation la usa de verdad a través de su interfaz en un escritorio de Windows (28 de 28 escenarios superados en la última ejecución; ver [`docs/QA_AUTOMATION.md`](docs/QA_AUTOMATION.md)). La prueba manual en Windows 11 con archivos reales sigue pendiente (ver [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md)). Detalle en [`docs/PROGRESS.md`](docs/PROGRESS.md) y [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Probar la aplicación
 1. Descarga el artefacto `PhotosWindows-win-x64` de la última ejecución correcta de GitHub Actions (pestaña *Actions* › *CI*).
@@ -44,6 +44,8 @@ dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Plat
 ```
 Pruebas de rendimiento del catálogo: `dotnet test PhotosWindows.Core.slnf --filter Category=Performance` (resultados en [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)).
 
+Pruebas de interfaz end-to-end (Windows con escritorio, la app publicada en `artifacts/PhotosWindows-win-x64`): `dotnet test tests/PhotosWindows.UIAutomation.Tests -c Release`. Mueven el ratón y escriben: no uses el equipo mientras se ejecutan. En GitHub: workflow *UI automation (Windows)*. Detalles, aislamiento de datos y runner propio en [`docs/QA_AUTOMATION.md`](docs/QA_AUTOMATION.md); evidencias en [`artifacts/qa/`](artifacts/qa/).
+
 Estructura:
 ```
 src/PhotosWindows.Domain          entidades y reglas (sin dependencias)
@@ -52,7 +54,7 @@ src/PhotosWindows.Infrastructure  SQLite, metadatos, ajustes, logging
 src/PhotosWindows.Imaging         decodificación, edición y codificación (SkiaSharp)
 src/PhotosWindows.Platform.Windows WIC (HEIF/AVIF/TIFF/RAW) y fotogramas de vídeo
 src/PhotosWindows.App             aplicación WinUI 3 (MVVM)
-tests/                            pruebas unitarias e integración (fixtures sintéticas)
+tests/                            pruebas unitarias, integración y UI Automation (datos sintéticos)
 docs/                             especificación, arquitectura, ADR, seguridad, privacidad…
 ```
 Arquitectura: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Decisiones: [`docs/decisions`](docs/decisions). Dependencias y licencias: [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md).

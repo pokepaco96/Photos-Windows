@@ -45,6 +45,10 @@ public sealed class ImportCoordinator(
         var copy = new RadioButton { Content = Loc.Get("Import_ModeCopy"), GroupName = "mode", IsChecked = current.DefaultImportMode == ImportMode.CopyToLibrary };
         var duplicates = new CheckBox { Content = Loc.Get("Import_IncludeDuplicates"), IsChecked = current.ImportDuplicates };
         var recursive = new CheckBox { Content = Loc.Get("Import_Subfolders"), IsChecked = true };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(addInPlace, "Import_ModeAddRadio");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(copy, "Import_ModeCopyRadio");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(duplicates, "Import_DuplicatesCheck");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(recursive, "Import_SubfoldersCheck");
         var panel = new StackPanel { Spacing = 8, MaxWidth = 460 };
         panel.Children.Add(new TextBlock { Text = sources.Count == 1 ? sources[0] : Loc.Format("Import_SourcesCount", sources.Count), TextWrapping = TextWrapping.Wrap, Opacity = 0.8 });
         panel.Children.Add(addInPlace);
@@ -77,10 +81,12 @@ public sealed class ImportCoordinator(
     {
         await activity.RunAsync(Loc.Get("Import_Title"), async (progress, ct) =>
         {
-            var importProgress = new Progress<ImportProgress>(p => progress.Report(new ActivityProgress(
+            var importProgress = new InlineProgress<ImportProgress>(p => progress.Report(new ActivityProgress(
                 p.Total == 0 ? null : p.Fraction,
                 Loc.Format("Import_Progress", p.Processed, p.Total, p.Imported, p.Duplicates, p.Failed + p.Skipped,
-                    p.EstimatedRemaining is { } eta ? Loc.Format("Import_Eta", Math.Ceiling(eta.TotalMinutes)) : string.Empty))));
+                    p.Processed < p.Total && p.EstimatedRemaining is { TotalSeconds: > 0 } eta
+                        ? Loc.Format("Import_Eta", Math.Ceiling(eta.TotalMinutes))
+                        : string.Empty))));
             var result = await run(importProgress, ct);
             background.Signal();
             var severity = result.Status switch

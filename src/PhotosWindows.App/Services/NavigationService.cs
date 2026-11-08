@@ -18,7 +18,8 @@ public sealed class NavigationService
 {
     private Frame? _frame;
 
-    public event EventHandler<Type>? Navigated;
+    /// <summary>Raised after navigation with the page type and the navigation parameter.</summary>
+    public event EventHandler<(Type Page, object? Parameter)>? Navigated;
 
     public bool CanGoBack => _frame?.CanGoBack == true;
 
@@ -27,7 +28,7 @@ public sealed class NavigationService
     public void Attach(Frame frame)
     {
         _frame = frame;
-        _frame.Navigated += (_, e) => Navigated?.Invoke(this, e.SourcePageType);
+        _frame.Navigated += (_, e) => Navigated?.Invoke(this, (e.SourcePageType, e.Parameter));
     }
 
     public void ToLibrary(LibraryNavigation target) => Navigate(typeof(LibraryPage), target);

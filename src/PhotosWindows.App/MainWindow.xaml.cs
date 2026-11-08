@@ -22,13 +22,44 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
+        if (Content is FrameworkElement root)
+        {
+            // The system draws the caption buttons with the OS theme; follow the app theme instead (UI run #10).
+            root.ActualThemeChanged += (sender, _) => ApplyCaptionButtonColors(sender.ActualTheme);
+            ApplyCaptionButtonColors(root.ActualTheme);
+        }
+
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
-        AppWindow.Resize(new Windows.Graphics.SizeInt32(1400, 900));
+        FitToDisplay();
         _navigation.Attach(ContentFrame);
-        _navigation.Navigated += (_, page) => SyncSelection(page);
+        _navigation.Navigated += (_, e) => SyncSelection(e.Page, e.Parameter);
     }
 
     public ShellViewModel ViewModel { get; }
+
+    private void ApplyCaptionButtonColors(ElementTheme theme)
+    {
+        var bar = AppWindow.TitleBar;
+        var dark = theme == ElementTheme.Dark;
+        byte fg = dark ? (byte)255 : (byte)0;
+        bar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonForegroundColor = Windows.UI.Color.FromArgb(255, fg, fg, fg);
+        bar.ButtonHoverForegroundColor = Windows.UI.Color.FromArgb(255, fg, fg, fg);
+        bar.ButtonPressedForegroundColor = Windows.UI.Color.FromArgb(255, fg, fg, fg);
+        bar.ButtonInactiveForegroundColor = dark ? Windows.UI.Color.FromArgb(255, 0x9A, 0x9A, 0x9A) : Windows.UI.Color.FromArgb(255, 0x6E, 0x6E, 0x6E);
+        bar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(0x18, fg, fg, fg);
+        bar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x10, fg, fg, fg);
+    }
+
+    /// <summary>Initial size: 1400×900, or 90 % of the work area on smaller displays, centred.</summary>
+    private void FitToDisplay()
+    {
+        var area = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(AppWindow.Id, Microsoft.UI.Windowing.DisplayAreaFallback.Primary).WorkArea;
+        var width = Math.Min(1400, (int)(area.Width * 0.9));
+        var height = Math.Min(900, (int)(area.Height * 0.9));
+        AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(area.X + (area.Width - width) / 2, area.Y + (area.Height - height) / 2, width, height));
+    }
 
     public async Task InitializeAsync()
     {
@@ -57,20 +88,29 @@ public sealed partial class MainWindow : Window
     private void ShowImportMenu(FrameworkElement anchor)
     {
         var menu = new MenuFlyout();
-        menu.Items.Add(new MenuFlyoutItem { Text = Loc.Get("Import_FromFolder"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFolderCommand });
-        menu.Items.Add(new MenuFlyoutItem { Text = Loc.Get("Import_FromFiles"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFilesCommand });
+        var folder = new MenuFlyoutItem { Text = Loc.Get("Import_FromFolder"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFolderCommand };
+        var files = new MenuFlyoutItem { Text = Loc.Get("Import_FromFiles"), Icon = new FontIcon { Glyph = "" }, Command = ViewModel.ImportFilesCommand };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(folder, "Import_FromFolder");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(files, "Import_FromFiles");
+        menu.Items.Add(folder);
+        menu.Items.Add(files);
         menu.ShowAt(anchor);
     }
 
-    private void SyncSelection(Type page)
+    private void SyncSelection(Type page, object? parameter)
     {
         // Keep the sidebar highlight in sync when navigating back or from inside pages.
         string? tag = page == typeof(SettingsPage) ? null
             : page == typeof(AlbumsPage) ? "Albums"
             : page == typeof(DuplicatesPage) ? "Duplicates"
             : page == typeof(ImportsPage) ? "Imports"
-            : page == typeof(LibraryPage) && ContentFrame.Content is LibraryPage { Target: { AlbumId: null, SearchText: null } t } ? t.Scope.ToString()
-            : page == typeof(LibraryPage) ? "Albums"
+            // Use the navigation parameter: the page's own state is not set yet when Navigated fires.
+            : page == typeof(LibraryPage) ? (parameter as LibraryNavigation ?? LibraryNavigation.AllPhotos) switch
+            {
+                { SearchText: not null } => null, // search results: no sidebar section
+                { AlbumId: not null } => "Albums",
+                var t => t.Scope.ToString(),
+            }
             : null;
         if (page == typeof(SettingsPage))
         {

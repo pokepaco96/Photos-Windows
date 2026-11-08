@@ -23,6 +23,14 @@ public sealed partial class AlbumsPage : Page
         if (e.ClickedItem is AlbumCardViewModel card) await ViewModel.OpenAsync(card);
     }
 
+    /// <summary>Accessible name/id on each card container (a StackPanel template has no automation peer of its own).</summary>
+    private void OnCardContainerChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.Item is not AlbumCardViewModel card) return;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(args.ItemContainer, $"{card.Name}, {card.Subtitle}");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(args.ItemContainer, "AlbumCard_" + card.Name);
+    }
+
     private static AlbumCardViewModel? CardOf(object sender) => (sender as FrameworkElement)?.Tag as AlbumCardViewModel;
 
     private void OnRename(object sender, RoutedEventArgs e) => ViewModel.RenameCommand.Execute(CardOf(sender));

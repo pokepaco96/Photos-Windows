@@ -4,7 +4,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:PhotosWindows.App.ViewModels"
     xmlns:conv="using:PhotosWindows.App.Converters"
-    KeyDown="OnKeyDown">
+    IsTabStop="True"
+    UseSystemFocusVisuals="False"
+    KeyDown="OnKeyDown"
+    PreviewKeyDown="OnPreviewKeyDown"
+    KeyboardAcceleratorPlacementMode="Hidden">
+
+    <!-- Escape leaves the viewer wherever keyboard focus is: after zooming with a double-click, focus was no longer
+         inside the page and Escape did nothing (UI run #20). An accelerator does not depend on focus. -->
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="OnEscapeInvoked" />
+    </Page.KeyboardAccelerators>
 
     <Grid Background="{ThemeResource ViewerBackgroundBrush}">
         <Grid.RowDefinitions>
@@ -19,65 +29,65 @@
         <CommandBar Grid.ColumnSpan="2" DefaultLabelPosition="Collapsed" HorizontalAlignment="Stretch" Background="Transparent">
             <CommandBar.Content>
                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="12,8,0,0">
-                    <TextBlock Text="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBlock Text="{x:Bind ViewModel.Position, Mode=OneWay}" Opacity="0.6" />
+                    <TextBlock AutomationProperties.AutomationId="Viewer_FileName" Text="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock AutomationProperties.AutomationId="Viewer_Position" Text="{x:Bind ViewModel.Position, Mode=OneWay}" Opacity="0.6" />
                     <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="16" Height="16" />
                 </StackPanel>
             </CommandBar.Content>
-            <AppBarButton x:Uid="Viewer_Previous" Label="Previous" Icon="Back" Command="{x:Bind ViewModel.PreviousCommand}" IsEnabled="{x:Bind ViewModel.CanGoPrevious, Mode=OneWay}" ToolTipService.ToolTip="Previous (Left)" />
-            <AppBarButton x:Uid="Viewer_Next" Label="Next" Icon="Forward" Command="{x:Bind ViewModel.NextCommand}" IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}" ToolTipService.ToolTip="Next (Right)" />
+            <AppBarButton x:Uid="Viewer_Previous" AutomationProperties.AutomationId="Viewer_Previous" Label="Previous" Icon="Back" Command="{x:Bind ViewModel.PreviousCommand}" IsEnabled="{x:Bind ViewModel.CanGoPrevious, Mode=OneWay}" ToolTipService.ToolTip="Previous (Left)" />
+            <AppBarButton x:Uid="Viewer_Next" AutomationProperties.AutomationId="Viewer_Next" Label="Next" Icon="Forward" Command="{x:Bind ViewModel.NextCommand}" IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}" ToolTipService.ToolTip="Next (Right)" />
             <AppBarSeparator />
-            <AppBarToggleButton x:Uid="Viewer_Favorite" Label="Favorite" Icon="Favorite" IsChecked="{x:Bind ViewModel.IsFavorite, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleFavoriteCommand}" ToolTipService.ToolTip="Favorite (.)" />
-            <AppBarButton x:Uid="Viewer_Rotate" Label="Rotate view" Icon="Rotate" Command="{x:Bind ViewModel.RotateViewCommand}" Visibility="{x:Bind ViewModel.IsPhoto, Mode=OneWay}" ToolTipService.ToolTip="Rotate view (R) – the file is not changed" />
-            <AppBarToggleButton x:Uid="Viewer_Compare" Label="Show original" IsChecked="{x:Bind ViewModel.ShowingOriginal, Mode=OneWay}" Command="{x:Bind ViewModel.CompareCommand}" Visibility="{x:Bind ViewModel.HasEdits, Mode=OneWay}" ToolTipService.ToolTip="Compare with the original (M)">
+            <AppBarToggleButton x:Uid="Viewer_Favorite" AutomationProperties.AutomationId="Viewer_Favorite" Label="Favorite" Icon="Favorite" IsChecked="{x:Bind ViewModel.IsFavorite, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleFavoriteCommand}" ToolTipService.ToolTip="Favorite (.)" />
+            <AppBarButton x:Uid="Viewer_Rotate" AutomationProperties.AutomationId="Viewer_Rotate" Label="Rotate view" Icon="Rotate" Command="{x:Bind ViewModel.RotateViewCommand}" Visibility="{x:Bind ViewModel.IsPhoto, Mode=OneWay}" ToolTipService.ToolTip="Rotate view (R) – the file is not changed" />
+            <AppBarToggleButton x:Uid="Viewer_Compare" AutomationProperties.AutomationId="Viewer_Compare" Label="Show original" IsChecked="{x:Bind ViewModel.ShowingOriginal, Mode=OneWay}" Command="{x:Bind ViewModel.CompareCommand}" Visibility="{x:Bind ViewModel.HasEdits, Mode=OneWay}" ToolTipService.ToolTip="Compare with the original (M)">
                 <AppBarToggleButton.Icon><FontIcon Glyph="&#xE7B3;" /></AppBarToggleButton.Icon>
             </AppBarToggleButton>
-            <AppBarButton x:Uid="Viewer_PlayLive" Label="Play motion" Command="{x:Bind ViewModel.PlayLiveVideoCommand}" Visibility="{x:Bind ViewModel.HasLiveVideo, Mode=OneWay}" ToolTipService.ToolTip="Play the motion clip">
+            <AppBarButton x:Uid="Viewer_PlayLive" AutomationProperties.AutomationId="Viewer_PlayLive" Label="Play motion" Command="{x:Bind ViewModel.PlayLiveVideoCommand}" Visibility="{x:Bind ViewModel.HasLiveVideo, Mode=OneWay}" ToolTipService.ToolTip="Play the motion clip">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE768;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Viewer_Edit" Label="Edit" Icon="Edit" Command="{x:Bind ViewModel.EditCommand}" Visibility="{x:Bind ViewModel.IsPhoto, Mode=OneWay}" ToolTipService.ToolTip="Edit (E)" />
-            <AppBarToggleButton x:Uid="Viewer_Info" Label="Info" IsChecked="{x:Bind ViewModel.IsInfoOpen, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleInfoCommand}" ToolTipService.ToolTip="Info (I)">
+            <AppBarButton x:Uid="Viewer_Edit" AutomationProperties.AutomationId="Viewer_Edit" Label="Edit" Icon="Edit" Command="{x:Bind ViewModel.EditCommand}" Visibility="{x:Bind ViewModel.IsPhoto, Mode=OneWay}" ToolTipService.ToolTip="Edit (E)" />
+            <AppBarToggleButton x:Uid="Viewer_Info" AutomationProperties.AutomationId="Viewer_Info" Label="Info" IsChecked="{x:Bind ViewModel.IsInfoOpen, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleInfoCommand}" ToolTipService.ToolTip="Info (I)">
                 <AppBarToggleButton.Icon><FontIcon Glyph="&#xE946;" /></AppBarToggleButton.Icon>
             </AppBarToggleButton>
-            <AppBarButton x:Uid="Viewer_FullScreen" Label="Full screen" Command="{x:Bind ViewModel.ToggleFullScreenCommand}" ToolTipService.ToolTip="Full screen (F)">
+            <AppBarButton x:Uid="Viewer_FullScreen" AutomationProperties.AutomationId="Viewer_FullScreen" Label="Full screen" Command="{x:Bind ViewModel.ToggleFullScreenCommand}" ToolTipService.ToolTip="Full screen (F)">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE740;" /></AppBarButton.Icon>
             </AppBarButton>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:Uid="Cmd_AddToAlbum" Label="Add to album" Command="{x:Bind ViewModel.AddToAlbumCommand}" />
-                <AppBarButton x:Uid="Cmd_Export" Label="Export" Command="{x:Bind ViewModel.ExportCommand}" />
-                <AppBarButton x:Uid="Cmd_Delete" Label="Delete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" />
+                <AppBarButton x:Uid="Cmd_AddToAlbum" AutomationProperties.AutomationId="Cmd_AddToAlbum" Label="Add to album" Command="{x:Bind ViewModel.AddToAlbumCommand}" />
+                <AppBarButton x:Uid="Cmd_Export" AutomationProperties.AutomationId="Cmd_Export" Label="Export" Command="{x:Bind ViewModel.ExportCommand}" />
+                <AppBarButton x:Uid="Cmd_Delete" AutomationProperties.AutomationId="Cmd_Delete" Label="Delete" Icon="Delete" Command="{x:Bind ViewModel.DeleteCommand}" />
             </CommandBar.SecondaryCommands>
         </CommandBar>
 
         <Grid x:Name="Stage" Grid.Row="1" SizeChanged="OnStageSizeChanged">
-            <ScrollViewer x:Name="Zoomer" ZoomMode="Enabled" MinZoomFactor="1" MaxZoomFactor="10"
+            <ScrollViewer x:Name="Zoomer" AutomationProperties.AutomationId="Viewer_Zoomer" ZoomMode="Enabled" MinZoomFactor="1" MaxZoomFactor="10"
                           HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                           Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsVideo), Mode=OneWay}"
                           DoubleTapped="OnImageDoubleTapped">
-                <Image x:Name="Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" RenderTransformOrigin="0.5,0.5"
+                <Image x:Name="Photo" AutomationProperties.AutomationId="Viewer_Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" ImageOpened="OnPhotoOpened" RenderTransformOrigin="0.5,0.5"
                        AutomationProperties.Name="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}">
                     <Image.RenderTransform>
                         <RotateTransform Angle="{x:Bind ViewModel.RotationAngle, Mode=OneWay}" />
                     </Image.RenderTransform>
                 </Image>
             </ScrollViewer>
-            <MediaPlayerElement x:Name="Player" AreTransportControlsEnabled="True" AutoPlay="True" Visibility="{x:Bind ViewModel.IsVideo, Mode=OneWay}" />
+            <MediaPlayerElement x:Name="Player" AutomationProperties.AutomationId="Viewer_Player" AreTransportControlsEnabled="True" AutoPlay="True" Visibility="{x:Bind ViewModel.IsVideo, Mode=OneWay}" />
             <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Warning" VerticalAlignment="Top" Margin="24"
-                     x:Uid="Viewer_ErrorBar" Title="Cannot show this item" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+                     x:Uid="Viewer_ErrorBar" AutomationProperties.AutomationId="Viewer_ErrorBar" Title="Cannot show this item" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
         </Grid>
 
         <!-- Inspector -->
-        <ScrollViewer Grid.Row="1" Grid.Column="1" Width="340" Visibility="{x:Bind ViewModel.IsInfoOpen, Mode=OneWay}"
+        <ScrollViewer Grid.Row="1" Grid.Column="1" AutomationProperties.AutomationId="Viewer_InfoPane" Width="340" Visibility="{x:Bind ViewModel.IsInfoOpen, Mode=OneWay}"
                       Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,0,0">
             <StackPanel Padding="16" Spacing="10">
-                <TextBlock x:Uid="Info_Title" Text="Info" Style="{StaticResource SubtitleTextBlockStyle}" />
-                <TextBox x:Uid="Info_TitleBox" Header="Title" Text="{x:Bind ViewModel.EditTitle, Mode=TwoWay}" />
-                <TextBox x:Uid="Info_DescriptionBox" Header="Description" Text="{x:Bind ViewModel.EditDescription, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" />
-                <RatingControl x:Uid="Info_Rating" HorizontalAlignment="Left" Value="{x:Bind ViewModel.Rating, Mode=TwoWay}" IsClearEnabled="True" AutomationProperties.Name="Rating" />
-                <Button x:Uid="Info_Save" Content="Save details" Command="{x:Bind ViewModel.SaveDetailsCommand}" />
+                <TextBlock x:Uid="Info_Title" AutomationProperties.AutomationId="Info_Title" Text="Info" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBox x:Uid="Info_TitleBox" AutomationProperties.AutomationId="Info_TitleBox" Header="Title" Text="{x:Bind ViewModel.EditTitle, Mode=TwoWay}" />
+                <TextBox x:Uid="Info_DescriptionBox" AutomationProperties.AutomationId="Info_DescriptionBox" Header="Description" Text="{x:Bind ViewModel.EditDescription, Mode=TwoWay}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" />
+                <RatingControl x:Uid="Info_Rating" AutomationProperties.AutomationId="Info_Rating" HorizontalAlignment="Left" Value="{x:Bind ViewModel.Rating, Mode=TwoWay}" IsClearEnabled="True" AutomationProperties.Name="Rating" />
+                <Button x:Uid="Info_Save" AutomationProperties.AutomationId="Info_Save" Content="Save details" Command="{x:Bind ViewModel.SaveDetailsCommand}" />
 
-                <TextBlock x:Uid="Info_Keywords" Text="Keywords" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                <TextBlock x:Uid="Info_Keywords" AutomationProperties.AutomationId="Info_Keywords" Text="Keywords" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
                 <ItemsRepeater ItemsSource="{x:Bind ViewModel.Keywords}">
                     <ItemsRepeater.Layout><StackLayout Spacing="4" /></ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
@@ -91,24 +101,24 @@
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
-                <TextBox x:Name="NewKeyword" x:Uid="Info_AddKeyword" PlaceholderText="Add a keyword and press Enter" KeyDown="OnKeywordKeyDown" />
+                <TextBox x:Name="NewKeyword" x:Uid="Info_AddKeyword" AutomationProperties.AutomationId="Info_AddKeyword" PlaceholderText="Add a keyword and press Enter" KeyDown="OnKeywordKeyDown" />
 
-                <TextBlock x:Uid="Info_AlbumsHeader" Text="Albums" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                <TextBlock x:Uid="Info_AlbumsHeader" AutomationProperties.AutomationId="Info_AlbumsHeader" Text="Albums" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
                 <TextBlock Text="{x:Bind ViewModel.AlbumsText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" />
 
-                <TextBlock x:Uid="Info_Details" Text="Details" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Details}">
+                <TextBlock x:Uid="Info_Details" AutomationProperties.AutomationId="Info_Details" Text="Details" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Details}" AutomationProperties.AutomationId="Info_DetailsList">
                     <ItemsRepeater.Layout><StackLayout Spacing="6" /></ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:InfoRow">
                             <StackPanel>
                                 <TextBlock Text="{x:Bind Label}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.6" />
-                                <TextBlock Text="{x:Bind Value}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                <TextBlock Text="{x:Bind Value}" AutomationProperties.Name="{x:Bind AccessibleText}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
                             </StackPanel>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
-                <HyperlinkButton x:Uid="Info_ClearLocation" Content="Remove location from catalogue" Command="{x:Bind ViewModel.ClearLocationCommand}" />
+                <HyperlinkButton x:Uid="Info_ClearLocation" AutomationProperties.AutomationId="Info_ClearLocation" Content="Remove location from catalogue" Command="{x:Bind ViewModel.ClearLocationCommand}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

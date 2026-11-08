@@ -12,7 +12,11 @@ using PhotosWindows.Domain;
 
 namespace PhotosWindows.App.ViewModels;
 
-public sealed record InfoRow(string Label, string Value);
+public sealed record InfoRow(string Label, string Value)
+{
+    /// <summary>What a screen reader announces for the value: "Camera: QA Cam 1", not just "Camera".</summary>
+    public string AccessibleText => $"{Label}: {Value}";
+}
 
 /// <summary>Full-screen-capable viewer for photos and videos with an information/inspector pane.</summary>
 public sealed partial class ViewerViewModel(

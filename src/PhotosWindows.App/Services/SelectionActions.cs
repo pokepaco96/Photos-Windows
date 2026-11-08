@@ -52,6 +52,8 @@ public sealed class SelectionActions(
         includeReferenced.Checked += async (_, _) => { plan = await organization.PlanPermanentDeletionAsync(ids, true, CancellationToken.None); Refresh(plan); };
         includeReferenced.Unchecked += async (_, _) => { plan = await organization.PlanPermanentDeletionAsync(ids, false, CancellationToken.None); Refresh(plan); };
 
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(includeReferenced, "Delete_IncludeReferenced");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(summary, "Delete_Summary");
         var panel = new StackPanel { Spacing = 10, MaxWidth = 520 };
         panel.Children.Add(summary);
         if (plan.KeptReferencedFiles > 0) panel.Children.Add(includeReferenced);
@@ -81,6 +83,9 @@ public sealed class SelectionActions(
         var combo = new ComboBox { PlaceholderText = Loc.Get("Album_Choose"), HorizontalAlignment = HorizontalAlignment.Stretch };
         foreach (var a in albums) combo.Items.Add(new ComboBoxItem { Content = a.Name, Tag = a });
         var newName = new TextBox { PlaceholderText = Loc.Get("Album_NewName") };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(combo, "AlbumPicker_Combo");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(newName, "AlbumPicker_NewName");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(newName, Loc.Get("Album_NewName"));
         var panel = new StackPanel { Spacing = 10, MinWidth = 320 };
         if (albums.Count > 0) panel.Children.Add(combo);
         panel.Children.Add(new TextBlock { Text = Loc.Get("Album_OrCreate") });
@@ -131,6 +136,14 @@ public sealed class SelectionActions(
         var metadata = new CheckBox { Content = Loc.Get("Export_Metadata"), IsChecked = true };
         var descriptive = new CheckBox { Content = Loc.Get("Export_Descriptive"), IsChecked = true };
         var location = new CheckBox { Content = Loc.Get("Export_Location"), IsChecked = false };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(edited, "Export_EditedRadio");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(original, "Export_OriginalRadio");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(format, "Export_FormatCombo");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(quality, "Export_QualitySlider");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(size, "Export_SizeCombo");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(metadata, "Export_MetadataCheck");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(descriptive, "Export_DescriptiveCheck");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(location, "Export_LocationCheck");
         var panel = new StackPanel { Spacing = 8, MinWidth = 360 };
         panel.Children.Add(edited);
         panel.Children.Add(original);
@@ -168,7 +181,7 @@ public sealed class SelectionActions(
 
         await activity.RunAsync(Loc.Get("Export_Activity"), async (progress, ct) =>
         {
-            var exportProgress = new Progress<ExportProgress>(p => progress.Report(new ActivityProgress((double)p.Done / Math.Max(1, p.Total), Loc.Format("Export_Progress", p.Done, p.Total, p.Current))));
+            var exportProgress = new InlineProgress<ExportProgress>(p => progress.Report(new ActivityProgress((double)p.Done / Math.Max(1, p.Total), Loc.Format("Export_Progress", p.Done, p.Total, p.Current))));
             var results = await export.ExportAsync(ids, folder, options, exportProgress, ct);
             var failed = results.Count(r => r.Error is not null);
             return new ActivityOutcome(

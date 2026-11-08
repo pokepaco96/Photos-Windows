@@ -39,63 +39,63 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource PageTitleStyle}" />
-                <TextBlock Text="{x:Bind ViewModel.Subtitle, Mode=OneWay}" Opacity="0.7" Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource PageTitleStyle}" AutomationProperties.AutomationId="PageTitle" />
+                <TextBlock Text="{x:Bind ViewModel.Subtitle, Mode=OneWay}" AutomationProperties.AutomationId="LibrarySubtitle" Opacity="0.7" Style="{StaticResource CaptionTextBlockStyle}" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <ComboBox x:Uid="Library_Grouping" SelectedIndex="{x:Bind ViewModel.GroupingIndex, Mode=TwoWay}" Visibility="{x:Bind ViewModel.CanGroup, Mode=OneWay}" MinWidth="110" AutomationProperties.Name="Grouping">
-                    <ComboBoxItem x:Uid="Group_Days" Content="Days" />
-                    <ComboBoxItem x:Uid="Group_Months" Content="Months" />
-                    <ComboBoxItem x:Uid="Group_Years" Content="Years" />
-                    <ComboBoxItem x:Uid="Group_None" Content="All" />
+                <ComboBox x:Uid="Library_Grouping" AutomationProperties.AutomationId="Library_Grouping" SelectedIndex="{x:Bind ViewModel.GroupingIndex, Mode=TwoWay}" Visibility="{x:Bind ViewModel.CanGroup, Mode=OneWay}" MinWidth="110" AutomationProperties.Name="Grouping">
+                    <ComboBoxItem x:Uid="Group_Days" AutomationProperties.AutomationId="Group_Days" Content="Days" />
+                    <ComboBoxItem x:Uid="Group_Months" AutomationProperties.AutomationId="Group_Months" Content="Months" />
+                    <ComboBoxItem x:Uid="Group_Years" AutomationProperties.AutomationId="Group_Years" Content="Years" />
+                    <ComboBoxItem x:Uid="Group_None" AutomationProperties.AutomationId="Group_None" Content="All" />
                 </ComboBox>
-                <ComboBox SelectedIndex="{x:Bind ViewModel.MediaFilterIndex, Mode=TwoWay}" MinWidth="110" AutomationProperties.Name="Media type">
-                    <ComboBoxItem x:Uid="Filter_All" Content="Photos and videos" />
-                    <ComboBoxItem x:Uid="Filter_Photos" Content="Photos" />
-                    <ComboBoxItem x:Uid="Filter_Videos" Content="Videos" />
+                <ComboBox AutomationProperties.AutomationId="MediaFilterCombo" SelectedIndex="{x:Bind ViewModel.MediaFilterIndex, Mode=TwoWay}" MinWidth="110" AutomationProperties.Name="Media type">
+                    <ComboBoxItem x:Uid="Filter_All" AutomationProperties.AutomationId="Filter_All" Content="Photos and videos" />
+                    <ComboBoxItem x:Uid="Filter_Photos" AutomationProperties.AutomationId="Filter_Photos" Content="Photos" />
+                    <ComboBoxItem x:Uid="Filter_Videos" AutomationProperties.AutomationId="Filter_Videos" Content="Videos" />
                 </ComboBox>
-                <ToggleButton IsChecked="{x:Bind ViewModel.FavoritesOnly, Mode=TwoWay}" x:Uid="Filter_Favorites" ToolTipService.ToolTip="Favorites only" AutomationProperties.Name="Favorites only">
+                <ToggleButton IsChecked="{x:Bind ViewModel.FavoritesOnly, Mode=TwoWay}" x:Uid="Filter_Favorites" AutomationProperties.AutomationId="Filter_Favorites" ToolTipService.ToolTip="Favorites only" AutomationProperties.Name="Favorites only">
                     <FontIcon Glyph="&#xEB51;" FontSize="14" />
                 </ToggleButton>
                 <Slider x:Name="ZoomSlider" Width="140" Minimum="90" Maximum="360" StepFrequency="10" Value="{x:Bind ViewModel.ItemSize, Mode=TwoWay}"
-                        x:Uid="Library_Zoom" ToolTipService.ToolTip="Thumbnail size" AutomationProperties.Name="Thumbnail size" VerticalAlignment="Center" />
+                        x:Uid="Library_Zoom" AutomationProperties.AutomationId="Library_Zoom" ToolTipService.ToolTip="Thumbnail size" AutomationProperties.Name="Thumbnail size" VerticalAlignment="Center" />
             </StackPanel>
         </Grid>
 
         <!-- Selection / scope commands -->
         <CommandBar Grid.Row="1" HorizontalAlignment="Left" DefaultLabelPosition="Right" Margin="-8,4,0,4" IsDynamicOverflowEnabled="True">
             <CommandBar.Content>
-                <TextBlock Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" Margin="12,14,12,0" Opacity="0.8" />
+                <TextBlock Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" AutomationProperties.AutomationId="SelectionText" Margin="12,14,12,0" Opacity="0.8" />
             </CommandBar.Content>
-            <AppBarButton x:Uid="Cmd_Favorite" Label="Favorite" Icon="Favorite" Command="{x:Bind ViewModel.FavoriteCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}" />
-            <AppBarButton x:Uid="Cmd_AddToAlbum" Label="Add to album" Command="{x:Bind ViewModel.AddToAlbumCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_Favorite" AutomationProperties.AutomationId="Cmd_Favorite" Label="Favorite" Icon="Favorite" Command="{x:Bind ViewModel.FavoriteCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}" />
+            <AppBarButton x:Uid="Cmd_AddToAlbum" AutomationProperties.AutomationId="Cmd_AddToAlbum" Label="Add to album" Command="{x:Bind ViewModel.AddToAlbumCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE8B9;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Cmd_Export" Label="Export" Command="{x:Bind ViewModel.ExportCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_Export" AutomationProperties.AutomationId="Cmd_Export" Label="Export" Command="{x:Bind ViewModel.ExportCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xEDE1;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Cmd_Delete" Label="Delete" Icon="Delete" Command="{x:Bind ViewModel.TrashCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsTrash), Mode=OneWay}" />
-            <AppBarButton x:Uid="Cmd_RemoveFromAlbum" Label="Remove from album" Command="{x:Bind ViewModel.RemoveFromAlbumCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsManualAlbum, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_Delete" AutomationProperties.AutomationId="Cmd_Delete" Label="Delete" Icon="Delete" Command="{x:Bind ViewModel.TrashCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsTrash), Mode=OneWay}" />
+            <AppBarButton x:Uid="Cmd_RemoveFromAlbum" AutomationProperties.AutomationId="Cmd_RemoveFromAlbum" Label="Remove from album" Command="{x:Bind ViewModel.RemoveFromAlbumCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsManualAlbum, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE738;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Cmd_Restore" Label="Recover" Command="{x:Bind ViewModel.RestoreCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsTrash, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_Restore" AutomationProperties.AutomationId="Cmd_Restore" Label="Recover" Command="{x:Bind ViewModel.RestoreCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsTrash, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE777;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Cmd_DeletePermanently" Label="Delete permanently" Command="{x:Bind ViewModel.DeletePermanentlyCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsTrash, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_DeletePermanently" AutomationProperties.AutomationId="Cmd_DeletePermanently" Label="Delete permanently" Command="{x:Bind ViewModel.DeletePermanentlyCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsTrash, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE74D;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Cmd_EmptyTrash" Label="Empty Recently deleted" Command="{x:Bind ViewModel.EmptyTrashCommand}" Visibility="{x:Bind ViewModel.IsTrash, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_EmptyTrash" AutomationProperties.AutomationId="Cmd_EmptyTrash" Label="Empty Recently deleted" Command="{x:Bind ViewModel.EmptyTrashCommand}" Visibility="{x:Bind ViewModel.IsTrash, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE894;" /></AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="Cmd_Unhide" Label="Unhide" Command="{x:Bind ViewModel.UnhideCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsHiddenScope, Mode=OneWay}">
+            <AppBarButton x:Uid="Cmd_Unhide" AutomationProperties.AutomationId="Cmd_Unhide" Label="Unhide" Command="{x:Bind ViewModel.UnhideCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsHiddenScope, Mode=OneWay}">
                 <AppBarButton.Icon><FontIcon Glyph="&#xE7B3;" /></AppBarButton.Icon>
             </AppBarButton>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:Uid="Cmd_Unfavorite" Label="Remove from favorites" Icon="UnFavorite" Command="{x:Bind ViewModel.UnfavoriteCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
-                <AppBarButton x:Uid="Cmd_Keywords" Label="Add keywords…" Command="{x:Bind ViewModel.AddKeywordsCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
+                <AppBarButton x:Uid="Cmd_Unfavorite" AutomationProperties.AutomationId="Cmd_Unfavorite" Label="Remove from favorites" Icon="UnFavorite" Command="{x:Bind ViewModel.UnfavoriteCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" />
+                <AppBarButton x:Uid="Cmd_Keywords" AutomationProperties.AutomationId="Cmd_Keywords" Label="Add keywords…" Command="{x:Bind ViewModel.AddKeywordsCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE8EC;" /></AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Uid="Cmd_Hide" Label="Hide" Command="{x:Bind ViewModel.HideCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}">
+                <AppBarButton x:Uid="Cmd_Hide" AutomationProperties.AutomationId="Cmd_Hide" Label="Hide" Command="{x:Bind ViewModel.HideCommand}" IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsNormalScope, Mode=OneWay}">
                     <AppBarButton.Icon><FontIcon Glyph="&#xED1A;" /></AppBarButton.Icon>
                 </AppBarButton>
             </CommandBar.SecondaryCommands>
@@ -103,6 +103,7 @@
 
         <GridView
             x:Name="AssetsGrid"
+            AutomationProperties.AutomationId="AssetsGrid"
             Grid.Row="2"
             Margin="-4,0,-24,0"
             Padding="0,0,24,24"
@@ -113,7 +114,7 @@
             SelectionChanged="OnSelectionChanged"
             DoubleTapped="OnDoubleTapped"
             RightTapped="OnRightTapped"
-            KeyDown="OnGridKeyDown"
+            PreviewKeyDown="OnGridKeyDown"
             DragItemsCompleted="OnDragItemsCompleted"
             AutomationProperties.Name="Photos">
             <GridView.ItemContainerStyle>
@@ -142,28 +143,28 @@
             </GridView.GroupStyle>
             <GridView.ContextFlyout>
                 <MenuFlyout>
-                    <MenuFlyoutItem x:Uid="Cmd_OpenItem" Text="Open" Click="OnOpenSelected" />
+                    <MenuFlyoutItem x:Uid="Cmd_OpenItem" AutomationProperties.AutomationId="Cmd_OpenItem" Text="Open" Click="OnOpenSelected" />
                     <MenuFlyoutSeparator />
-                    <MenuFlyoutItem x:Uid="Cmd_FavoriteMenu" Text="Favorite" Command="{x:Bind ViewModel.FavoriteCommand}" />
-                    <MenuFlyoutItem x:Uid="Cmd_UnfavoriteMenu" Text="Remove from favorites" Command="{x:Bind ViewModel.UnfavoriteCommand}" />
-                    <MenuFlyoutItem x:Uid="Cmd_AddToAlbumMenu" Text="Add to album…" Command="{x:Bind ViewModel.AddToAlbumCommand}" />
-                    <MenuFlyoutItem x:Uid="Cmd_KeywordsMenu" Text="Add keywords…" Command="{x:Bind ViewModel.AddKeywordsCommand}" />
-                    <MenuFlyoutItem x:Uid="Cmd_ExportMenu" Text="Export…" Command="{x:Bind ViewModel.ExportCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_FavoriteMenu" AutomationProperties.AutomationId="Cmd_FavoriteMenu" Text="Favorite" Command="{x:Bind ViewModel.FavoriteCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_UnfavoriteMenu" AutomationProperties.AutomationId="Cmd_UnfavoriteMenu" Text="Remove from favorites" Command="{x:Bind ViewModel.UnfavoriteCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_AddToAlbumMenu" AutomationProperties.AutomationId="Cmd_AddToAlbumMenu" Text="Add to album…" Command="{x:Bind ViewModel.AddToAlbumCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_KeywordsMenu" AutomationProperties.AutomationId="Cmd_KeywordsMenu" Text="Add keywords…" Command="{x:Bind ViewModel.AddKeywordsCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_ExportMenu" AutomationProperties.AutomationId="Cmd_ExportMenu" Text="Export…" Command="{x:Bind ViewModel.ExportCommand}" />
                     <MenuFlyoutSeparator />
-                    <MenuFlyoutItem x:Uid="Cmd_HideMenu" Text="Hide" Command="{x:Bind ViewModel.HideCommand}" />
-                    <MenuFlyoutItem x:Uid="Cmd_DeleteMenu" Text="Delete" Command="{x:Bind ViewModel.TrashCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_HideMenu" AutomationProperties.AutomationId="Cmd_HideMenu" Text="Hide" Command="{x:Bind ViewModel.HideCommand}" />
+                    <MenuFlyoutItem x:Uid="Cmd_DeleteMenu" AutomationProperties.AutomationId="Cmd_DeleteMenu" Text="Delete" Command="{x:Bind ViewModel.TrashCommand}" />
                 </MenuFlyout>
             </GridView.ContextFlyout>
         </GridView>
 
-        <ProgressRing Grid.Row="2" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <ProgressRing Grid.Row="2" AutomationProperties.AutomationId="LibraryLoading" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-        <StackPanel Grid.Row="2" MaxWidth="480" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <StackPanel Grid.Row="2" AutomationProperties.AutomationId="EmptyState" MaxWidth="480" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
             <FontIcon Glyph="&#xE91B;" FontSize="48" Opacity="0.4" />
-            <TextBlock Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.AutomationId="EmptyTitle" Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
             <TextBlock Text="{x:Bind ViewModel.EmptyMessage, Mode=OneWay}" Opacity="0.75" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
-            <Button x:Uid="Library_ImportButton" Content="Import photos…" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Center"
+            <Button x:Uid="Library_ImportButton" AutomationProperties.AutomationId="Library_ImportButton" Content="Import photos…" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Center"
                     Command="{x:Bind ViewModel.ImportFolderCommand}" Visibility="{x:Bind ViewModel.ShowImportHint, Mode=OneWay}" />
         </StackPanel>
     </Grid>

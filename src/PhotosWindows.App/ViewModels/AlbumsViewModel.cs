@@ -18,7 +18,7 @@ public sealed partial class AlbumCardViewModel : ObservableObject
     {
         Album = album;
         Name = album.Name;
-        Subtitle = album.Kind == AlbumKind.Smart ? Loc.Get("Albums_Smart") : Loc.Format("Group_Count", album.ItemCount);
+        Subtitle = album.Kind == AlbumKind.Smart ? Loc.Get("Albums_Smart") : Loc.Format("Albums_ItemCount", album.ItemCount);
         Glyph = album.Kind == AlbumKind.Smart ? "" : "";
     }
 
@@ -253,7 +253,10 @@ public sealed class SmartAlbumEditor(Album? existing)
         panel.Children.Add(_name);
         panel.Children.Add(_match);
         panel.Children.Add(_rows);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(_name, "Smart_NameBox");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(_match, "Smart_MatchCombo");
         var add = new Button { Content = Loc.Get("Smart_AddRule") };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(add, "Smart_AddRule");
         add.Click += (_, _) => AddRow(null);
         panel.Children.Add(add);
         panel.Children.Add(new TextBlock { Text = Loc.Get("Smart_Help"), TextWrapping = TextWrapping.Wrap, Opacity = 0.7, FontSize = 12 });
@@ -270,6 +273,13 @@ public sealed class SmartAlbumEditor(Album? existing)
         var value = new TextBox { Width = 170, PlaceholderText = Loc.Get("Smart_Value") };
         var remove = new Button { Content = new FontIcon { Glyph = "", FontSize = 12 }, VerticalAlignment = VerticalAlignment.Stretch };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(remove, Loc.Get("Smart_RemoveRule"));
+        var index = _rows.Children.Count;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(field, $"Smart_Field_{index}");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(op, $"Smart_Op_{index}");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(value, $"Smart_Value_{index}");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(remove, $"Smart_Remove_{index}");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(field, Loc.Get("Smart_Match"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(value, Loc.Get("Smart_Value"));
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { field, op, value, remove } };
 
         void FillOperators()

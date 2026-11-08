@@ -88,6 +88,12 @@ jobs:
         run: dotnet build src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64
       - name: Publish app (self-contained folder)
         run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
+      - name: Smoke test the published app (must start and stay alive)
+        shell: pwsh
+        run: |
+          # Regression check: the published folder once lacked resources.pri/.xbf and the app crashed at start-up.
+          ./tests/PhotosWindows.UIAutomation.Tests/scripts/startup-smoke.ps1 -Exe artifacts/PhotosWindows-win-x64/PhotosWindows.exe -Output artifacts/smoke
+          if (-not (Select-String -Path artifacts/smoke/startup-smoke.txt -Pattern 'RESULT: alive' -Quiet)) { Write-Error "The published app did not stay running."; exit 1 }
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:

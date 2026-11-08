@@ -93,7 +93,12 @@ public sealed class RollingFileLoggerProvider : ILoggerProvider
               .Append(logLevel.ToString().ToUpperInvariant()[..4]).Append(' ')
               .Append(category[(category.LastIndexOf('.') + 1)..]).Append(": ")
               .Append(formatter(state, exception));
-            if (exception is not null) sb.Append(" | ").Append(exception.GetType().Name).Append(": ").Append(exception.Message);
+            if (exception is not null)
+            {
+                // Full detail (type, HRESULT, stack, inner exceptions): logs are local and used for diagnosis.
+                sb.AppendLine().Append("    ").Append(exception.ToString().Replace(Environment.NewLine, Environment.NewLine + "    ", StringComparison.Ordinal))
+                  .Append(CultureInfo.InvariantCulture, $" (HRESULT 0x{exception.HResult:X8})");
+            }
             sb.AppendLine();
             provider.Enqueue(sb.ToString());
         }
