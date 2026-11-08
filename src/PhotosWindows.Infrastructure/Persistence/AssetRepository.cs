@@ -162,6 +162,35 @@ public sealed class AssetRepository : IAssetRepository
             return (int)await c.ExecuteScalarAsync<long>($"SELECT count(*) FROM assets a {sql.Joins} {sql.WhereClause}", sql.Parameters).ConfigureAwait(false);
         }, cancellationToken);
 
+    public Task<IReadOnlyList<GeoPoint>> QueryGeoPointsAsync(AssetQuery query, CancellationToken cancellationToken) =>
+        _db.ReadAsync<IReadOnlyList<GeoPoint>>(async c =>
+        {
+            var sql = AssetQuerySql.Build(query with { HasLocation = true }, _clock.UtcNow);
+            var limit = query.Limit is { } l ? $" LIMIT {Math.Max(0, l)}" : string.Empty;
+            var text = $"SELECT a.id, a.latitude, a.longitude, a.capture_local FROM assets a {sql.Joins} {sql.WhereClause} {AssetQuerySql.OrderBy(query.Sort, sql.Joins.Length > 0)}{limit}";
+            var rows = await c.QueryAsync<GeoRow>(new CommandDefinition(text, sql.Parameters, cancellationToken: cancellationToken)).ConfigureAwait(false);
+            var result = new List<GeoPoint>();
+            foreach (var r in rows)
+            {
+                // Defensive: rows written by older versions or by hand might hold out-of-range values.
+                if (r.Latitude is { } lat && r.Longitude is { } lon && GeoLocation.TryCreate(lat, lon, null, out _))
+                {
+                    result.Add(new GeoPoint(r.Id, lat, lon, DbFormat.ParseLocal(r.CaptureLocal)));
+                }
+            }
+
+            return result;
+        }, cancellationToken);
+
+    public Task SetLocationAsync(IReadOnlyCollection<long> ids, GeoLocation? location, CancellationToken cancellationToken) =>
+        _db.WriteAsync(async (c, t) =>
+        {
+            await c.ExecuteAsync(
+                "UPDATE assets SET latitude = @lat, longitude = @lon, altitude = @alt WHERE id IN (SELECT value FROM json_each(@ids))",
+                new { lat = location?.Latitude, lon = location?.Longitude, alt = location?.Altitude, ids = Json(ids) }, t).ConfigureAwait(false);
+            await RefreshFtsAsync(c, t, ids).ConfigureAwait(false);
+        }, cancellationToken);
+
     public Task<AssetFile?> FindFileByStoredPathAsync(string storedPath, CancellationToken cancellationToken) =>
         _db.ReadAsync(async c =>
             (await c.QuerySingleOrDefaultAsync<FileRow>("SELECT * FROM asset_files WHERE stored_path_key = @key", new { key = DbFormat.PathKey(storedPath) }).ConfigureAwait(false))?.ToFile(),
@@ -355,6 +384,14 @@ public sealed class AssetRepository : IAssetRepository
         public long ManagedBytes { get; set; }
         public long Unavailable { get; set; }
         public long PendingThumbs { get; set; }
+    }
+
+    private sealed class GeoRow
+    {
+        public long Id { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string CaptureLocal { get; set; } = "";
     }
 
     private sealed class SummaryRow

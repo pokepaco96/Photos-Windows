@@ -51,6 +51,12 @@ public interface IAssetRepository
     Task<AssetFile?> GetOriginalFileAsync(long assetId, CancellationToken cancellationToken);
     Task<IReadOnlyList<AssetSummary>> QueryAsync(AssetQuery query, CancellationToken cancellationToken);
     Task<int> CountAsync(AssetQuery query, CancellationToken cancellationToken);
+
+    /// <summary>Coordinates of the located assets matching <paramref name="query"/> (assets without GPS are skipped).</summary>
+    Task<IReadOnlyList<GeoPoint>> QueryGeoPointsAsync(AssetQuery query, CancellationToken cancellationToken);
+
+    /// <summary>Sets (or clears, when null) the catalog location of several assets. Original files are never touched.</summary>
+    Task SetLocationAsync(IReadOnlyCollection<long> ids, GeoLocation? location, CancellationToken cancellationToken);
     Task<AssetFile?> FindFileByStoredPathAsync(string storedPath, CancellationToken cancellationToken);
     Task<IReadOnlyList<AssetFile>> FindFilesByHashAsync(string sha256, CancellationToken cancellationToken);
     Task AttachFileAsync(AssetFile file, CancellationToken cancellationToken);
