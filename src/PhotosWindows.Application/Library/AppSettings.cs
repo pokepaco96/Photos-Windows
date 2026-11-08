@@ -25,6 +25,25 @@ public sealed record AppSettings
     public string Language { get; init; } = string.Empty;
     public int SlideshowSeconds { get; init; } = 3;
     public int MaxBackgroundWorkers { get; init; } = Math.Clamp(Environment.ProcessorCount / 2, 1, 4);
+    /// <summary>Last Places filters and view mode, restored when the page opens again.</summary>
+    public PlacesPreferences Places { get; init; } = new();
+}
+
+public enum PlacesViewMode
+{
+    Map = 0,
+    List = 1,
+}
+
+/// <summary>Persisted Places state. Holds filters only, never coordinates of the user's photos.</summary>
+public sealed record PlacesPreferences
+{
+    public PlacesViewMode ViewMode { get; init; } = PlacesViewMode.Map;
+    public MediaType? MediaType { get; init; }
+    public bool FavoritesOnly { get; init; }
+    public long? AlbumId { get; init; }
+    public DateTime? From { get; init; }
+    public DateTime? To { get; init; }
 }
 
 public interface ISettingsStore
