@@ -1,0 +1,46 @@
+{
+  "format": "pwmap/1",
+  "scale": 10000,
+  "license": "Public domain (Natural Earth)",
+  "layers": [
+    {
+      "name": "land110",
+      "kind": "fill",
+      "source": "https://naciscdn.org/naturalearth/110m/physical/ne_110m_land.zip",
+      "sha256": "1926c621afd6ac67c3f36639bb1236134a48d82226dc675d3e3df53d02d2a3de",
+      "naturalEarthVersion": "4.1.0",
+      "rings": 128,
+      "points": 5133
+    },
+    {
+      "name": "land50",
+      "kind": "fill",
+      "source": "https://naciscdn.org/naturalearth/50m/physical/ne_50m_land.zip",
+      "sha256": "0b8e670cf80dce9cbebe2a193bc44ba5602758c22e1fa603980553646d7ff162",
+      "naturalEarthVersion": "4.1.0",
+      "rings": 1422,
+      "points": 60669
+    },
+    {
+      "name": "lakes50",
+      "kind": "fill",
+      "source": "https://naciscdn.org/naturalearth/50m/physical/ne_50m_lakes.zip",
+      "sha256": "f28d42c286d96b57a17aac2cbeb432f8c65532c20063495711fbc64e24666df3",
+      "naturalEarthVersion": "5.0.0",
+      "rings": 465,
+      "points": 18614
+    },
+    {
+      "name": "borders50",
+      "kind": "line",
+      "source": "https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_0_boundary_lines_land.zip",
+      "sha256": "02f369ae10578c4ce33fc4a08f8cdd69ea11eb39b44d7923e88eb7199aaff8ea",
+      "naturalEarthVersion": "5.1.0",
+      "rings": 393,
+      "points": 19764
+    }
+  ],
+  "bytes": 366942,
+  "uncompressedPayloadBytes": 414006,
+  "sha256": "97ed2537777af1945878ab44b8ced10dfe26a0f85e6f01ffcc855d3115b0e7ec"
+}
