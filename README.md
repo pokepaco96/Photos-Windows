@@ -60,4 +60,12 @@ docs/                             especificación, arquitectura, ADR, seguridad,
 Arquitectura: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Decisiones: [`docs/decisions`](docs/decisions). Dependencias y licencias: [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md).
 
 ## Licencia
-Aún no decidida por el propietario del repositorio; hasta entonces no se concede licencia de uso del código.
+
+El código original de Photos Windows se distribuye bajo la **licencia MIT** (ver [LICENSE](LICENSE)).
+Puedes usarlo, copiarlo, modificarlo y redistribuirlo sin pagar cuotas ni regalías al titular,
+siempre que conserves el aviso de copyright y el texto de la licencia.
+
+El proyecto se ofrece gratuitamente. La MIT también permite redistribuciones comerciales:
+por tanto, terceros podrían cobrar por una copia, empaquetado o servicio, aunque quien reciba
+el código bajo esta licencia conserva los mismos permisos. Los componentes de terceros
+siguen sujetos a sus propias licencias; consulta [docs/THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md).
