@@ -41,6 +41,7 @@ jobs:
           name: test-results-linux
           path: TestResults
           if-no-files-found: ignore
+          retention-days: 2
 
   windows-tests:
     name: Core + tests (Windows)
@@ -74,6 +75,7 @@ jobs:
           name: test-results-windows
           path: TestResults
           if-no-files-found: ignore
+          retention-days: 2
 
   windows-app:
     name: Windows app (WinUI 3, x64)
@@ -100,6 +102,7 @@ jobs:
           name: PhotosWindows-win-x64
           path: artifacts/PhotosWindows-win-x64
           if-no-files-found: error
+          retention-days: 2
       - name: Vulnerable package report
         shell: pwsh
         run: |
