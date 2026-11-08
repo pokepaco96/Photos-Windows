@@ -21,6 +21,10 @@ public sealed partial class EndToEndTests
 
     private IReadOnlyList<string> PersonCardNames() => PersonCards().Select(e => e.Properties.Name.ValueOrDefault ?? string.Empty).ToList();
 
+    /// <summary>Names of every text element in the app's windows (dialogs included).</summary>
+    private string AllVisibleText() =>
+        string.Join(" | ", App.FindAll(cf => cf.ByControlType(ControlType.Text)).Select(e => e.Properties.Name.ValueOrDefault ?? string.Empty));
+
     private void OpenPeople()
     {
         Nav("Nav_People");
@@ -37,8 +41,8 @@ public sealed partial class EndToEndTests
         App.Find("Settings_People");
         App.Screenshot("29_settings_people_off");
         App.Click("Settings_DownloadFaceModels");
-        var details = App.Find("People_DownloadDetails", TimeSpan.FromSeconds(10));
-        var text = AppSession.AllText(details);
+        App.Find("People_DownloadIntro", TimeSpan.FromSeconds(10));
+        var text = AllVisibleText();
         qa.Evidence.Log("download dialog: " + text);
         foreach (var expected in new[] { "huggingface.co", "MIT", "Apache-2.0", "No photo, face, name" })
         {
@@ -61,8 +65,9 @@ public sealed partial class EndToEndTests
     {
         OpenSettings();
         App.Click("Settings_EnablePeople");
-        var consent = App.Find("People_ConsentText", TimeSpan.FromSeconds(10));
-        qa.Evidence.Log("consent: " + AppSession.AllText(consent));
+        App.Find("People_ConsentWhat", TimeSpan.FromSeconds(10));
+        foreach (var part in new[] { "People_ConsentStored", "People_ConsentDelete", "People_ConsentNever" }) App.Find(part);
+        qa.Evidence.Log("consent: " + string.Join(" | ", new[] { "People_ConsentWhat", "People_ConsentStored", "People_ConsentDelete", "People_ConsentNever" }.Select(App.TextOf)));
         App.Screenshot("30_consent_dialog");
         App.DialogButton("PrimaryButton");
         // "Analyse now?": analyse later, from the People page.

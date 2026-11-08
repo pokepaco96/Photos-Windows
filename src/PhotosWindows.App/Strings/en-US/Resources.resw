@@ -305,7 +305,7 @@
   <data name="Search_Title" xml:space="preserve"><value>Search: {0}</value></data>
   <data name="Selection_Count" xml:space="preserve"><value>{0} selected</value></data>
   <data name="Settings_About.Text" xml:space="preserve"><value>About</value></data>
-  <data name="Settings_AboutText.Text" xml:space="preserve"><value>Independent project, not affiliated with Apple. Built with .NET, Windows App SDK, SQLite, SkiaSharp, MetadataExtractor, XmpCore, Dapper and CommunityToolkit.Mvvm under their respective open-source licences (see docs/THIRD_PARTY_NOTICES.md).</value></data>
+  <data name="Settings_AboutText.Text" xml:space="preserve"><value>Independent project, not affiliated with Apple. Built with .NET, Windows App SDK, SQLite, SkiaSharp, MetadataExtractor, XmpCore, Dapper, CommunityToolkit.Mvvm and ONNX Runtime under their respective open-source licences (see docs/THIRD_PARTY_NOTICES.md).</value></data>
   <data name="Settings_Adopt.Content" xml:space="preserve"><value>Add uncatalogued copies</value></data>
   <data name="Settings_Albums" xml:space="preserve"><value>Albums</value></data>
   <data name="Settings_Appearance.Text" xml:space="preserve"><value>Appearance</value></data>

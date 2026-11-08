@@ -27,7 +27,10 @@ public sealed class PeopleCoordinator(PeopleService people, IFaceModelManager mo
     public async Task<bool> DownloadModelsAsync()
     {
         var details = new StackPanel { Spacing = 10, MaxWidth = 520 };
-        details.Children.Add(Text(Loc.Get("People_DownloadIntro")));
+        // A StackPanel has no UI Automation peer: the id goes on the first text, which has one.
+        var intro = Text(Loc.Get("People_DownloadIntro"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(intro, "People_DownloadIntro");
+        details.Children.Add(intro);
         foreach (var model in models.Models)
         {
             details.Children.Add(Text(Loc.Format("People_DownloadModel", model.DisplayName, SelectionActions.FormatBytes(model.SizeBytes), model.License, model.Source.Host, model.Provenance), opacity: 0.85));
@@ -42,7 +45,6 @@ public sealed class PeopleCoordinator(PeopleService people, IFaceModelManager mo
             CloseButtonText = Loc.Get("Common_Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(details, "People_DownloadDetails");
         if (await dialogs.ShowAsync(dialog) != ContentDialogResult.Primary) return false;
 
         return await activity.RunAsync(Loc.Get("People_DownloadActivity"), async (progress, ct) =>
@@ -70,10 +72,10 @@ public sealed class PeopleCoordinator(PeopleService people, IFaceModelManager mo
         var body = new StackPanel { Spacing = 10, MaxWidth = 520 };
         foreach (var key in new[] { "People_ConsentWhat", "People_ConsentStored", "People_ConsentDelete", "People_ConsentNever" })
         {
-            body.Children.Add(Text(Loc.Get(key)));
+            var line = Text(Loc.Get(key));
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(line, key);
+            body.Children.Add(line);
         }
-
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(body, "People_ConsentText");
         var dialog = new ContentDialog
         {
             Title = Loc.Get("People_ConsentTitle"),
