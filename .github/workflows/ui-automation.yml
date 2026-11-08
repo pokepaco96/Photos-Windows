@@ -105,9 +105,9 @@ jobs:
         id: run
         shell: pwsh
         env:
-          PW_APP_EXE: ${{ github.workspace }}\artifacts\PhotosWindows-win-x64\PhotosWindows.exe
-          PW_QA_OUTPUT: ${{ github.workspace }}\artifacts\qa\run
-          PW_QA_WORK: ${{ runner.temp }}\pwqa
+          PW_APP_EXE: ${{ github.workspace }}\\artifacts\\PhotosWindows-win-x64\\PhotosWindows.exe
+          PW_QA_OUTPUT: ${{ github.workspace }}\\artifacts\\qa\\run
+          PW_QA_WORK: ${{ runner.temp }}\\pwqa
         run: |
           # Refresh PATH so a freshly installed ffmpeg is found.
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
@@ -128,3 +128,4 @@ jobs:
           name: ui-automation-evidence
           path: artifacts/qa/run
           if-no-files-found: warn
+          retention-days: 2
