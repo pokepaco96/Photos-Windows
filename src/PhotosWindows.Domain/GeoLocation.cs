@@ -54,3 +54,33 @@ public readonly record struct GeoLocation
         return 2 * earthRadiusKm * Math.Asin(Math.Min(1, Math.Sqrt(a)));
     }
 }
+
+/// <summary>
+/// A latitude/longitude box. When <see cref="MinLon"/> &gt; <see cref="MaxLon"/> the box crosses the antimeridian
+/// (180°): it spans from MinLon eastwards through 180° to MaxLon. Latitudes cannot wrap, so an inverted pair is
+/// swapped. Edges are inclusive.
+/// </summary>
+public readonly record struct GeoBounds(double MinLat, double MinLon, double MaxLat, double MaxLon)
+{
+    public bool CrossesAntimeridian => MinLon > MaxLon;
+
+    public static GeoBounds From(double minLat, double minLon, double maxLat, double maxLon)
+    {
+        Check(minLat, 90, nameof(minLat));
+        Check(maxLat, 90, nameof(maxLat));
+        Check(minLon, 180, nameof(minLon));
+        Check(maxLon, 180, nameof(maxLon));
+        return minLat <= maxLat ? new GeoBounds(minLat, minLon, maxLat, maxLon) : new GeoBounds(maxLat, minLon, minLat, maxLon);
+    }
+
+    public bool Contains(GeoLocation location) =>
+        location.Latitude >= MinLat && location.Latitude <= MaxLat
+        && (CrossesAntimeridian
+            ? location.Longitude >= MinLon || location.Longitude <= MaxLon
+            : location.Longitude >= MinLon && location.Longitude <= MaxLon);
+
+    private static void Check(double value, double limit, string name)
+    {
+        if (double.IsNaN(value) || value < -limit || value > limit) throw new ArgumentOutOfRangeException(name, value, $"Must be within [-{limit}, {limit}].");
+    }
+}
