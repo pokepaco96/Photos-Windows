@@ -51,7 +51,11 @@ public static class WebMercator
 public sealed record MapView
 {
     public const double MinZoom = 0;
-    public const double MaxZoom = 10;
+    /// <summary>Highest zoom a view can hold (leaves room for high-DPI rendering of <see cref="MaxInteractiveZoom"/>).</summary>
+    public const double MaxZoom = 12;
+
+    /// <summary>Highest zoom the user can reach: the 1:50m basemap has no more detail beyond it.</summary>
+    public const double MaxInteractiveZoom = 10;
     public const double TileSize = 256;
 
     public MapView(double centerX, double centerY, double zoom, int width, int height)
@@ -104,11 +108,18 @@ public sealed record MapView
 
     public MapView Resize(int width, int height) => new(CenterX, CenterY, Zoom, width, height);
 
+    /// <summary>The same view in device pixels (e.g. 1.5 for 150 % display scaling), for sharp rendering.</summary>
+    public MapView Scaled(double factor)
+    {
+        if (!double.IsFinite(factor) || factor <= 0) factor = 1;
+        return new MapView(CenterX, CenterY, Zoom + Math.Log2(factor), (int)Math.Round(Width * factor), (int)Math.Round(Height * factor));
+    }
+
     /// <summary>Zooms keeping the world point under (<paramref name="screenX"/>, <paramref name="screenY"/>) fixed.</summary>
     public MapView ZoomAt(double delta, double screenX, double screenY)
     {
         var (wx, wy) = ToWorld(screenX, screenY);
-        var zoom = Math.Clamp(Zoom + delta, MinZoom, MaxZoom);
+        var zoom = Math.Clamp(Zoom + delta, MinZoom, Math.Max(Zoom, MaxInteractiveZoom));
         var size = TileSize * Math.Pow(2, zoom);
         return new MapView(wx - (screenX - Width / 2.0) / size, wy - (screenY - Height / 2.0) / size, zoom, Width, Height);
     }

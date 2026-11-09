@@ -549,4 +549,60 @@
   <data name="Info_ExcludeFromPeople.Content" xml:space="preserve"><value>Excluir de Personas</value></data>
   <data name="Info_IncludeInPeople.Content" xml:space="preserve"><value>Incluir en Personas</value></data>
   <data name="Info_AnalyzePeopleAgain.Content" xml:space="preserve"><value>Volver a analizar</value></data>
+  <data name="Nav_Places.Content" xml:space="preserve"><value>Lugares</value></data>
+  <data name="Scope_WithoutLocation" xml:space="preserve"><value>Sin ubicación</value></data>
+  <data name="Places_Title.Text" xml:space="preserve"><value>Lugares</value></data>
+  <data name="Places_ListToggle.Content" xml:space="preserve"><value>Lista</value></data>
+  <data name="Places_MapSwitch.OnContent" xml:space="preserve"><value>Mapa activado</value></data>
+  <data name="Places_MapSwitch.OffContent" xml:space="preserve"><value>Mapa desactivado</value></data>
+  <data name="Places_MapSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Mostrar mapa</value></data>
+  <data name="Places_From.PlaceholderText" xml:space="preserve"><value>Desde</value></data>
+  <data name="Places_From.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Fecha inicial</value></data>
+  <data name="Places_To.PlaceholderText" xml:space="preserve"><value>Hasta</value></data>
+  <data name="Places_To.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Fecha final</value></data>
+  <data name="Places_Type.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Tipo de elemento</value></data>
+  <data name="Places_TypeAll.Content" xml:space="preserve"><value>Fotos y vídeos</value></data>
+  <data name="Places_TypePhotos.Content" xml:space="preserve"><value>Fotos</value></data>
+  <data name="Places_TypeVideos.Content" xml:space="preserve"><value>Vídeos</value></data>
+  <data name="Places_Album.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Álbum</value></data>
+  <data name="Places_Favorites.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Solo favoritos</value></data>
+  <data name="Places_FavoritesText.Text" xml:space="preserve"><value>Favoritos</value></data>
+  <data name="Places_ClearFilters.Content" xml:space="preserve"><value>Quitar filtros</value></data>
+  <data name="Places_EmptyClearFilters.Content" xml:space="preserve"><value>Quitar filtros</value></data>
+  <data name="Places_ShowWithoutLocation.Content" xml:space="preserve"><value>Verlos</value></data>
+  <data name="Places_MapUnavailable.Title" xml:space="preserve"><value>Mapa no disponible</value></data>
+  <data name="Places_MapUnavailable.Message" xml:space="preserve"><value>No se pudo cargar el mapa integrado. Los lugares se muestran como lista.</value></data>
+  <data name="Places_Map.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Mapa. Las flechas lo desplazan, más y menos cambian el zoom, Inicio muestra todos los lugares.</value></data>
+  <data name="Places_ZoomIn.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Acercar</value></data>
+  <data name="Places_ZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Acercar</value></data>
+  <data name="Places_ZoomOut.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Alejar</value></data>
+  <data name="Places_ZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Alejar</value></data>
+  <data name="Places_FitAll.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Mostrar todos los lugares</value></data>
+  <data name="Places_FitAll.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Mostrar todos los lugares</value></data>
+  <data name="Places_List.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Lugares</value></data>
+  <data name="Places_CloseTray.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Places_CloseTray.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Places_Approximate.Text" xml:space="preserve"><value>Las coordenadas son aproximadas: se muestra la zona, nunca una dirección.</value></data>
+  <data name="Places_TrayGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Fotos de esta zona</value></data>
+  <data name="Places_OpenPhoto.Content" xml:space="preserve"><value>Abrir</value></data>
+  <data name="Places_ZoomToSelection.Content" xml:space="preserve"><value>Acercar a la zona</value></data>
+  <data name="Places_RemoveLocation.Content" xml:space="preserve"><value>Quitar ubicación</value></data>
+  <data name="Places_OneItem" xml:space="preserve"><value>1 elemento</value></data>
+  <data name="Places_Items" xml:space="preserve"><value>{0} elementos</value></data>
+  <data name="Places_Near" xml:space="preserve"><value>Alrededor de {0}</value></data>
+  <data name="Places_AllAlbums" xml:space="preserve"><value>Todos los álbumes</value></data>
+  <data name="Places_Attribution" xml:space="preserve"><value>Mapa: {0} (dominio público)</value></data>
+  <data name="Places_EmptyTitle" xml:space="preserve"><value>Aún no hay fotos con ubicación</value></data>
+  <data name="Places_EmptyMessage" xml:space="preserve"><value>Las fotos aparecen aquí cuando sus archivos incluyen coordenadas GPS. También puedes añadir una ubicación desde el panel de información de una foto.</value></data>
+  <data name="Places_EmptyFilteredTitle" xml:space="preserve"><value>Ningún lugar coincide con estos filtros</value></data>
+  <data name="Places_EmptyFilteredMessage" xml:space="preserve"><value>Prueba con otras fechas, otro álbum u otro tipo de elemento.</value></data>
+  <data name="Places_Summary" xml:space="preserve"><value>{0} elementos con ubicación en {1} zonas</value></data>
+  <data name="Places_WithoutLocation" xml:space="preserve"><value>{0} elementos sin ubicación no aparecen en el mapa.</value></data>
+  <data name="Places_WithoutLocationOne" xml:space="preserve"><value>1 elemento sin ubicación no aparece en el mapa.</value></data>
+  <data name="Places_RemoveTitle" xml:space="preserve"><value>¿Quitar ubicación?</value></data>
+  <data name="Places_RemoveMessage" xml:space="preserve"><value>Se quitará la ubicación de {0} elementos del catálogo de la biblioteca. Los archivos originales no se modifican.</value></data>
+  <data name="Places_RemoveConfirm" xml:space="preserve"><value>Quitar ubicación</value></data>
+  <data name="Places_AllDates" xml:space="preserve"><value>Todas las fechas</value></data>
+  <data name="Places_Year.PlaceholderText" xml:space="preserve"><value>Periodo personalizado</value></data>
+  <data name="Places_Year.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Año</value></data>
 </root>

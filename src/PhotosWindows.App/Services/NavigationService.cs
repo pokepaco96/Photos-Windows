@@ -39,6 +39,8 @@ public sealed class NavigationService
 
     public void ToAlbums() => Navigate(typeof(AlbumsPage), null);
 
+    public void ToPlaces() => Navigate(typeof(PlacesPage), null);
+
     public void ToDuplicates() => Navigate(typeof(DuplicatesPage), null);
 
     public void ToPeople() => Navigate(typeof(PeoplePage), null);

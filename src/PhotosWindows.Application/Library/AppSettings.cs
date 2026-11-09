@@ -39,6 +39,8 @@ public enum PlacesViewMode
 public sealed record PlacesPreferences
 {
     public PlacesViewMode ViewMode { get; init; } = PlacesViewMode.Map;
+    /// <summary>When false the map is never drawn and Places shows the list only.</summary>
+    public bool MapEnabled { get; init; } = true;
     public MediaType? MediaType { get; init; }
     public bool FavoritesOnly { get; init; }
     public long? AlbumId { get; init; }
