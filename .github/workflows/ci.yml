@@ -20,6 +20,9 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
 
 jobs:
+  # ==========================================
+  # CORE + TESTS (LINUX)
+  # ==========================================
   core-linux:
     name: Core + tests (Linux)
     runs-on: ubuntu-latest
@@ -50,6 +53,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 2
 
+  # ==========================================
+  # CORE + TESTS (WINDOWS)
+  # ==========================================
   windows-tests:
     name: Core + tests (Windows)
     runs-on: windows-latest
@@ -71,15 +77,27 @@ jobs:
       - name: Test
         run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults --blame-hang-timeout 5m
 
+      # Fixed: TRX filenames may contain brackets [1].
+      # Use -LiteralPath to prevent wildcard interpretation.
       - name: Test summary
         if: always()
         shell: pwsh
         run: |
-          $files = Get-ChildItem TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue
-          foreach ($f in $files) {
-            [xml]$x = Get-Content $f.FullName
-            $c = $x.TestRun.ResultSummary.Counters
-            "| $($f.Name) | total $($c.total) | passed $($c.passed) | failed $($c.failed) |" >> $env:GITHUB_STEP_SUMMARY
+          $files = Get-ChildItem -Path TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue
+
+          if (-not $files) {
+            "No TRX test results found." >> $env:GITHUB_STEP_SUMMARY
+          }
+          else {
+            "| Test file | Total | Passed | Failed |" >> $env:GITHUB_STEP_SUMMARY
+            "|---|---:|---:|---:|" >> $env:GITHUB_STEP_SUMMARY
+
+            foreach ($f in $files) {
+              [xml]$x = Get-Content -LiteralPath $f.FullName -Raw
+              $c = $x.TestRun.ResultSummary.Counters
+
+              "| $($f.Name) | $($c.total) | $($c.passed) | $($c.failed) |" >> $env:GITHUB_STEP_SUMMARY
+            }
           }
 
       - name: Upload test results
@@ -91,6 +109,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 2
 
+  # ==========================================
+  # WINDOWS APP (WINUI 3, X64)
+  # ==========================================
   windows-app:
     name: Windows app (WinUI 3, x64)
     runs-on: windows-latest
@@ -112,16 +133,22 @@ jobs:
       - name: Smoke test the published app (must start and stay alive)
         shell: pwsh
         run: |
-          # Regression check: published folder must contain
-          # resources.pri/.xbf and the app must start.
+          # Regression check: published folder must
+          # contain resources.pri/.xbf and app must start.
           ./tests/PhotosWindows.UIAutomation.Tests/scripts/startup-smoke.ps1 -Exe artifacts/PhotosWindows-win-x64/PhotosWindows.exe -Output artifacts/smoke
+
           if (-not (Select-String -Path artifacts/smoke/startup-smoke.txt -Pattern 'RESULT: alive' -Quiet)) {
             Write-Error "The published app did not stay running."
             exit 1
           }
 
-      # Only store the full Windows app when needed.
-      # This avoids accumulating large build artifacts.
+      # Store the executable only on:
+      # - Push to the default branch
+      # - Manual workflow execution
+      #
+      # Avoids accumulating large build artifacts
+      # during development.
+
       - name: Upload app artifact
         if: >-
           github.event_name == 'workflow_dispatch' ||
@@ -134,10 +161,14 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+      # ==========================================
+      # SECURITY CHECK
+      # ==========================================
       - name: Vulnerable package report
         shell: pwsh
         run: |
           dotnet list PhotosWindows.sln package --vulnerable --include-transitive | Tee-Object -FilePath vulnerable.txt
+
           if (Select-String -Path vulnerable.txt -Pattern "has the following vulnerable packages") {
             Write-Error "Vulnerable packages found"
             exit 1
