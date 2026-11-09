@@ -14,5 +14,11 @@
 ## Funciones inteligentes
 Todas locales y opt-in. Actualmente solo existe el hash perceptual (dHash) para sugerir fotos similares; no identifica personas ni contenido. El reconocimiento facial (futuro) se activará explícitamente, procesará en el dispositivo y tendrá un botón para borrar todos los datos derivados.
 
+## Lugares
+- El mapa se dibuja con datos incluidos en la aplicación (Natural Earth, dominio público). **No se descargan teselas** ni se hace ninguna petición de red al abrir, mover o ampliar el mapa.
+- **No hay geocodificación** (ni directa ni inversa): las coordenadas nunca salen del equipo y las zonas se muestran como coordenadas aproximadas, no como direcciones.
+- Los filtros de Lugares y la preferencia de mapa se guardan en la configuración local del usuario; esa configuración no contiene coordenadas.
+- «Quitar ubicación» solo modifica el catálogo; los archivos originales no se tocan (verificado por SHA-256 en las pruebas de UI).
+
 ## Registros
 Los logs registran nombres de archivo y errores, no contenido de imágenes ni metadatos personales. No se incluyen miniaturas en ningún informe.

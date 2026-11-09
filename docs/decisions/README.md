@@ -13,3 +13,4 @@ Formato breve: contexto, decisión, alternativas, consecuencias. Un ADR aceptado
 | [0007](0007-build-and-test-strategy.md) | Estrategia de compilación y pruebas (Linux + runner Windows) | Aceptado |
 | [0008](0008-smart-features-deferred.md) | Personas, lugares y recuerdos: locales, opt-in y aplazados | Aceptado |
 | [0009](0009-packaging.md) | Empaquetado sin paquete y autocontenido | Aceptado |
+| [0011](0011-places-offline-map.md) | Lugares: mapa offline propio (Natural Earth) y modo lista | Aceptado |

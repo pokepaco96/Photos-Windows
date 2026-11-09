@@ -24,6 +24,18 @@ Extrapolación: 100.000 elementos ≈ 18 MB de filas en memoria y ~0,5 s para ca
 
 Los límites de la prueba son techos generosos (1,5 s por cada 10.000 elementos) para detectar regresiones en CI.
 
+## Lugares (medido)
+Máquina: contenedor Linux de CI, Intel Xeon @ 2,10 GHz, 4 núcleos, .NET 10.0, Release salvo indicación. Método: `Stopwatch`, media de 5 renders tras uno de calentamiento; agrupación repetida 3 veces en un programa aparte.
+
+| Operación | Resultado |
+|---|---|
+| Render del mapa 1600×1000, mundo (zoom 2,0) | 21,7 ms/frame (Debug, `MapRendererTests`) |
+| Render del mapa 1600×1000, región (zoom 6,8) | 14,3 ms/frame (Debug) |
+| Agrupar 100 000 puntos uniformes en el mundo, nivel 2 / 6 / 10 | ~15 / ~65 / ~150 ms (Release, peor caso: puntos dispersos) |
+| Carga del mapa base | 367 KB comprimidos, 104 180 vértices |
+
+No medido aún: tiempos de la página en Windows con 10k/50k/100k fotos reales (pendiente de la fase de rendimiento).
+
 ## Pendiente de medir en Windows (QA manual)
 - Importación de 1.000 JPEG reales (copiar y sin mover) en SSD y HDD.
 - Generación de miniaturas por segundo con `MaxBackgroundWorkers` 1, 2 y 4.
