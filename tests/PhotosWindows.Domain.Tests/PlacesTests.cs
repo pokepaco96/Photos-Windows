@@ -106,6 +106,17 @@ public sealed class MapViewTests
     }
 
     [Fact]
+    public void Interactive_zoom_stops_at_the_basemap_detail_limit_and_scaling_keeps_the_same_area()
+    {
+        var view = new MapView(0.5, 0.5, 9.5, 800, 600).ZoomAt(3, 400, 300);
+        Assert.Equal(MapView.MaxInteractiveZoom, view.Zoom);
+        var hi = view.Scaled(1.5);
+        Assert.Equal((1200, 900), (hi.Width, hi.Height));
+        Assert.Equal(view.VisibleBounds.MinLon, hi.VisibleBounds.MinLon, 9);
+        Assert.Equal(view.VisibleBounds.MaxLat, hi.VisibleBounds.MaxLat, 9);
+    }
+
+    [Fact]
     public void Fit_of_a_single_point_uses_the_max_zoom_cap()
     {
         var view = MapView.Fit(GeoBounds.From(40, -3, 40, -3), 800, 600, maxZoom: 8);
@@ -204,6 +215,6 @@ public sealed class PlaceClusteringTests
         Assert.Equal(3, PlaceClustering.LevelFor(3.99));
         Assert.Equal(4, PlaceClustering.LevelFor(4));
         Assert.Equal(0, PlaceClustering.LevelFor(-2));
-        Assert.Equal(10, PlaceClustering.LevelFor(50));
+        Assert.Equal((int)MapView.MaxZoom, PlaceClustering.LevelFor(50));
     }
 }

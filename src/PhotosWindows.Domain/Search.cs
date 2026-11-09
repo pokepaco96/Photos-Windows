@@ -24,6 +24,8 @@ public enum LibraryScope
     WithLocation = 8,
     LivePhotos = 9,
     Raw = 10,
+    /// <summary>Visible assets without GPS (linked from Places so they can be found and fixed).</summary>
+    WithoutLocation = 11,
 }
 
 /// <summary>Combinable filter set used by the grid, the search page and smart albums.</summary>
@@ -47,6 +49,8 @@ public sealed record AssetQuery
     public int? MinRating { get; init; }
     /// <summary>Optional bounding box: (minLat, minLon, maxLat, maxLon).</summary>
     public (double MinLat, double MinLon, double MaxLat, double MaxLon)? Area { get; init; }
+    /// <summary>Restricts the result to these asset ids (e.g. the photos of a Places cluster).</summary>
+    public IReadOnlyCollection<long>? Ids { get; init; }
     /// <summary>Rules of a smart album, combined (AND) with the other filters.</summary>
     public SmartAlbumDefinition? Smart { get; init; }
     public AssetSort Sort { get; init; } = AssetSort.CaptureDateDescending;
