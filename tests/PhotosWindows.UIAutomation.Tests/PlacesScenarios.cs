@@ -26,7 +26,8 @@ public sealed partial class EndToEndTests
         ("Cero.jpg", 0, 0, new DateTime(2023, 1, 1, 12, 0, 0)),
     ];
 
-    private Dictionary<string, string>? _placesHashes;
+    // Static: xUnit creates a new test-class instance per step.
+    private static Dictionary<string, string>? _placesHashes;
 
     private void OpenPlaces()
     {
