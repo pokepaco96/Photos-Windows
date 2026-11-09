@@ -81,7 +81,7 @@ public sealed class QaDataset
 
     public static string Sha256(string path) => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
 
-    private static void Jpeg(string path, int seed, DateTime taken, TimeSpan? offset, GeoLocation? location, string? title, IReadOnlyList<string> keywords)
+    internal static void Jpeg(string path, int seed, DateTime taken, TimeSpan? offset, GeoLocation? location, string? title, IReadOnlyList<string> keywords)
     {
         using var bmp = Pattern(1600, 1067, seed);
         using var image = SKImage.FromBitmap(bmp);

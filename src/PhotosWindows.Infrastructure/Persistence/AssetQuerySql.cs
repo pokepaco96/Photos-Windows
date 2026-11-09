@@ -38,6 +38,7 @@ internal sealed class AssetQuerySql
         if (!string.IsNullOrWhiteSpace(query.Camera)) b._where.Add($"(coalesce(a.camera_make,'') || ' ' || coalesce(a.camera_model,'')) LIKE {b.Param(Like(query.Camera!))} ESCAPE '\\'");
         if (!string.IsNullOrWhiteSpace(query.Lens)) b._where.Add($"a.lens LIKE {b.Param(Like(query.Lens!))} ESCAPE '\\'");
         if (!string.IsNullOrWhiteSpace(query.Format)) b._where.Add($"a.format = {b.Param(query.Format!)} COLLATE NOCASE");
+        if (query.Ids is { } ids) b._where.Add($"a.id IN (SELECT value FROM json_each({b.Param(System.Text.Json.JsonSerializer.Serialize(ids))}))");
         if (query.MinRating is { } rating) b._where.Add($"a.rating >= {b.Param(rating)}");
         if (query.Area is { } area)
         {
@@ -127,6 +128,7 @@ internal sealed class AssetQuerySql
             case LibraryScope.RecentlyDeleted: _where.Add("a.deleted_utc IS NOT NULL"); break;
             case LibraryScope.Edited: _where.Add(visible + " AND a.edit_version > 0"); break;
             case LibraryScope.WithLocation: _where.Add(visible + " AND a.latitude IS NOT NULL"); break;
+            case LibraryScope.WithoutLocation: _where.Add(visible + " AND a.latitude IS NULL"); break;
             case LibraryScope.LivePhotos: _where.Add(visible + " AND a.has_live_video = 1"); break;
             case LibraryScope.Raw: _where.Add(visible + " AND (a.has_raw_pair = 1 OR a.format = 'RAW')"); break;
             default: throw new ArgumentOutOfRangeException(nameof(scope), scope, null);

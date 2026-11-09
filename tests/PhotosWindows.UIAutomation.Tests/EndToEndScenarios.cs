@@ -670,7 +670,7 @@ public sealed partial class EndToEndTests
         if (unnamed.Count > 0) throw new InvalidOperationException("Buttons without an accessible name: " + string.Join(", ", unnamed.Distinct()));
     });
 
-    [Fact, Step(28)]
+    [Fact, Step(99)] // always last: closes the app and checks every dataset file
     public void S28_Originals_untouched_and_clean_exit() => Run(28, "Originals unchanged (SHA-256) and clean exit", ["app"], null, () =>
     {
         qa.CloseApp();
