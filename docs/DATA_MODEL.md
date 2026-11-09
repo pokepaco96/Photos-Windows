@@ -1,5 +1,7 @@
 # Modelo de datos (esquema v2)
 
+> Lugares no añade tablas: usa `assets.latitude/longitude` (índice `ix_assets_location`). Las consultas nuevas son `QueryGeoPointsAsync` (id, lat, lon, fecha) y `SetLocationAsync`; el filtro `AssetQuery.Ids` usa `json_each`.
+
 Fuente de verdad: `src/PhotosWindows.Infrastructure/Persistence/Migrations.cs`.
 
 | Tabla | Propósito | Notas |
