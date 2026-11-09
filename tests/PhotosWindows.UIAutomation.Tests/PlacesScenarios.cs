@@ -45,6 +45,14 @@ public sealed partial class EndToEndTests
         return m.Success ? int.Parse(m.Groups[1].Value) : 0;
     }
 
+    /// <summary>Puts Places back in map mode (map on, list off) whatever a previous step left.</summary>
+    private void EnsureMapMode()
+    {
+        App.SetChecked("Places_MapSwitch", true);
+        App.SetChecked("Places_ListToggle", false);
+        App.WaitUntil(() => App.Exists("Places_FitAll"), "map mode");
+    }
+
     private int SummaryCount() => ItemsIn(App.TextOf("Places_Summary"));
 
     private AutomationElement ClusterNamed(string fragment) =>
@@ -92,7 +100,7 @@ public sealed partial class EndToEndTests
         // The biggest cluster near Iberia groups Lisbon with Madrid/Málaga at low zoom; zooming to it splits them.
         var iberia = Clusters().OrderByDescending(c => ItemsIn(c.Properties.Name.ValueOrDefault ?? "")).First();
         App.Invoke(iberia);
-        App.WaitUntil(() => App.Exists("Places_Tray"), "the tray");
+        App.WaitUntil(() => App.Exists("Places_TrayCount"), "the tray");
         App.Click("Places_ZoomToSelection");
         Thread.Sleep(1200);
         qa.Evidence.Log($"clusters before {before}, after zoom {Clusters().Count}");
@@ -116,14 +124,16 @@ public sealed partial class EndToEndTests
         App.WaitUntil(() => App.Exists("Viewer_FileName") && App.TextOf("Viewer_FileName") == "Lisboa_2.jpg", "the viewer showing Lisboa_2.jpg", TimeSpan.FromSeconds(30));
         App.Screenshot("42_viewer_from_places");
         AppSession.Keys(VirtualKeyShort.ESCAPE);
-        App.WaitUntil(() => App.Exists("Places_Tray"), "Places with the tray still open", TimeSpan.FromSeconds(15));
+        App.WaitUntil(() => App.Exists("Places_TrayCount"), "Places with the tray still open", TimeSpan.FromSeconds(15));
         if (ItemsIn(App.TextOf("Places_TrayCount")) != 3) throw new InvalidOperationException("The selected area was lost after coming back from the viewer.");
     });
 
     [Fact, Step(43)]
     public void S43_Places_antimeridian() => Run(43, "Places: Fiji and Samoa (both sides of 180°) are framed together", ["places-open"], null, () =>
     {
-        App.Click("Places_CloseTray");
+        OpenPlaces();
+        EnsureMapMode();
+        if (App.Exists("Places_CloseTray")) App.Click("Places_CloseTray");
         App.Click("Places_FitAll");
         Thread.Sleep(1000);
         var map = App.Find("Places_Map").BoundingRectangle;
@@ -153,40 +163,44 @@ public sealed partial class EndToEndTests
     public void S45_Places_list_mode() => Run(45, "Places: list mode with one row per area", ["places-open"], null, () =>
     {
         App.SetChecked("Places_ListToggle", true);
-        App.WaitUntil(() => App.Exists("Places_List") && !App.Exists("Places_Map"), "list mode");
+        App.WaitUntil(() => App.Exists("Places_List") && !App.Exists("Places_FitAll"), "list mode");
         var rows = App.FindAll(cf => cf.ByAutomationId("Places_Group"));
         qa.Evidence.Log("groups: " + string.Join(" ; ", rows.Select(r => r.Properties.Name.ValueOrDefault)));
         if (rows.Count < 4) throw new InvalidOperationException($"Expected at least 4 areas, found {rows.Count}.");
         var fiji = rows.First(r => (r.Properties.Name.ValueOrDefault ?? "").Contains("17.71° S", StringComparison.Ordinal));
         App.Invoke(fiji);
-        App.WaitUntil(() => App.Exists("Places_Tray") && ItemsIn(App.TextOf("Places_TrayCount")) == 1, "the Fiji tray");
+        App.WaitUntil(() => App.Exists("Places_TrayCount") && ItemsIn(App.TextOf("Places_TrayCount")) == 1, "the Fiji tray");
         App.Screenshot("45_places_list");
         App.SetChecked("Places_ListToggle", false);
-        App.WaitUntil(() => App.Exists("Places_Map"), "map mode again");
+        App.WaitUntil(() => App.Exists("Places_FitAll"), "map mode again");
     });
 
     [Fact, Step(46)]
     public void S46_Places_map_off_and_on() => Run(46, "Places: turn the map off (persisted across navigation) and on", ["places-open"], null, () =>
     {
+        OpenPlaces();
+        EnsureMapMode();
         App.SetChecked("Places_MapSwitch", false);
-        App.WaitUntil(() => App.Exists("Places_List") && !App.Exists("Places_Map"), "the list when the map is off");
+        App.WaitUntil(() => App.Exists("Places_List") && !App.Exists("Places_FitAll"), "the list when the map is off");
         Nav("Nav_All");
         OpenPlaces();
-        if (App.Exists("Places_Map")) throw new InvalidOperationException("The map came back after navigating although it was turned off.");
+        if (App.Exists("Places_FitAll")) throw new InvalidOperationException("The map came back after navigating although it was turned off.");
         App.Screenshot("46_places_map_off");
         App.SetChecked("Places_MapSwitch", true);
-        App.WaitUntil(() => App.Exists("Places_Map"), "the map turned on");
+        App.WaitUntil(() => App.Exists("Places_FitAll"), "the map turned on");
     });
 
     [Fact, Step(47)]
     public void S47_Places_remove_location() => Run(47, "Places: remove an area's location; catalog updated, originals untouched", ["places-open"], null, () =>
     {
+        OpenPlaces();
+        EnsureMapMode();
         App.Click("Places_FitAll");
         Thread.Sleep(800);
         var total = SummaryCount();
         var without = ItemsIn(AppSession.AllText(App.Find("Places_NoGpsInfo")));
         App.Invoke(ClusterNamed("64.15° N"));
-        App.WaitUntil(() => App.Exists("Places_Tray"), "the Reykjavik tray");
+        App.WaitUntil(() => App.Exists("Places_TrayCount"), "the Reykjavik tray");
         App.Click("Places_RemoveLocation");
         App.DialogButton("PrimaryButton");
         App.WaitUntil(() => SummaryCount() == total - 1, "one place fewer", TimeSpan.FromSeconds(15));
@@ -202,6 +216,8 @@ public sealed partial class EndToEndTests
     [Fact, Step(48)]
     public void S48_Places_offline() => Run(48, "Places: the map draws while the app holds no network connection (sampled)", ["places-open"], null, () =>
     {
+        OpenPlaces();
+        EnsureMapMode();
         OpenPlaces();
         App.Click("Places_ZoomIn");
         App.Click("Places_ZoomOut");

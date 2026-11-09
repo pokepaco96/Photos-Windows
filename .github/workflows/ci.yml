@@ -63,7 +63,7 @@ jobs:
         run: |
           $files = Get-ChildItem TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue
           foreach ($f in $files) {
-            [xml]$x = Get-Content $f.FullName
+            [xml]$x = Get-Content -LiteralPath $f.FullName
             $c = $x.TestRun.ResultSummary.Counters
             "| $($f.Name) | total $($c.total) | passed $($c.passed) | failed $($c.failed) |" >> $env:GITHUB_STEP_SUMMARY
           }

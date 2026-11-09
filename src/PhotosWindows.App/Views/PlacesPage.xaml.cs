@@ -124,9 +124,11 @@ public sealed partial class PlacesPage : Page
                 Height = size,
                 Padding = new Thickness(0),
                 CornerRadius = new CornerRadius(size / 2),
-                Content = new TextBlock { Text = cluster.Count > 999 ? "999+" : cluster.Count.ToString(System.Globalization.CultureInfo.CurrentCulture), FontSize = 12, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold },
-                Style = selected ? (Style)Microsoft.UI.Xaml.Application.Current.Resources["AccentButtonStyle"] : null,
-                BorderThickness = new Thickness(2),
+                Content = new TextBlock { Text = cluster.Count > 999 ? "999+" : cluster.Count.ToString(System.Globalization.CultureInfo.CurrentCulture), FontSize = 12, Foreground = (Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextOnAccentFillColorPrimaryBrush"], FontWeight = Microsoft.UI.Text.FontWeights.SemiBold },
+                // Accent-filled markers stand out on both map themes; the selected one is inverted.
+                Style = (Style)Microsoft.UI.Xaml.Application.Current.Resources["AccentButtonStyle"],
+                BorderThickness = new Thickness(selected ? 3 : 2),
+                BorderBrush = (Brush)Microsoft.UI.Xaml.Application.Current.Resources[selected ? "TextFillColorPrimaryBrush" : "TextOnAccentFillColorPrimaryBrush"],
                 Tag = cluster,
             };
             var label = new PlaceGroupViewModel(cluster).AutomationName;
