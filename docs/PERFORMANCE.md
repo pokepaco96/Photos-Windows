@@ -34,6 +34,17 @@ Prueba `End_to_end_groups_the_same_people_and_measures_speed`: 5 retratos de la 
 | Contenedor Linux, 4 vCPU, 2026-11-07 | 140 ms |
 
 Extrapolación lineal de lo medido, no una medida: 10.000 fotos ≈ 25–50 min con 2 vCPU. Falta medirlo en un PC con Windows 11 y con una biblioteca grande. La agrupación (en memoria, 128 valores por rostro) y la base de datos no son el cuello de botella con estas cantidades; falta medir 10.000 rostros sintéticos (pendiente).
+## Lugares (medido)
+Máquina: contenedor Linux de CI, Intel Xeon @ 2,10 GHz, 4 núcleos, .NET 10.0, Release salvo indicación. Método: `Stopwatch`, media de 5 renders tras uno de calentamiento; agrupación repetida 3 veces en un programa aparte.
+
+| Operación | Resultado |
+|---|---|
+| Render del mapa 1600×1000, mundo (zoom 2,0) | 21,7 ms/frame (Debug, `MapRendererTests`) |
+| Render del mapa 1600×1000, región (zoom 6,8) | 14,3 ms/frame (Debug) |
+| Agrupar 100 000 puntos uniformes en el mundo, nivel 2 / 6 / 10 | ~15 / ~65 / ~150 ms (Release, peor caso: puntos dispersos) |
+| Carga del mapa base | 367 KB comprimidos, 104 180 vértices |
+
+No medido aún: tiempos de la página en Windows con 10k/50k/100k fotos reales (pendiente de la fase de rendimiento).
 
 ## Pendiente de medir en Windows (QA manual)
 - Importación de 1.000 JPEG reales (copiar y sin mover) en SSD y HDD.
