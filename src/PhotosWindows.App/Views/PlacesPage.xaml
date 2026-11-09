@@ -179,10 +179,10 @@
                         </Style>
                     </GridView.ItemContainerStyle>
                 </GridView>
-                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
-                    <Button x:Name="OpenPhotoButton" x:Uid="Places_OpenPhoto" AutomationProperties.AutomationId="Places_OpenPhoto" Content="Open" IsEnabled="False" Click="OnOpenPhoto" Style="{StaticResource AccentButtonStyle}" />
-                    <Button x:Uid="Places_ZoomToSelection" AutomationProperties.AutomationId="Places_ZoomToSelection" Content="Zoom to area" Command="{x:Bind ViewModel.ZoomToSelectionCommand}" IsEnabled="{x:Bind ViewModel.IsMapEnabled, Mode=OneWay}" />
-                    <Button x:Uid="Places_RemoveLocation" AutomationProperties.AutomationId="Places_RemoveLocation" Content="Remove location" Command="{x:Bind ViewModel.RemoveLocationCommand}" />
+                <StackPanel Grid.Row="3" Spacing="6">
+                    <Button HorizontalAlignment="Stretch" x:Name="OpenPhotoButton" x:Uid="Places_OpenPhoto" AutomationProperties.AutomationId="Places_OpenPhoto" Content="Open" IsEnabled="False" Click="OnOpenPhoto" Style="{StaticResource AccentButtonStyle}" />
+                    <Button HorizontalAlignment="Stretch" x:Uid="Places_ZoomToSelection" AutomationProperties.AutomationId="Places_ZoomToSelection" Content="Zoom to area" Command="{x:Bind ViewModel.ZoomToSelectionCommand}" IsEnabled="{x:Bind ViewModel.IsMapEnabled, Mode=OneWay}" />
+                    <Button HorizontalAlignment="Stretch" x:Uid="Places_RemoveLocation" AutomationProperties.AutomationId="Places_RemoveLocation" Content="Remove location" Command="{x:Bind ViewModel.RemoveLocationCommand}" />
                 </StackPanel>
             </Grid>
         </Grid>
@@ -195,10 +195,8 @@
                 <VisualState x:Name="Narrow">
                     <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="0" /></VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <!-- Small windows: the tray floats over the right edge of the map instead of shrinking it. -->
-                        <Setter Target="Tray.(Grid.Column)" Value="0" />
-                        <Setter Target="Tray.HorizontalAlignment" Value="Right" />
-                        <Setter Target="Tray.Width" Value="280" />
+                        <!-- Small windows: a narrower tray, still beside the map so it never covers the zoom controls. -->
+                        <Setter Target="Tray.Width" Value="230" />
                         <Setter Target="Root.Padding" Value="12,8,12,8" />
                     </VisualState.Setters>
                 </VisualState>
