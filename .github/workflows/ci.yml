@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -23,17 +24,23 @@ jobs:
     name: Core + tests (Linux)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+
       - name: Restore
         run: dotnet restore PhotosWindows.Core.slnf
+
       - name: Build (Release, warnings as errors)
         run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
+
       - name: Test
         run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,17 +54,23 @@ jobs:
     name: Core + tests (Windows)
     runs-on: windows-latest
     timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+
       - name: Restore
         run: dotnet restore PhotosWindows.Core.slnf
+
       - name: Build core (Release)
         run: dotnet build PhotosWindows.Core.slnf -c Release --no-restore
+
       - name: Test
         run: dotnet test PhotosWindows.Core.slnf -c Release --no-build --logger "trx" --results-directory TestResults --blame-hang-timeout 5m
+
       - name: Test summary
         if: always()
         shell: pwsh
@@ -68,6 +81,7 @@ jobs:
             $c = $x.TestRun.ResultSummary.Counters
             "| $($f.Name) | total $($c.total) | passed $($c.passed) | failed $($c.failed) |" >> $env:GITHUB_STEP_SUMMARY
           }
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -81,30 +95,50 @@ jobs:
     name: Windows app (WinUI 3, x64)
     runs-on: windows-latest
     timeout-minutes: 40
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+
       - name: Build app (Release, x64)
         run: dotnet build src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64
+
       - name: Publish app (self-contained folder)
         run: dotnet publish src/PhotosWindows.App/PhotosWindows.App.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -o artifacts/PhotosWindows-win-x64
+
       - name: Smoke test the published app (must start and stay alive)
         shell: pwsh
         run: |
-          # Regression check: the published folder once lacked resources.pri/.xbf and the app crashed at start-up.
+          # Regression check: published folder must contain
+          # resources.pri/.xbf and the app must start.
           ./tests/PhotosWindows.UIAutomation.Tests/scripts/startup-smoke.ps1 -Exe artifacts/PhotosWindows-win-x64/PhotosWindows.exe -Output artifacts/smoke
-          if (-not (Select-String -Path artifacts/smoke/startup-smoke.txt -Pattern 'RESULT: alive' -Quiet)) { Write-Error "The published app did not stay running."; exit 1 }
+          if (-not (Select-String -Path artifacts/smoke/startup-smoke.txt -Pattern 'RESULT: alive' -Quiet)) {
+            Write-Error "The published app did not stay running."
+            exit 1
+          }
+
+      # Only store the full Windows app when needed.
+      # This avoids accumulating large build artifacts.
       - name: Upload app artifact
+        if: >-
+          github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'push' &&
+          github.ref_name == github.event.repository.default_branch)
         uses: actions/upload-artifact@v4
         with:
           name: PhotosWindows-win-x64
           path: artifacts/PhotosWindows-win-x64
           if-no-files-found: error
           retention-days: 2
+
       - name: Vulnerable package report
         shell: pwsh
         run: |
           dotnet list PhotosWindows.sln package --vulnerable --include-transitive | Tee-Object -FilePath vulnerable.txt
-          if (Select-String -Path vulnerable.txt -Pattern "has the following vulnerable packages") { Write-Error "Vulnerable packages found"; exit 1 }
+          if (Select-String -Path vulnerable.txt -Pattern "has the following vulnerable packages") {
+            Write-Error "Vulnerable packages found"
+            exit 1
+          }
