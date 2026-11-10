@@ -18,9 +18,12 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly UiThread _ui;
     private readonly ILogger<ShellViewModel> _logger;
 
+    private readonly PeopleCoordinator _people;
+
     public ShellViewModel(LibraryManager libraries, ILibraryContext context, ISettingsStore settings, NavigationService navigation, DialogService dialogs,
-        ImportCoordinator import, ActivityCenter activity, UiThread ui, ILogger<ShellViewModel> logger)
+        ImportCoordinator import, ActivityCenter activity, PeopleCoordinator people, UiThread ui, ILogger<ShellViewModel> logger)
     {
+        _people = people;
         _libraries = libraries;
         _settings = settings;
         _navigation = navigation;
@@ -33,13 +36,31 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             HasLibrary = library is not null;
             LibraryName = library?.Name ?? string.Empty;
+            _ = RefreshPeopleAsync();
         });
+        people.People.Changed += (_, _) => _ui.Post(() => _ = RefreshPeopleAsync());
+        people.Models.Changed += (_, _) => _ui.Post(() => _ = RefreshPeopleAsync());
     }
 
     public ActivityCenter Activity { get; }
 
     [ObservableProperty] public partial bool HasLibrary { get; set; }
     [ObservableProperty] public partial string LibraryName { get; set; } = string.Empty;
+
+    /// <summary>The People section is listed only when it works (library open, People on, models installed).</summary>
+    [ObservableProperty] public partial bool ShowPeople { get; set; }
+
+    public async Task RefreshPeopleAsync()
+    {
+        try
+        {
+            ShowPeople = HasLibrary && await _people.IsAvailableAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            ShowPeople = false; // library closed meanwhile
+        }
+    }
 
     /// <summary>Opens the last library if it is still available; otherwise shows the welcome page with an explanation.</summary>
     public async Task StartAsync()

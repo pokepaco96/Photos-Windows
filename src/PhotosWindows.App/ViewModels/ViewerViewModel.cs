@@ -28,7 +28,8 @@ public sealed partial class ViewerViewModel(
     ImageLoader images,
     SelectionActions actions,
     NavigationService navigation,
-    WindowContext window) : ObservableObject
+    WindowContext window,
+    PeopleCoordinator people) : ObservableObject
 {
     private const int ViewerRenderSize = 3840;
     private IReadOnlyList<long> _ids = [];
@@ -57,6 +58,11 @@ public sealed partial class ViewerViewModel(
     [ObservableProperty] public partial string EditDescription { get; set; } = string.Empty;
     [ObservableProperty] public partial double Rating { get; set; }
     [ObservableProperty] public partial string AlbumsText { get; set; } = string.Empty;
+
+    /// <summary>People in the photo (only when People is on); the user's names, never guesses.</summary>
+    [ObservableProperty] public partial bool ShowPeople { get; set; }
+    [ObservableProperty] public partial string PeopleText { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsExcludedFromPeople { get; set; }
     [ObservableProperty] public partial bool CanGoPrevious { get; set; }
     [ObservableProperty] public partial bool CanGoNext { get; set; }
 
@@ -161,6 +167,7 @@ public sealed partial class ViewerViewModel(
         foreach (var k in await organization.GetKeywordsForAsync(asset.Id, ct)) Keywords.Add(k);
         var albums = await organization.GetAlbumsContainingAsync(asset.Id, ct);
         AlbumsText = albums.Count == 0 ? Loc.Get("Info_NoAlbums") : string.Join(", ", albums.Select(a => a.Name));
+        await LoadPeopleAsync(asset, ct);
 
         var culture = CultureInfo.CurrentCulture;
         var file = await assets.GetOriginalFileAsync(asset.Id, ct);
@@ -325,4 +332,49 @@ public sealed partial class ViewerViewModel(
     }
 
     public void Cancel() => _cts?.Cancel();
+
+    private async Task LoadPeopleAsync(Asset asset, CancellationToken ct)
+    {
+        ShowPeople = asset.MediaType == MediaType.Photo && await people.IsAvailableAsync();
+        if (!ShowPeople) return;
+        IsExcludedFromPeople = await people.People.IsExcludedAsync(asset.Id, ct);
+        var faces = await people.People.GetFacesOfAssetAsync(asset.Id, ct);
+        var names = new List<string>();
+        foreach (var face in faces.Where(f => f.Review != FaceReview.Ignored))
+        {
+            var person = face.PersonId is { } id ? await people.People.GetPersonAsync(id, ct) : null;
+            names.Add(person is null ? Loc.Get("People_UngroupedFace") : PeopleCoordinator.DisplayName(person));
+        }
+
+        PeopleText = IsExcludedFromPeople ? Loc.Get("Info_PeopleExcluded")
+            : names.Count == 0 ? Loc.Get("Info_NoPeople")
+            : string.Join(", ", names);
+    }
+
+    [RelayCommand]
+    private async Task ExcludeFromPeopleAsync()
+    {
+        if (Asset is not { } asset) return;
+        await people.People.ExcludeAsync([asset.Id], CancellationToken.None);
+        await LoadPeopleAsync(asset, CancellationToken.None);
+    }
+
+    [RelayCommand]
+    private async Task IncludeInPeopleAsync()
+    {
+        if (Asset is not { } asset) return;
+        await people.People.IncludeAsync([asset.Id], CancellationToken.None);
+        await people.AnalyzeAsync([asset.Id]);
+        await LoadPeopleAsync(asset, CancellationToken.None);
+    }
+
+    /// <summary>Runs the analysis of this photo again; names given to its faces are kept.</summary>
+    [RelayCommand]
+    private async Task AnalyzePeopleAgainAsync()
+    {
+        if (Asset is not { } asset) return;
+        await people.People.ResetAnalysisAsync([asset.Id], CancellationToken.None);
+        await people.AnalyzeAsync([asset.Id]);
+        await LoadPeopleAsync(asset, CancellationToken.None);
+    }
 }

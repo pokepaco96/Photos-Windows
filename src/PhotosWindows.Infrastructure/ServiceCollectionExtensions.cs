@@ -8,6 +8,7 @@ using PhotosWindows.Application.Import;
 using PhotosWindows.Application.Library;
 using PhotosWindows.Application.Maintenance;
 using PhotosWindows.Application.Organization;
+using PhotosWindows.Application.People;
 using PhotosWindows.Application.Search;
 using PhotosWindows.Application.Thumbnails;
 using PhotosWindows.Infrastructure.FileSystem;
@@ -37,6 +38,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IImportJobRepository, ImportJobRepository>();
         services.AddSingleton<IEditRepository, EditRepository>();
         services.AddSingleton<IDuplicateDismissalRepository, DuplicateDismissalRepository>();
+        services.AddSingleton<IPeopleRepository, PeopleRepository>();
         services.AddSingleton<IMetadataReader, MetadataExtractorReader>();
 
         services.AddSingleton<LibraryManager>();
@@ -49,6 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DuplicateService>();
         services.AddSingleton<BackupService>();
         services.AddSingleton<LibraryMaintenanceService>();
+        services.AddSingleton<PeopleService>();
         return services;
     }
 }

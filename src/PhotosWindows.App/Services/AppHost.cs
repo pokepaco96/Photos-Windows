@@ -6,6 +6,7 @@ using PhotosWindows.Imaging;
 using PhotosWindows.Infrastructure;
 using PhotosWindows.Infrastructure.Logging;
 using PhotosWindows.Infrastructure.Settings;
+using PhotosWindows.MachineLearning;
 using PhotosWindows.Platform.Windows;
 
 namespace PhotosWindows.App.Services;
@@ -31,6 +32,7 @@ public static class AppHost
         services.AddPhotosWindowsCore(paths);
         services.AddPhotosWindowsImaging();
         services.AddPhotosWindowsPlatform();
+        services.AddPhotosWindowsMachineLearning();
 
         services.AddSingleton(new UiThread(dispatcher));
         services.AddSingleton<WindowContext>();
@@ -42,6 +44,7 @@ public static class AppHost
         services.AddSingleton<ActivityCenter>();
         services.AddSingleton<ImportCoordinator>();
         services.AddSingleton<SelectionActions>();
+        services.AddSingleton<PeopleCoordinator>();
 
         services.AddSingleton<ShellViewModel>();
         services.AddTransient<WelcomeViewModel>();
@@ -52,6 +55,7 @@ public static class AppHost
         services.AddTransient<DuplicatesViewModel>();
         services.AddTransient<ImportsViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<PeopleViewModel>();
         return services.BuildServiceProvider();
     }
 }

@@ -9,6 +9,7 @@ internal static class Migrations
     public static IReadOnlyList<(int Version, string Description, string Sql)> All { get; } =
     [
         (1, "Initial catalog", V1),
+        (2, "People: faces, groups and analysis state", V2),
     ];
 
     public static int Latest => All[^1].Version;
@@ -190,5 +191,49 @@ internal static class Migrations
             tokenize = 'unicode61 remove_diacritics 2',
             prefix = '2 3'
         );
+        """;
+
+    /// <summary>
+    /// Faces are derived (biometric) data: everything here can be deleted at once without touching photos.
+    /// Descriptors are 32-bit floats, L2-normalized, stored as BLOBs; boxes are normalized to the oriented photo.
+    /// </summary>
+    private const string V2 = """
+        CREATE TABLE people (
+            id            INTEGER PRIMARY KEY,
+            name          TEXT NULL,
+            cover_face_id INTEGER NULL,
+            created_utc   TEXT NOT NULL,
+            updated_utc   TEXT NOT NULL
+        );
+
+        CREATE TABLE faces (
+            id            INTEGER PRIMARY KEY,
+            asset_id      INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+            model_version TEXT    NOT NULL,
+            x             REAL    NOT NULL,
+            y             REAL    NOT NULL,
+            w             REAL    NOT NULL,
+            h             REAL    NOT NULL,
+            score         REAL    NOT NULL,
+            embedding     BLOB    NOT NULL,
+            person_id     INTEGER NULL REFERENCES people(id) ON DELETE SET NULL,
+            review        INTEGER NOT NULL DEFAULT 0,
+            created_utc   TEXT    NOT NULL
+        );
+        CREATE INDEX ix_faces_asset ON faces(asset_id);
+        CREATE INDEX ix_faces_person ON faces(person_id);
+
+        CREATE TABLE face_analysis (
+            asset_id      INTEGER PRIMARY KEY REFERENCES assets(id) ON DELETE CASCADE,
+            model_version TEXT    NOT NULL,
+            state         INTEGER NOT NULL,
+            face_count    INTEGER NOT NULL DEFAULT 0,
+            analyzed_utc  TEXT    NOT NULL
+        ) WITHOUT ROWID;
+
+        CREATE TABLE face_exclusions (
+            asset_id    INTEGER PRIMARY KEY REFERENCES assets(id) ON DELETE CASCADE,
+            created_utc TEXT NOT NULL
+        ) WITHOUT ROWID;
         """;
 }

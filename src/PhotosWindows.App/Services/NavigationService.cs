@@ -6,7 +6,7 @@ using PhotosWindows.Domain;
 namespace PhotosWindows.App.Services;
 
 /// <summary>What a library grid should show.</summary>
-public sealed record LibraryNavigation(LibraryScope Scope, long? AlbumId = null, string? SearchText = null)
+public sealed record LibraryNavigation(LibraryScope Scope, long? AlbumId = null, string? SearchText = null, long? PersonId = null)
 {
     public static LibraryNavigation AllPhotos { get; } = new(LibraryScope.All);
 }
@@ -40,6 +40,10 @@ public sealed class NavigationService
     public void ToAlbums() => Navigate(typeof(AlbumsPage), null);
 
     public void ToDuplicates() => Navigate(typeof(DuplicatesPage), null);
+
+    public void ToPeople() => Navigate(typeof(PeoplePage), null);
+
+    public void ToPerson(long personId) => ToLibrary(new LibraryNavigation(LibraryScope.All, PersonId: personId));
 
     public void ToImports() => Navigate(typeof(ImportsPage), null);
 
