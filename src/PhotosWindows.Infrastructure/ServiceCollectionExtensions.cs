@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using PhotosWindows.Application.Abstractions;
 using PhotosWindows.Application.Backup;
@@ -54,6 +55,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<BackupService>();
         services.AddSingleton<LibraryMaintenanceService>();
         services.AddSingleton<PeopleService>();
+        services.TryAddSingleton<PhotosWindows.Application.Devices.IPortableMediaDeviceProvider, PhotosWindows.Application.Devices.NoPortableDeviceProvider>();
+        services.AddSingleton<PhotosWindows.Application.Devices.PhoneImportCoordinator>();
         services.AddSingleton<PhotosWindows.Application.Memories.MemoriesService>();
         return services;
     }
