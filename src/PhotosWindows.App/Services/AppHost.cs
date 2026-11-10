@@ -53,6 +53,8 @@ public static class AppHost
         services.AddTransient<EditorViewModel>();
         services.AddTransient<AlbumsViewModel>();
         services.AddTransient<PlacesViewModel>();
+        services.AddTransient<MemoriesViewModel>();
+        services.AddTransient<SlideshowViewModel>();
         services.AddTransient<DuplicatesViewModel>();
         services.AddTransient<ImportsViewModel>();
         services.AddTransient<SettingsViewModel>();

@@ -6,13 +6,16 @@ using PhotosWindows.Domain;
 namespace PhotosWindows.App.Services;
 
 /// <summary>What a library grid should show.</summary>
-public sealed record LibraryNavigation(LibraryScope Scope, long? AlbumId = null, string? SearchText = null, long? PersonId = null)
+public sealed record LibraryNavigation(LibraryScope Scope, long? AlbumId = null, string? SearchText = null, long? PersonId = null, IReadOnlyList<long>? Ids = null, string? Title = null)
 {
     public static LibraryNavigation AllPhotos { get; } = new(LibraryScope.All);
 }
 
 /// <summary>Opens the viewer on <see cref="Ids"/>[<see cref="Index"/>]; the list enables previous/next.</summary>
 public sealed record ViewerNavigation(IReadOnlyList<long> Ids, int Index);
+
+/// <summary>Plays <see cref="Ids"/> as a slideshow titled <see cref="Title"/>.</summary>
+public sealed record SlideshowNavigation(IReadOnlyList<long> Ids, string Title);
 
 public sealed class NavigationService
 {
@@ -40,6 +43,10 @@ public sealed class NavigationService
     public void ToAlbums() => Navigate(typeof(AlbumsPage), null);
 
     public void ToPlaces() => Navigate(typeof(PlacesPage), null);
+
+    public void ToMemories() => Navigate(typeof(MemoriesPage), null);
+
+    public void ToSlideshow(SlideshowNavigation target) => Navigate(typeof(SlideshowPage), target, new DrillInNavigationTransitionInfo());
 
     public void ToDuplicates() => Navigate(typeof(DuplicatesPage), null);
 
