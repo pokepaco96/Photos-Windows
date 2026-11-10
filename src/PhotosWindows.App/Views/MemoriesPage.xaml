@@ -58,11 +58,12 @@
             </GridView.ItemContainerStyle>
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="vm:MemoryCardViewModel">
-                    <Grid Width="360" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    <!-- Fixed height: a GridView sizes every item like the first one, so cards must not depend on text length. -->
+                    <Grid Width="360" Height="536" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                           BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="220" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <Grid Background="{ThemeResource TilePlaceholderBrush}">
                             <Image Source="{x:Bind Cover, Mode=OneWay}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -70,12 +71,22 @@
                                 <TextBlock Text="{x:Bind KindName}" FontSize="12" />
                             </Border>
                         </Grid>
-                        <StackPanel Grid.Row="1" Padding="12" Spacing="4">
-                            <TextBlock Text="{x:Bind Title}" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
-                            <TextBlock Text="{x:Bind Subtitle}" Opacity="0.8" TextWrapping="Wrap" />
-                            <TextBlock x:Uid="Memory_WhyLabel" Text="Why you see this" Style="{StaticResource CaptionTextBlockStyle}" FontWeight="SemiBold" Margin="0,6,0,0" />
-                            <TextBlock Text="{x:Bind Why}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.8" TextWrapping="Wrap" />
-                            <Grid ColumnSpacing="6" RowSpacing="6" Margin="0,8,0,0">
+                        <Grid Grid.Row="1" Padding="12" RowSpacing="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="{x:Bind Title}" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Title}" />
+                            <TextBlock Grid.Row="1" Text="{x:Bind Subtitle}" Opacity="0.8" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Row="2" x:Uid="Memory_WhyLabel" Text="Why you see this" Style="{StaticResource CaptionTextBlockStyle}" FontWeight="SemiBold" Margin="0,6,0,0" />
+                            <!-- The whole explanation is always available: it scrolls if it does not fit. -->
+                            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled" IsTabStop="False">
+                                <TextBlock Text="{x:Bind Why}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.8" TextWrapping="Wrap" />
+                            </ScrollViewer>
+                            <Grid Grid.Row="4" ColumnSpacing="6" RowSpacing="6" Margin="0,8,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
@@ -89,7 +100,7 @@
                                 <Button Grid.Row="1" x:Uid="Memory_CreateAlbum" AutomationProperties.AutomationId="Memory_CreateAlbum" Content="Create album" HorizontalAlignment="Stretch" Click="OnCreateAlbum" Tag="{x:Bind}" />
                                 <Button Grid.Row="1" Grid.Column="1" x:Uid="Memory_Hide" AutomationProperties.AutomationId="Memory_Hide" Content="Hide" HorizontalAlignment="Stretch" Click="OnHide" Tag="{x:Bind}" />
                             </Grid>
-                        </StackPanel>
+                        </Grid>
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>

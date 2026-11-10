@@ -73,6 +73,16 @@ public sealed partial class EndToEndTests
             throw new InvalidOperationException("The event card does not explain itself with its facts: " + partyText);
         }
 
+        // Regression (UI run #34, screenshot): the second card's lower buttons were cut off because cards had different heights.
+        foreach (var card in new[] { day, party })
+        {
+            var hide = card.FindFirstDescendant(cf => cf.ByAutomationId("Memory_Hide")) ?? throw new InvalidOperationException("Hide button missing.");
+            if (hide.Properties.IsOffscreen.ValueOrDefault || !card.BoundingRectangle.Contains(hide.BoundingRectangle))
+            {
+                throw new InvalidOperationException($"A card's buttons are clipped: card {card.BoundingRectangle}, Hide {hide.BoundingRectangle}.");
+            }
+        }
+
         if (!App.TextOf("Memories_Summary").Contains("memories from", StringComparison.Ordinal)) throw new InvalidOperationException("Summary missing.");
         Thread.Sleep(1500);
         App.Screenshot("50_memories_light");
