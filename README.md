@@ -6,10 +6,21 @@ Importa, cataloga, busca, organiza, edita sin destruir, exporta y protege tu col
 > «Photos Windows» es un nombre de trabajo. El proyecto no está afiliado a Apple y no utiliza su código, marcas ni recursos.
 
 ## Estado
-En desarrollo activo. El núcleo (biblioteca, importación, catálogo, búsqueda, edición, exportación, copias, verificación) está implementado y cubierto por pruebas automáticas en Linux y Windows. La aplicación WinUI 3 se compila y publica en CI (`windows-latest`) y una suite de UI Automation la usa de verdad a través de su interfaz en un escritorio de Windows (28 de 28 escenarios superados en la última ejecución; ver [`docs/QA_AUTOMATION.md`](docs/QA_AUTOMATION.md)). La prueba manual en Windows 11 con archivos reales sigue pendiente (ver [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md)). Detalle en [`docs/PROGRESS.md`](docs/PROGRESS.md) y [`docs/ROADMAP.md`](docs/ROADMAP.md).
+En desarrollo activo; **no es una versión lista para publicar**.
 
-## Personas (opcional, local)
-Ajustes › Personas: descarga los modelos (unos 39 MB, una vez; se muestran origen y licencias y no se envía nada de tu biblioteca), activa la función en la biblioteca y analiza. Los rostros se agrupan en este PC; tú pones los nombres y corriges los grupos. Puedes excluir fotos y borrar todos los datos faciales cuando quieras. Detalles: [ADR-0010](docs/decisions/0010-people-local-face-grouping.md), [privacidad](docs/PRIVACY.md), [revisión de modelos](docs/research/FACE_MODELS_REVIEW.md).
+- **Núcleo** (biblioteca, importación, catálogo, búsqueda, edición, exportación, copias, verificación): implementado y con pruebas automáticas en Linux y Windows.
+- **Personas, Lugares y Recuerdos**: implementados e integrados; todos locales.
+- **Aplicación WinUI 3**: se compila y publica en CI (`windows-latest`), y una suite de UI Automation la usa a través de su interfaz en un escritorio de Windows Server 2025. Cifras de cada ejecución en [`docs/QA_AUTOMATION.md`](docs/QA_AUTOMATION.md).
+- **Pendiente**: prueba manual en Windows 11 con archivos reales, Narrador, DPI 150/200 % y contraste alto ([`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md)); rendimiento medido en Windows con bibliotecas grandes; instalador y firma.
+
+Detalle en [`docs/PROGRESS.md`](docs/PROGRESS.md) y [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+## Funciones locales
+- **Personas (opcional, desactivada por defecto).** Ajustes › Personas: descarga los modelos (unos 39 MB, una vez; se muestran origen y licencias y no se envía nada de tu biblioteca), activa la función en la biblioteca y analiza. Los rostros se agrupan en este PC; tú pones los nombres y corriges los grupos. Puedes excluir fotos y borrar todos los datos faciales. Los derechos de los datos con que se entrenaron esos modelos no están resueltos, así que no se incluyen en la app ni se considera despejado el uso comercial. Detalles: [ADR-0010](docs/decisions/0010-people-local-face-grouping.md), [revisión de modelos](docs/research/FACE_MODELS_REVIEW.md).
+- **Lugares.** Mapa del mundo incluido en la app (Natural Earth, dominio público), sin teselas descargadas ni geocodificación; grupos por zona, modo lista y filtros. Detalles: [ADR-0011](docs/decisions/0011-places-offline-map.md).
+- **Recuerdos.** Colecciones sugeridas con reglas fijas a partir de fechas y coordenadas del catálogo; cada una explica por qué aparece y se puede ocultar o excluir. Detalles: [`docs/MEMORIES.md`](docs/MEMORIES.md).
+
+La única conexión de red que hace la app es la descarga de los modelos de Personas, y solo cuando tú la pides. Ver [privacidad](docs/PRIVACY.md).
 
 ## Probar la aplicación
 1. Descarga el artefacto `PhotosWindows-win-x64` de la última ejecución correcta de GitHub Actions (pestaña *Actions* › *CI*).
