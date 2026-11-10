@@ -39,6 +39,8 @@ Fecha de consulta de las fuentes: **2026-11-07**. Todas las licencias se han le�
 
 ## Mascotas
 
+> **Descartado (10-11-2026).** Por decisión del propietario, Mascotas no se implementa ni se planifica. Esta sección se conserva solo como registro de lo que se revisó en su día; no hay código, modelos, pantallas ni pruebas de Mascotas en el proyecto.
+
 | Modelo | Código | Pesos | Datos | Tamaño | Veredicto |
 |---|---|---|---|---|---|
 | **YOLOX-s** (opencv_zoo) | Apache-2.0 | Apache-2.0 ([README](https://github.com/opencv/opencv_zoo/tree/main/models/object_detection_yolox)) | COCO 2017 (anotaciones CC BY 4.0; imágenes de Flickr con sus licencias) | 35,9 MB fp32 / 9,1 MB int8 | Detecta las clases «cat» y «dog» de COCO. Permite **agrupar por especie**, no reconocer individuos. |
@@ -55,7 +57,7 @@ Fecha de consulta de las fuentes: **2026-11-07**. Todas las licencias se han le�
 - **Modelos:** YuNet 2023mar (detección + 5 puntos) y SFace 2021dec (descriptor de 128 valores).
 - **No se empaquetan** en el repositorio ni en la app publicada por el riesgo 1. El usuario los **descarga expresamente** desde Ajustes › Personas: la app muestra proveedor (opencv_zoo en Hugging Face), URL fija, tamaño, licencia y aviso de datos de entrenamiento; descarga solo tras confirmación, verifica **SHA-256** fijado en el código y guarda los archivos en `%LOCALAPPDATA%\PhotosWindows\models`. También se pueden instalar a mano desde un archivo (misma verificación). Se pueden borrar.
 - **Sin modelo**, la función no se ofrece (la sección no aparece) y nada falla.
-- **Mascotas:** detección por especie con YOLOX-s en un hito posterior, con el mismo mecanismo de descarga. Sin reconocimiento individual.
+- **Mascotas:** descartado por decisión del propietario (10-11-2026). No se implementa.
 - **Pruebas de inferencia real** en CI: descargan los modelos (no datos de usuarios) y usan retratos de **dominio público** (NASA); si la descarga no es posible, la prueba queda **bloqueada**, nunca superada.
 
 ## Fuentes (consultadas el 2026-11-07)
