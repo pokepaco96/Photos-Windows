@@ -113,6 +113,11 @@ public sealed partial class EndToEndTests
             App.Find("PlacesTile_" + n, TimeSpan.FromSeconds(10));
         }
 
+        // The tray narrows the map: the selected area must stay inside it (recentred if needed).
+        Thread.Sleep(600);
+        var mapRect = App.Find("Places_Map").BoundingRectangle;
+        var selectedRect = ClusterNamed("9.14° W").BoundingRectangle;
+        if (!mapRect.Contains(selectedRect)) throw new InvalidOperationException($"The selected area {selectedRect} is outside the map {mapRect} after the tray opened.");
         App.Screenshot("41_places_cluster_tray");
     });
 

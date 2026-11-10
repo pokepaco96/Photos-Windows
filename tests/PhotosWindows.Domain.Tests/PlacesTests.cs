@@ -117,6 +117,27 @@ public sealed class MapViewTests
     }
 
     [Fact]
+    public void Pan_to_include_moves_the_least_needed_and_keeps_zoom()
+    {
+        var view = new MapView(0.5, 0.5, 4, 800, 600);
+        var (lat, lon) = view.ToGeo(790, 300); // near the right edge
+        Assert.Same(view, view.PanToInclude(view.ToGeo(400, 300).Latitude, view.ToGeo(400, 300).Longitude, 64));
+        var moved = view.PanToInclude(lat, lon, 64);
+        var (x, y) = moved.Project(lat, lon);
+        Assert.Equal(800 - 64, x, 3);
+        Assert.Equal(300, y, 3);
+        Assert.Equal(view.Zoom, moved.Zoom);
+        // After the map narrows (tray opens) a point that was visible on the right is brought back in.
+        var narrow = view.Resize(480, 600);
+        var (px, _) = narrow.PanToInclude(lat, lon, 64).Project(lat, lon);
+        Assert.InRange(px, 64 - 0.001, 480 - 64 + 0.001);
+        // Across the antimeridian the nearest world copy is used.
+        var fiji = MapView.Fit(GeoBounds.From(-19, 177, -16, 179), 800, 600);
+        var (sx, _) = fiji.PanToInclude(-14, -179.5, 64).Project(-14, -179.5);
+        Assert.InRange(sx, 64 - 0.001, 800 - 64 + 0.001);
+    }
+
+    [Fact]
     public void Fit_of_a_single_point_uses_the_max_zoom_cap()
     {
         var view = MapView.Fit(GeoBounds.From(40, -3, 40, -3), 800, 600, maxZoom: 8);

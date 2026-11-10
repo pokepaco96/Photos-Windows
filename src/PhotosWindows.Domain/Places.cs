@@ -103,6 +103,20 @@ public sealed record MapView
         return WebMercator.ToGeo(WebMercator.WrapX(x), y);
     }
 
+    /// <summary>
+    /// The smallest pan that brings a point at least <paramref name="margin"/> pixels inside the view; the same view
+    /// when it already is. Zoom never changes. Used to keep the selected area visible when the map is resized.
+    /// </summary>
+    public MapView PanToInclude(double latitude, double longitude, double margin)
+    {
+        var (x, y) = Project(latitude, longitude);
+        var mx = Math.Min(margin, Width / 2.0);
+        var my = Math.Min(margin, Height / 2.0);
+        var dx = x < mx ? mx - x : x > Width - mx ? Width - mx - x : 0;
+        var dy = y < my ? my - y : y > Height - my ? Height - my - y : 0;
+        return dx == 0 && dy == 0 ? this : PanBy(dx, dy);
+    }
+
     public MapView PanBy(double dxPixels, double dyPixels) =>
         new(CenterX - dxPixels / WorldSize, CenterY - dyPixels / WorldSize, Zoom, Width, Height);
 
