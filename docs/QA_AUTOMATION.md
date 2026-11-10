@@ -6,7 +6,7 @@ Pruebas end-to-end que **usan la aplicación real** (`PhotosWindows.exe`) a trav
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| Proyecto de pruebas | `tests/PhotosWindows.UIAutomation.Tests` | xUnit + [FlaUI](https://github.com/FlaUI/FlaUI) 5.0 (UIA3, licencia MIT). 37 escenarios ordenados: 28 generales (`EndToEndScenarios.cs`, el 28 —SHA-256 y cierre— siempre el último) y 9 de Personas (`PeopleScenarios.cs`, S29–S37). |
+| Proyecto de pruebas | `tests/PhotosWindows.UIAutomation.Tests` | xUnit + [FlaUI](https://github.com/FlaUI/FlaUI) 5.0 (UIA3, licencia MIT). 54 escenarios ordenados: 28 generales (`EndToEndScenarios.cs`, el 28 —SHA-256 y cierre— siempre el último) 9 de Personas (`PeopleScenarios.cs`, S29–S37), 10 de Lugares (`PlacesScenarios.cs`, S40–S49) y 7 de Recuerdos (`MemoriesScenarios.cs`, S50–S56). |
 | Sesión de app | `AppSession.cs` | Lanza el ejecutable con un perfil aislado, espera la ventana, busca controles por `AutomationId`/nombre en todas las ventanas del proceso (ventana principal, menús emergentes, diálogos), hace clics/teclado/texto, maneja el selector de carpetas de Windows, detecta cierres inesperados y el diálogo de error de la app, hace capturas y vuelca el árbol de accesibilidad. |
 | Dataset | `QaDataset.cs` | Genera datos sintéticos reproducibles (semillas fijas) y un manifiesto SHA-256. |
 | Evidencias | `Evidence.cs` | `screenshots/`, `trees/`, `logs/` (log de la ejecución + logs de la app), `results.json`, `report.md`. |
@@ -90,7 +90,8 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | **#32 (Lugares, integrada)** | **47** | **0** | **0** | 28 base + 9 Personas + 10 Lugares sobre `1b587c8`, fusionada como #6. Incluye el recentrado de la bandeja. 22 archivos del dataset y 7 de Lugares sin cambios; ninguna conexión TCP remota en el muestreo. |
 | #33 (Recuerdos) | — | — | — | No llegó a ejecutar pasos: la app no compiló en Windows (`DispatcherQueueTimer` ambiguo). Corregido en `2ff3138`. |
 | #34 (Recuerdos) | 54 | 0 | 0 | 28 base + 9 Personas + 10 Lugares + 7 Recuerdos sobre `2ff3138`. La revisión de capturas encontró un fallo real que las aserciones no cubrían: los botones inferiores de la segunda tarjeta salían cortados. |
-| **#35 (Recuerdos)** | **54** | **0** | **0** | **Tarjetas de altura fija y nueva comprobación en S50** (`a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #75/#76 en verde sobre el mismo commit. |
+| #35 (Recuerdos) | 54 | 0 | 0 | **Tarjetas de altura fija y nueva comprobación en S50** (`a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #75/#76 en verde sobre el mismo commit. |
+| **#36 (Recuerdos, final)** | **54** | **0** | **0** | **Última ejecución completa**, sobre `dd04124` (el commit fusionado como #7, `400dfa3`; solo añade documentación a `a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #77/#78 en verde sobre el mismo commit; CI #79 en verde sobre el default tras la fusión. |
 
 ### Errores encontrados y corregidos
 
