@@ -46,7 +46,18 @@ Máquina: contenedor Linux de CI, Intel Xeon @ 2,10 GHz, 4 núcleos, .NET 10.0, 
 
 No medido aún: tiempos de la página en Windows con 10k/50k/100k fotos reales (pendiente de la fase de rendimiento).
 
+## Recuerdos (medido)
+Máquina: contenedor Linux, Intel Xeon @ 2,10 GHz, 4 núcleos, .NET 10.0, compilación **Debug** (`MemoriesScaleTests`). Datos sintéticos con fechas entre 2012 y 2026, un 75 % con GPS.
+
+| Elementos | Generar candidatos | Ordenar y deduplicar |
+|---|---|---|
+| 10 000 | 104 ms (248 candidatos) | < 1 ms (13 mostrados) |
+| 100 000 | 751 ms (3 479 candidatos) | 5 ms (17 mostrados) |
+
+No incluye la lectura del catálogo ni la carga de portadas, y no es una medida de la página en Windows.
+
 ## Pendiente de medir en Windows (QA manual)
+- Páginas de Lugares y Recuerdos con 10k/50k/100k elementos reales (tiempo hasta el primer pintado, memoria).
 - Importación de 1.000 JPEG reales (copiar y sin mover) en SSD y HDD.
 - Generación de miniaturas por segundo con `MaxBackgroundWorkers` 1, 2 y 4.
 - Desplazamiento de la cuadrícula con 50.000 elementos (fotogramas perdidos, memoria de trabajo).

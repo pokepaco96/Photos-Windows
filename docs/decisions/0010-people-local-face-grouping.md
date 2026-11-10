@@ -14,7 +14,7 @@ La misión pide agrupar rostros localmente para organizar la biblioteca privada,
 6. **Cambio de modelo:** un resultado con otra versión de modelo cuenta como pendiente; al reanalizar, un rostro nuevo que coincide en posición (IoU ≥ 0,5) con uno anterior conserva su persona y su estado.
 7. **Borrado:** «Borrar todos los datos de reconocimiento facial» elimina rostros, descriptores, grupos, nombres y resultados con `secure_delete`, vacía el WAL y hace `VACUUM`; borra las miniaturas de rostros y desactiva la función. Las exclusiones (decisión del usuario) se conservan.
 8. **Copias de seguridad:** sin datos faciales salvo que el usuario lo marque; `backup.json` registra `IncludesFaceData`.
-9. **Mascotas:** no hay modelo de identidad de mascotas con licencia verificable; no se implementa reconocimiento individual. La detección por especie (YOLOX-s, Apache-2.0) queda para un hito posterior.
+9. **Mascotas:** no hay modelo de identidad de mascotas con licencia verificable; no se implementa reconocimiento individual. Mascotas quedó descartado por decisión del propietario (10-11-2026): no se implementa ni se planifica.
 
 ## Alternativas descartadas
 - Empaquetar los modelos: riesgo jurídico por los datos de entrenamiento.

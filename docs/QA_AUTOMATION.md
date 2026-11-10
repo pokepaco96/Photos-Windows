@@ -84,6 +84,13 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | #23 (Personas) | 28 | 1 | 8 | S29: el id del diálogo de descarga estaba en un `StackPanel` sin par UIA (arnés/accesibilidad); S30–S37 bloqueados. |
 | #24 (Personas) | 32 | 1 | 4 | S29–S31 y S37 superados; S32 contaba las tarjetas fuera de la página de Personas (arnés). |
 | **#25 (Personas)** | **37** | **0** | **0** | **Los 28 anteriores y los 9 de Personas** (commit `93551f9`, rama `claude/smart-people`). Evidencias en [`artifacts/qa/evidence/2026-11-08-run25`](../artifacts/qa/evidence/2026-11-08-run25/). |
+| #27–#29 (Lugares) | 31 → 37 | 6 → 1 | 1 → 0 | Fallos del arnés (la bandeja era un `Grid` sin par UIA; los hashes se perdían entre pasos). La captura de #28 mostró un fallo real: en 900×640 la bandeja tapaba los botones de zoom (corregido). |
+| #30 (Lugares) | 38 | 0 | 0 | Los 28 base y los 10 de Lugares (`0434bbd`, rama antigua `claude/smart-places`). |
+| **#31 (Personas, integrada)** | **37** | **0** | **0** | Personas reconstruida sobre el default (`fbe6516`), fusionada como #5. 22 archivos del dataset sin cambios. |
+| **#32 (Lugares, integrada)** | **47** | **0** | **0** | 28 base + 9 Personas + 10 Lugares sobre `1b587c8`, fusionada como #6. Incluye el recentrado de la bandeja. 22 archivos del dataset y 7 de Lugares sin cambios; ninguna conexión TCP remota en el muestreo. |
+| #33 (Recuerdos) | — | — | — | No llegó a ejecutar pasos: la app no compiló en Windows (`DispatcherQueueTimer` ambiguo). Corregido en `2ff3138`. |
+| #34 (Recuerdos) | 54 | 0 | 0 | 28 base + 9 Personas + 10 Lugares + 7 Recuerdos sobre `2ff3138`. La revisión de capturas encontró un fallo real que las aserciones no cubrían: los botones inferiores de la segunda tarjeta salían cortados. |
+| **#35 (Recuerdos)** | **54** | **0** | **0** | **Tarjetas de altura fija y nueva comprobación en S50** (`a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #75/#76 en verde sobre el mismo commit. |
 
 ### Errores encontrados y corregidos
 

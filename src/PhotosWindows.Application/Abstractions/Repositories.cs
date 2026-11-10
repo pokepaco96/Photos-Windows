@@ -42,6 +42,25 @@ public sealed record AssetDetailsUpdate(
     GeoLocation? Location,
     bool ClearLocation = false);
 
+/// <summary>The user's decisions about memories, and the catalog facts the memory rules read.</summary>
+public interface IMemoryRepository
+{
+    /// <summary>Visible, available, thumbnail-able assets only: hidden, deleted, disconnected and undecodable ones are left out.</summary>
+    Task<IReadOnlyList<MemoryItem>> GetItemsAsync(CancellationToken cancellationToken);
+
+    /// <summary>People the user named, with their visible assets. Call only when People is enabled for the library.</summary>
+    Task<IReadOnlyList<MemoryPerson>> GetNamedPeopleAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<HiddenMemory>> GetHiddenAsync(CancellationToken cancellationToken);
+    Task HideAsync(HiddenMemory memory, CancellationToken cancellationToken);
+    Task UnhideAsync(string key, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<MemoryExclusion>> GetExclusionsAsync(CancellationToken cancellationToken);
+    Task<long> ExcludeKindAsync(MemoryKind kind, DateTime createdUtc, CancellationToken cancellationToken);
+    Task<long> ExcludeRangeAsync(DateTime from, DateTime to, DateTime createdUtc, CancellationToken cancellationToken);
+    Task RemoveExclusionAsync(long id, CancellationToken cancellationToken);
+}
+
 public interface IAssetRepository
 {
     Task<long> InsertAsync(NewAssetRecord record, CancellationToken cancellationToken);

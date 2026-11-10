@@ -10,6 +10,7 @@ internal static class Migrations
     [
         (1, "Initial catalog", V1),
         (2, "People: faces, groups and analysis state", V2),
+        (3, "Memories: hidden memories and exclusions", V3),
     ];
 
     public static int Latest => All[^1].Version;
@@ -235,5 +236,31 @@ internal static class Migrations
             asset_id    INTEGER PRIMARY KEY REFERENCES assets(id) ON DELETE CASCADE,
             created_utc TEXT NOT NULL
         ) WITHOUT ROWID;
+        """;
+
+    /// <summary>
+    /// Additive: only the user's decisions about memories are stored (memories themselves are computed on demand).
+    /// To go back to version 2: DROP TABLE memory_exclusions; DROP TABLE memory_hidden; DELETE FROM schema_migrations
+    /// WHERE version = 3; PRAGMA user_version = 2; — nothing else references these tables.
+    /// </summary>
+    private const string V3 = """
+        CREATE TABLE memory_hidden (
+            key         TEXT PRIMARY KEY,
+            kind        INTEGER NOT NULL,
+            start_local TEXT NOT NULL,
+            end_local   TEXT NOT NULL,
+            hidden_utc  TEXT NOT NULL
+        ) WITHOUT ROWID;
+
+        CREATE TABLE memory_exclusions (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            kind        INTEGER NULL,
+            from_local  TEXT NULL,
+            to_local    TEXT NULL,
+            created_utc TEXT NOT NULL,
+            CHECK ((kind IS NOT NULL AND from_local IS NULL AND to_local IS NULL)
+                OR (kind IS NULL AND from_local IS NOT NULL AND to_local IS NOT NULL AND from_local <= to_local))
+        );
+        CREATE UNIQUE INDEX ux_memory_exclusions_kind ON memory_exclusions(kind) WHERE kind IS NOT NULL;
         """;
 }

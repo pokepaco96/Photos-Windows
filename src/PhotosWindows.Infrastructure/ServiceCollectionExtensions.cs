@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEditRepository, EditRepository>();
         services.AddSingleton<IDuplicateDismissalRepository, DuplicateDismissalRepository>();
         services.AddSingleton<IPeopleRepository, PeopleRepository>();
+        services.AddSingleton<IMemoryRepository, MemoryRepository>();
         services.AddSingleton<IMetadataReader, MetadataExtractorReader>();
 
         services.AddSingleton<LibraryManager>();
@@ -53,6 +54,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<BackupService>();
         services.AddSingleton<LibraryMaintenanceService>();
         services.AddSingleton<PeopleService>();
+        services.AddSingleton<PhotosWindows.Application.Memories.MemoriesService>();
         return services;
     }
 }

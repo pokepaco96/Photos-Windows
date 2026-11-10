@@ -2,7 +2,14 @@
 
 Estados: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `DONE` (solo con criterio de salida cumplido y evidencia de pruebas).
 
-> **Validación de la interfaz:** el desarrollo se hace en un contenedor Linux sin escritorio. Desde la fase de QA automatizado, la app publicada **se usa de verdad a través de su interfaz** en el escritorio interactivo de `windows-latest` (Windows Server 2025) con la suite `tests/PhotosWindows.UIAutomation.Tests` (FlaUI/UIA): en la última ejecución (#22) 28 de 28 escenarios superados, 0 fallidos, 0 bloqueados. Ver [`QA_AUTOMATION.md`](QA_AUTOMATION.md). Sigue pendiente la prueba manual en Windows 11 con archivos reales de cámaras y teléfonos, Narrador, escalado 200 % y contraste alto (`QA_CHECKLIST.md`), por eso las fases siguen en `IN PROGRESS`.
+> **Cómo leer la evidencia.** Hay cinco niveles distintos y ninguno sustituye a otro:
+> 1. **Linux (local y CI):** pruebas unitarias y de integración del núcleo.
+> 2. **CI en Windows:** las mismas pruebas, más compilación, publicación y arranque de la app WinUI 3 x64.
+> 3. **UI Automation en Windows Server 2025** (`windows-latest`): la app publicada se usa a través de su interfaz con datos sintéticos. Cifras por ejecución en [`QA_AUTOMATION.md`](QA_AUTOMATION.md).
+> 4. **Validación manual en Windows 11:** **no realizada** (`QA_CHECKLIST.md`). Incluye archivos reales de cámaras y teléfonos, Narrador, DPI 150/200 % y contraste alto.
+> 5. **Rendimiento:** medido en Linux (`PERFORMANCE.md`); **no medido** en Windows con bibliotecas grandes.
+>
+> Mientras falten los niveles 4 y 5, ninguna fase de producto pasa a `DONE`.
 
 | Fase | Estado | Evidencia / pendiente |
 |---|---|---|
@@ -14,10 +21,10 @@ Estados: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `DONE` (solo con criteri
 | 5 — Búsqueda y metadatos | IN PROGRESS | `SearchTests` (FTS, fechas, tipo, cámara, álbum, entradas hostiles), edición de título/descripción/valoración/ubicación. Pendiente: QA #10 |
 | 6 — Editor no destructivo | IN PROGRESS | Pipeline determinista (`RendererTests`), persistencia y reapertura (`EditExportTests`), exportación con metadatos. UI implementada. Pendiente: QA #8 |
 | 7 — Duplicados avanzados, RAW y formatos | IN PROGRESS | dHash y agrupación (`PerceptualHashTests`, `BackupMaintenanceTests`); WIC para HEIF/AVIF/TIFF/RAW compilado. Pendiente: probar con archivos reales de cámaras/teléfonos en Windows |
-| 8 — Funciones inteligentes | IN PROGRESS | **Personas** (ADR-0010, rama `claude/smart-people`): modelos locales con licencia revisada (`research/FACE_MODELS_REVIEW.md`), descarga explícita y verificada, consentimiento, esquema v2, agrupación y correcciones, borrado total, copias sin datos faciales por defecto. Pruebas: 16 de integración y 8 unitarias con detector de prueba + 7 de inferencia real (CI Linux y Windows, retratos de dominio público), UI #25 con 9 escenarios de Personas (37/37). Pendiente: revisión del PR, Windows 11 con biblioteca real, Narrador/200 %. Mascotas, Lugares y Recuerdos sin empezar |
+| 8 — Funciones inteligentes | IN PROGRESS | **Personas** (ADR-0010, fusionada en #5, `3831c7c`): modelos locales descargados por el usuario, consentimiento, esquema v2, correcciones, borrado total. CI #63/#64 y UI #31 (37/37) sobre `fbe6516`. **Lugares** (ADR-0011, fusionada en #6, `f3d7fe1`): mapa offline Natural Earth, grupos, lista, filtros, antimeridiano, recentrado de bandeja. CI #69/#70 y UI #32 (47/47) sobre `1b587c8`. **Recuerdos** (ADR-0012): reglas deterministas, explicación, pase, ocultar/excluir, esquema v3. CI #75/#76 y UI #35 (54/54) sobre `a7c6c72`. Pendiente en las tres: Windows 11 real, Narrador, DPI 200 %, contraste alto, biblioteca real; revisión jurídica de los modelos de rostros; rendimiento en Windows |
 | 9 — Copias, rendimiento y hardening | IN PROGRESS | Copias verificadas y restauración (`BackupMaintenanceTests`), verificación/reparación, rendimiento del catálogo (`PERFORMANCE.md`). Pendiente: accesibilidad con Narrador, pruebas de interrupción en Windows (QA #11–13, #16) |
 | 10 — Distribución | IN PROGRESS | ADR-0009; CI publica la carpeta autocontenida `PhotosWindows-win-x64`. Pendiente: probar en Windows limpio, decidir licencia, firma/MSIX |
 
-Pruebas automáticas (última ejecución local, Linux, .NET SDK 10.0.403): Domain 36/36, Imaging 30/30, Integration 87/87 (incluye 2 de rendimiento).
+Pruebas automáticas del núcleo (Linux, .NET SDK 10.0.403, rama de Recuerdos `a7c6c72`): Domain 90/90, Imaging 38/38, Integration 154/154. Las mismas pruebas se ejecutan en CI en Linux y Windows (CI #75/#76 en verde sobre ese commit).
 
-UI automatizada (Windows Server 2025, `windows-latest`): en la última ejecución (#22) 28 de 28 escenarios superados, 0 fallidos, 0 bloqueados. 18 errores de la app encontrados y corregidos con prueba de regresión (lista en `QA_AUTOMATION.md`).
+UI automatizada (Windows Server 2025, `windows-latest`): ver la tabla de ejecuciones de `QA_AUTOMATION.md`. 18 errores de la app encontrados y corregidos con prueba de regresión en la fase de QA; los fallos posteriores fueron del arnés salvo el diseño de la bandeja de Lugares en ventanas pequeñas (corregido).

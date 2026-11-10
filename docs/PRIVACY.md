@@ -26,5 +26,12 @@ Todas locales y opt-in.
 - Los filtros de Lugares y la preferencia de mapa se guardan en la configuración local del usuario; esa configuración no contiene coordenadas.
 - «Quitar ubicación» solo modifica el catálogo; los archivos originales no se tocan (verificado por SHA-256 en las pruebas de UI).
 
+## Recuerdos
+- Se calculan en el equipo con reglas fijas ([`MEMORIES.md`](MEMORIES.md)) a partir del catálogo: fechas, coordenadas y marcas de favorita/editada. **No hay ninguna petición de red**, ni geocodificación, ni análisis del contenido de las fotos.
+- Las coordenadas se muestran aproximadas («alrededor de 38,72° N, 9,14° W»); nunca se convierten en una dirección ni en un nombre de lugar.
+- La «zona habitual» que se usa para detectar viajes se calcula al vuelo y **no se guarda ni se muestra**.
+- Recuerdos solo usa Personas si la activaste en esa biblioteca, y solo los grupos a los que pusiste nombre. No activa Personas ni analiza rostros.
+- Lo único que se guarda son tus decisiones (recuerdos ocultos y exclusiones) en el catálogo de la biblioteca.
+
 ## Registros
 Los logs registran nombres de archivo y errores, no contenido de imágenes ni metadatos personales. No se incluyen miniaturas en ningún informe. El análisis de Personas solo registra recuentos y el tipo de error: nunca rostros, posiciones, descriptores ni nombres.

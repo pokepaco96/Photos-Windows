@@ -1,0 +1,45 @@
+<Page
+    x:Class="PhotosWindows.App.Views.SlideshowPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    NavigationCacheMode="Disabled">
+
+    <Grid x:Name="Root" Background="Black" IsTabStop="True" KeyDown="OnKeyDown" RequestedTheme="Dark">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Image x:Uid="Slideshow_Image" AutomationProperties.AutomationId="Slideshow_Image" AutomationProperties.Name="Slideshow photo"
+               Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" />
+        <Grid Grid.Row="1" Padding="16,10" ColumnSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock AutomationProperties.AutomationId="Slideshow_Title" Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                <TextBlock AutomationProperties.AutomationId="Slideshow_Position" Text="{x:Bind ViewModel.PositionText, Mode=OneWay}" Opacity="0.8" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Uid="Slideshow_Previous" AutomationProperties.AutomationId="Slideshow_Previous" AutomationProperties.Name="Previous" ToolTipService.ToolTip="Previous (Left arrow)"
+                        Width="44" Height="40" Padding="0" Command="{x:Bind ViewModel.PreviousCommand}">
+                    <FontIcon Glyph="&#xE892;" FontSize="16" />
+                </Button>
+                <Button x:Name="PlayPauseButton" AutomationProperties.AutomationId="Slideshow_PlayPause" AutomationProperties.Name="{x:Bind ViewModel.PlayPauseLabel, Mode=OneWay}"
+                        ToolTipService.ToolTip="{x:Bind ViewModel.PlayPauseLabel, Mode=OneWay}" Width="56" Height="40" Padding="0" Style="{StaticResource AccentButtonStyle}"
+                        Command="{x:Bind ViewModel.TogglePlayCommand}">
+                    <FontIcon Glyph="{x:Bind ViewModel.PlayPauseGlyph, Mode=OneWay}" FontSize="16" />
+                </Button>
+                <Button x:Uid="Slideshow_Next" AutomationProperties.AutomationId="Slideshow_Next" AutomationProperties.Name="Next" ToolTipService.ToolTip="Next (Right arrow)"
+                        Width="44" Height="40" Padding="0" Command="{x:Bind ViewModel.NextCommand}">
+                    <FontIcon Glyph="&#xE893;" FontSize="16" />
+                </Button>
+            </StackPanel>
+            <Button Grid.Column="2" x:Uid="Slideshow_Exit" AutomationProperties.AutomationId="Slideshow_Exit" AutomationProperties.Name="Exit slideshow" ToolTipService.ToolTip="Exit (Esc)"
+                    HorizontalAlignment="Right" Width="44" Height="40" Padding="0" Command="{x:Bind ViewModel.ExitCommand}">
+                <FontIcon Glyph="&#xE711;" FontSize="14" />
+            </Button>
+        </Grid>
+    </Grid>
+</Page>

@@ -75,6 +75,9 @@
                 <NavigationViewItem x:Uid="Nav_Places" AutomationProperties.AutomationId="Nav_Places" Content="Places" Tag="Places">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE909;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Memories" AutomationProperties.AutomationId="Nav_Memories" Content="Memories" Tag="Memories">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
 
                 <NavigationViewItemHeader x:Uid="Nav_AlbumsHeader" AutomationProperties.AutomationId="Nav_AlbumsHeader" Content="Albums" />
                 <NavigationViewItem x:Uid="Nav_Albums" AutomationProperties.AutomationId="Nav_Albums" Content="My albums" Tag="Albums">

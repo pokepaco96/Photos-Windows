@@ -28,6 +28,8 @@ La app procesa archivos no confiables (tarjetas SD, descargas, discos ajenos). L
 - **Fuera de alcance:** identificación de personas reales, búsqueda en internet, atributos sensibles.
 
 ## Pendiente / limitaciones
+- **Red.** La app solo abre una conexión: la descarga de los modelos de Personas, iniciada por el usuario y verificada por SHA-256. Lugares y Recuerdos no hacen peticiones. La prueba de UI comprueba que la app no tiene conexiones TCP remotas en un instante concreto; eso es un muestreo, no una demostración de ausencia de tráfico.
+- **Datos derivados sin cifrar.** El catálogo (incluidos los descriptores faciales, las coordenadas y las decisiones de Recuerdos) no está cifrado; se recomienda BitLocker o cifrado de dispositivo.
 - Los decodificadores nativos (Skia, WIC y sus extensiones) son código de terceros; se mitiga con límites y aislamiento por archivo, no con un proceso sandbox (evaluar en Fase 9).
 - Condición de carrera validación→apertura: los archivos se abren una vez para firma y otra para hash/copia; un cambio intermedio se detecta porque el hash queda registrado y la verificación compara tamaños/hash.
 

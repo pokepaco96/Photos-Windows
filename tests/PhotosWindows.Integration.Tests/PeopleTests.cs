@@ -326,7 +326,7 @@ public sealed class PeopleTests : IAsyncLifetime
         await using (var c = new SqliteConnection($"Data Source={_library.DatabasePath}"))
         {
             await c.OpenAsync();
-            await c.ExecuteAsync("DROP TABLE face_exclusions; DROP TABLE face_analysis; DROP TABLE faces; DROP TABLE people; DELETE FROM schema_migrations WHERE version > 1; PRAGMA user_version = 1;");
+            await c.ExecuteAsync("DROP TABLE memory_exclusions; DROP TABLE memory_hidden; DROP TABLE face_exclusions; DROP TABLE face_analysis; DROP TABLE faces; DROP TABLE people; DELETE FROM schema_migrations WHERE version > 1; PRAGMA user_version = 1;");
         }
 
         SqliteConnection.ClearAllPools();
