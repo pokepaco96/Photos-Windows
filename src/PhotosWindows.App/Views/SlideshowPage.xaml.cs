@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -13,7 +12,7 @@ namespace PhotosWindows.App.Views;
 /// <summary>Slideshow: Space plays/pauses, Left/Right step, Esc exits. Every control is also a named button.</summary>
 public sealed partial class SlideshowPage : Page
 {
-    private DispatcherQueueTimer? _timer;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _timer;
 
     public SlideshowPage()
     {
