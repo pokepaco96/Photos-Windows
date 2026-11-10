@@ -100,6 +100,9 @@
                 <NavigationViewItem x:Uid="Nav_Imports" AutomationProperties.AutomationId="Nav_Imports" Content="Imports" Tag="Imports">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Backup" AutomationProperties.AutomationId="Nav_Backup" Content="Backup" Tag="Backup">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE78C;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>

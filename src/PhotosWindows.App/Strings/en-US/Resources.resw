@@ -692,4 +692,61 @@
   <data name="Slideshow_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Slideshow_Position" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Slideshow_Image.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Slideshow photo</value></data>
+  <data name="Nav_Backup.Content" xml:space="preserve"><value>Backup</value></data>
+  <data name="BackupPage_Title.Text" xml:space="preserve"><value>Backup</value></data>
+  <data name="Backup_OriginalsHeader.Text" xml:space="preserve"><value>Backup of photos and videos (originals)</value></data>
+  <data name="Backup_OriginalsHelp.Text" xml:space="preserve"><value>Copies the original file of every item in the library, including those added without moving, to a folder you choose. Files are copied exactly as they are (no compression or conversion), sorted into YEAR/MONTH folders, and each copy is verified. The result is a normal folder you can open from File Explorer. It does not contain albums or edits: use the library backup below for that.</value></data>
+  <data name="Backup_DestinationLabel.Text" xml:space="preserve"><value>Destination</value></data>
+  <data name="Backup_ChooseDestination.Content" xml:space="preserve"><value>Choose destination…</value></data>
+  <data name="Backup_AcceptIncomplete.Content" xml:space="preserve"><value>Copy only the available files. The result will be marked as incomplete.</value></data>
+  <data name="Backup_Start.Content" xml:space="preserve"><value>Create backup of originals</value></data>
+  <data name="Backup_Resume.Content" xml:space="preserve"><value>Resume unfinished backup</value></data>
+  <data name="Backup_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Backup_VerifyExisting.Content" xml:space="preserve"><value>Verify an existing backup…</value></data>
+  <data name="Backup_ProgressBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Backup progress</value></data>
+  <data name="Backup_OpenFolder.Content" xml:space="preserve"><value>Open backup folder</value></data>
+  <data name="Backup_ProblemsHeader.Text" xml:space="preserve"><value>Files with problems</value></data>
+  <data name="Backup_Problems.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Files with problems</value></data>
+  <data name="Backup_HistoryHeader.Text" xml:space="preserve"><value>Latest backups from this PC</value></data>
+  <data name="Backup_History.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Latest backups</value></data>
+  <data name="Backup_LibraryHeader.Text" xml:space="preserve"><value>Photos Windows library backup (restorable)</value></data>
+  <data name="Backup_LibraryHelp.Text" xml:space="preserve"><value>Saves the catalog (albums, keywords, edits, favourites) and, optionally, the originals copied into the library. It is what you restore to get the whole library back. It does not include files added without moving: use the backup of originals above for those.</value></data>
+  <data name="Backup_OpenLibraryBackup.Content" xml:space="preserve"><value>Open library backup and restore in Settings</value></data>
+  <data name="Backup_Analysis" xml:space="preserve"><value>{0} photos and {1} videos · {2} files · {3} to copy.</value></data>
+  <data name="Backup_AnalysisUndated" xml:space="preserve"><value>{0} items without a reliable date will go to “Sin fecha/00”.</value></data>
+  <data name="Backup_NoDestination" xml:space="preserve"><value>Choose where to save the backup: an external drive, a USB drive or another folder.</value></data>
+  <data name="Backup_DestinationMissing" xml:space="preserve"><value>The destination is not available. Connect the drive or choose another folder.</value></data>
+  <data name="Backup_Space" xml:space="preserve"><value>{0} free · {1} needed.</value></data>
+  <data name="Backup_SpaceUnknown" xml:space="preserve"><value>Free space could not be determined.</value></data>
+  <data name="Backup_Unavailable" xml:space="preserve"><value>{0} original files are not available right now (for example, on a disconnected drive).</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>{0} files are too large for the destination’s file system (FAT32 cannot hold files over 4 GB); use exFAT or NTFS.</value></data>
+  <data name="Backup_BadDestination" xml:space="preserve"><value>The destination cannot be inside the library or inside a folder that holds originals.</value></data>
+  <data name="Backup_NotEnoughSpace" xml:space="preserve"><value>There is not enough free space in the destination.</value></data>
+  <data name="Backup_NothingToCopy" xml:space="preserve"><value>The library has no files to back up.</value></data>
+  <data name="Backup_Preparing" xml:space="preserve"><value>Preparing…</value></data>
+  <data name="Backup_Verifying" xml:space="preserve"><value>Verifying…</value></data>
+  <data name="Backup_Progress" xml:space="preserve"><value>{0} of {1} files · {2} of {3} · about {4}/s</value></data>
+  <data name="Backup_ResultComplete" xml:space="preserve"><value>Backup completed and verified</value></data>
+  <data name="Backup_ResultPartial" xml:space="preserve"><value>Incomplete backup (as you chose): the available files were copied and verified</value></data>
+  <data name="Backup_ResultCancelled" xml:space="preserve"><value>Backup cancelled. It can be resumed.</value></data>
+  <data name="Backup_ResultIncomplete" xml:space="preserve"><value>The backup is NOT complete. It can be resumed.</value></data>
+  <data name="Backup_ResultBlockedTitle" xml:space="preserve"><value>The backup could not start</value></data>
+  <data name="Backup_ResultFailedTitle" xml:space="preserve"><value>The backup failed</value></data>
+  <data name="Backup_ResultCounts" xml:space="preserve"><value>{0} files verified · {1} · {2} files with problems · {3}</value></data>
+  <data name="Backup_ErrorSpace" xml:space="preserve"><value>The destination ran out of space.</value></data>
+  <data name="Backup_ErrorDestination" xml:space="preserve"><value>The destination is no longer available.</value></data>
+  <data name="Backup_Issue_SourceMissing" xml:space="preserve"><value>not available</value></data>
+  <data name="Backup_Issue_ChangedSinceImport" xml:space="preserve"><value>changed since it was imported</value></data>
+  <data name="Backup_Issue_ChangedDuringCopy" xml:space="preserve"><value>changed while it was being copied</value></data>
+  <data name="Backup_Issue_TooLargeForDestination" xml:space="preserve"><value>too large for the destination</value></data>
+  <data name="Backup_Issue_CopyFailed" xml:space="preserve"><value>could not be copied</value></data>
+  <data name="Backup_VerifyOk" xml:space="preserve"><value>The backup is intact</value></data>
+  <data name="Backup_VerifyBad" xml:space="preserve"><value>The backup has problems</value></data>
+  <data name="Backup_VerifyNotABackup" xml:space="preserve"><value>This folder is not a backup of originals (no backup-manifest.json).</value></data>
+  <data name="Backup_VerifyCounts" xml:space="preserve"><value>{0} of {1} files checked · {2} problems.</value></data>
+  <data name="Backup_HistoryLine" xml:space="preserve"><value>{0} · {1} · {2} files · {3} · {4}</value></data>
+  <data name="Backup_Status_Complete" xml:space="preserve"><value>complete</value></data>
+  <data name="Backup_Status_PartialAccepted" xml:space="preserve"><value>incomplete (accepted)</value></data>
+  <data name="Backup_Status_Incomplete" xml:space="preserve"><value>not complete</value></data>
+  <data name="Backup_Status_Cancelled" xml:space="preserve"><value>cancelled</value></data>
 </root>
