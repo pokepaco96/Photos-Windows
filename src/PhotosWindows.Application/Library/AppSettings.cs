@@ -25,6 +25,8 @@ public sealed record AppSettings
     public string Language { get; init; } = string.Empty;
     public int SlideshowSeconds { get; init; } = 3;
     public int MaxBackgroundWorkers { get; init; } = Math.Clamp(Environment.ProcessorCount / 2, 1, 4);
+    /// <summary>Memories choose favourites and edited photos first for covers and samples.</summary>
+    public bool MemoriesPreferFavorites { get; init; } = true;
     /// <summary>Last Places filters and view mode, restored when the page opens again.</summary>
     public PlacesPreferences Places { get; init; } = new();
 }

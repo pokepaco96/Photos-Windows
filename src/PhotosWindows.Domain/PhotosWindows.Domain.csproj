@@ -3,4 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>PhotosWindows.Domain</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="PhotosWindows.Domain.Tests" />
+  </ItemGroup>
 </Project>
