@@ -40,6 +40,16 @@ public sealed class MapRendererTests
         Assert.Equal(64 * 64 * 4, image.Pixels.Length);
     }
 
+    [Fact]
+    public void Missing_map_makes_the_renderer_unavailable_without_throwing()
+    {
+        using var missing = new SkiaMapRenderer(() => throw new InvalidDataException("The embedded world map is missing."));
+        Assert.False(missing.IsAvailable);
+        Assert.Contains("missing", missing.UnavailableReason);
+        var image = missing.Render(MapView.World(32, 32), MapTheme.Dark);
+        Assert.Equal(32 * 32 * 4, image.Pixels.Length);
+    }
+
     [Theory]
     [InlineData(MapTheme.Light)]
     [InlineData(MapTheme.Dark)]

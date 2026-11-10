@@ -144,6 +144,26 @@ public sealed class PlacesServiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Zero_zero_placeholder_and_pole_limits_are_handled()
+    {
+        var dir = _host.SourceDir("limits");
+        Fixtures.Jpeg(Path.Combine(dir, "null_island.jpg"), new Fixtures.PhotoSpec { Seed = 900, Location = new GeoLocation(0, 0) });
+        Fixtures.Jpeg(Path.Combine(dir, "north.jpg"), new Fixtures.PhotoSpec { Seed = 901, Location = new GeoLocation(89.5, 180) });
+        Fixtures.Jpeg(Path.Combine(dir, "south.jpg"), new Fixtures.PhotoSpec { Seed = 902, Location = new GeoLocation(-89.5, -180) });
+        await _host.ImportAsync(dir, ImportMode.AddInPlace);
+        var ids = (await _host.AllAsync()).ToDictionary(a => a.FileName, a => a.Id);
+
+        var s = await Load();
+        var located = s.Points.Select(p => p.AssetId).ToHashSet();
+        Assert.DoesNotContain(ids["null_island.jpg"], located); // (0,0) is a device placeholder, not a place
+        Assert.Contains(ids["north.jpg"], located);
+        Assert.Contains(ids["south.jpg"], located);
+        Assert.Equal(3, s.WithoutLocationCount);
+        // Every point lands in exactly one cluster even at the projection's latitude limit and at ±180°.
+        Assert.Equal(s.Points.Count, s.ClustersAt(3).Sum(c => c.Count));
+    }
+
+    [Fact]
     public void Coordinates_are_formatted_without_geocoding()
     {
         Assert.Equal("40.42° N, 3.70° W", PlacesService.FormatCoordinate(40.4168, -3.7038));

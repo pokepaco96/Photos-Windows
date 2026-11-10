@@ -27,6 +27,7 @@ public sealed partial class PlacesPage : Page
     private Windows.Foundation.Point? _dragStart;
     private MapView? _dragView;
     private bool _dragged;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _panTimer;
 
     public PlacesPage()
     {
@@ -147,11 +148,43 @@ public sealed partial class PlacesPage : Page
         if ((sender as FrameworkElement)?.Tag is PlaceCluster cluster) ViewModel.Select(cluster);
     }
 
-    private void OnMapSizeChanged(object sender, SizeChangedEventArgs e) => Invalidate();
+    private void OnMapSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        Invalidate();
+        // Opening the tray narrows the map: keep the selected area in view instead of letting it slide under the edge.
+        if (ViewModel.ShowMap && ViewModel.Selected is { } selected && MapHost.ActualWidth >= 2)
+        {
+            var view = CurrentView();
+            var target = view.PanToInclude(selected.Cluster.Latitude, selected.Cluster.Longitude, 64);
+            if (!ReferenceEquals(target, view)) AnimateTo(view, target);
+        }
+    }
+
+    /// <summary>Short eased pan (about 200 ms) between two views with the same zoom and size.</summary>
+    private void AnimateTo(MapView from, MapView to)
+    {
+        _panTimer?.Stop();
+        var (fx, fy) = from.ToScreen(to.CenterX, to.CenterY);
+        var (dx, dy) = (from.Width / 2.0 - fx, from.Height / 2.0 - fy);
+        const int steps = 10;
+        var step = 0;
+        var timer = _panTimer = DispatcherQueue.CreateTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(20);
+        timer.Tick += (_, _) =>
+        {
+            step++;
+            var t = step / (double)steps;
+            var eased = 1 - (1 - t) * (1 - t);
+            SetView(step >= steps ? to : from.PanBy(dx * eased, dy * eased));
+            if (step >= steps) timer.Stop();
+        };
+        timer.Start();
+    }
 
     private void OnMapPointerPressed(object sender, PointerRoutedEventArgs e)
     {
         if (e.OriginalSource is not (Grid or Image or Canvas)) return;
+        _panTimer?.Stop();
         _dragStart = e.GetCurrentPoint(MapHost).Position;
         _dragView = CurrentView();
         _dragged = false;
