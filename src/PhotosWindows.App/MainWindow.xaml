@@ -72,6 +72,9 @@
                 <NavigationViewItem x:Uid="Nav_Located" AutomationProperties.AutomationId="Nav_Located" Content="With location" Tag="WithLocation">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE707;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="Nav_Places" AutomationProperties.AutomationId="Nav_Places" Content="Places" Tag="Places">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE909;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
 
                 <NavigationViewItemHeader x:Uid="Nav_AlbumsHeader" AutomationProperties.AutomationId="Nav_AlbumsHeader" Content="Albums" />
                 <NavigationViewItem x:Uid="Nav_Albums" AutomationProperties.AutomationId="Nav_Albums" Content="My albums" Tag="Albums">

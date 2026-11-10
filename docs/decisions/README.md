@@ -14,3 +14,4 @@ Formato breve: contexto, decisión, alternativas, consecuencias. Un ADR aceptado
 | [0008](0008-smart-features-deferred.md) | Personas, lugares y recuerdos: locales, opt-in y aplazados | Aceptado (Personas: ver 0010) |
 | [0009](0009-packaging.md) | Empaquetado sin paquete y autocontenido | Aceptado |
 | [0010](0010-people-local-face-grouping.md) | Personas: agrupación facial local con modelos descargados por el usuario | Aceptado (reemplaza la parte de Personas de 0008) |
+| [0011](0011-places-offline-map.md) | Lugares: mapa offline propio (Natural Earth) y modo lista | Aceptado |

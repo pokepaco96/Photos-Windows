@@ -79,6 +79,7 @@ public sealed partial class MainWindow : Window
         {
             case "Albums": _navigation.ToAlbums(); break;
             case "People": _navigation.ToPeople(); break;
+            case "Places": _navigation.ToPlaces(); break;
             case "Duplicates": _navigation.ToDuplicates(); break;
             case "Imports": _navigation.ToImports(); break;
             case "Import": ShowImportMenu(args.InvokedItemContainer); break;
@@ -104,6 +105,7 @@ public sealed partial class MainWindow : Window
         string? tag = page == typeof(SettingsPage) ? null
             : page == typeof(AlbumsPage) ? "Albums"
             : page == typeof(PeoplePage) ? "People"
+            : page == typeof(PlacesPage) ? "Places"
             : page == typeof(DuplicatesPage) ? "Duplicates"
             : page == typeof(ImportsPage) ? "Imports"
             // Use the navigation parameter: the page's own state is not set yet when Navigated fires.
