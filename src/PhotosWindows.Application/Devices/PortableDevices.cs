@@ -83,22 +83,33 @@ public sealed class NoPortableDeviceProvider : IPortableMediaDeviceProvider
 public sealed class SimulatedFolderDeviceProvider(string root, bool canDelete) : IPortableMediaDeviceProvider
 {
     public const string EnvironmentVariable = "PW_QA_SIMULATED_DEVICE";
+    public const string ReadOnlySuffix = "-readonly";
 
     public bool IsSupported => true;
 
-    public Task<IReadOnlyList<PortableDevice>> GetDevicesAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<PortableDevice>>(Directory.Exists(root)
-            ? [new PortableDevice("simulated", "Simulated device (QA)", Directory.EnumerateFileSystemEntries(root).Any() ? DeviceAccess.Ready : DeviceAccess.NoAccess)]
-            : []);
-
-    public Task<IPortableDeviceSession> OpenAsync(string deviceId, CancellationToken cancellationToken) =>
-        Directory.Exists(root)
-            ? Task.FromResult<IPortableDeviceSession>(new Session(root, canDelete))
-            : throw new DeviceUnavailableException("The device is not connected.");
-
-    private sealed class Session(string root, bool canDelete) : IPortableDeviceSession
+    /// <summary>The main simulated device, plus a second one that cannot delete when the folder "&lt;root&gt;-readonly" exists.</summary>
+    private IEnumerable<(string Id, string Name, string Root, bool CanDelete)> Known()
     {
-        public PortableDevice Device { get; } = new("simulated", "Simulated device (QA)", DeviceAccess.Ready);
+        if (Directory.Exists(root)) yield return ("simulated", "Simulated device (QA)", root, canDelete);
+        if (Directory.Exists(root + ReadOnlySuffix)) yield return ("simulated-readonly", "Simulated read-only device (QA)", root + ReadOnlySuffix, false);
+    }
+
+    public Task<IReadOnlyList<PortableDevice>> GetDevicesAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<PortableDevice>>(Known()
+            .Select(d => new PortableDevice(d.Id, d.Name, Directory.EnumerateFileSystemEntries(d.Root).Any() ? DeviceAccess.Ready : DeviceAccess.NoAccess))
+            .ToList());
+
+    public Task<IPortableDeviceSession> OpenAsync(string deviceId, CancellationToken cancellationToken)
+    {
+        var device = Known().FirstOrDefault(d => d.Id == deviceId);
+        return device.Id is null
+            ? throw new DeviceUnavailableException("The device is not connected.")
+            : Task.FromResult<IPortableDeviceSession>(new Session(device.Root, device.CanDelete, new PortableDevice(device.Id, device.Name, DeviceAccess.Ready)));
+    }
+
+    private sealed class Session(string root, bool canDelete, PortableDevice device) : IPortableDeviceSession
+    {
+        public PortableDevice Device { get; } = device;
 
         public bool CanDelete => canDelete;
 

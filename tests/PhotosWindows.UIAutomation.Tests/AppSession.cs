@@ -44,6 +44,9 @@ public sealed class AppSession : IDisposable
             WorkingDirectory = Path.GetDirectoryName(exePath)!,
         };
         psi.Environment["PHOTOSWINDOWS_DATA_DIR"] = profileDir;
+        // A folder next to the profile plays the role of a connected device for the Devices scenarios (QA hook).
+        psi.Environment["PW_QA_SIMULATED_DEVICE"] = Path.Combine(Path.GetDirectoryName(profileDir)!, "sim-device");
+        psi.Environment["PW_QA_SIMULATED_DEVICE_DELETE"] = "1";
         var app = FlaUI.Core.Application.Launch(psi);
         var automation = new UIA3Automation();
         Window? window = null;
