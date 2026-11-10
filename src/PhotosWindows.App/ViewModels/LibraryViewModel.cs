@@ -112,7 +112,8 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         IsNormalScope = !IsTrash && !IsHiddenScope;
         CanGroup = !IsManualAlbum && target.Scope is not LibraryScope.RecentlyAdded;
         GroupingIndex = CanGroup ? (int)GroupingMode.Days : (int)GroupingMode.None;
-        Title = _album?.Name
+        Title = _target.Title
+            ?? _album?.Name
             ?? (_person is not null ? PeopleCoordinator.DisplayName(_person) : null)
             ?? (target.SearchText is { } q ? Loc.Format("Search_Title", q) : Loc.Get("Scope_" + target.Scope));
         await ReloadAsync();
@@ -125,6 +126,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
             Scope = _target.Scope,
             AlbumId = IsManualAlbum ? _album!.Id : null,
             PersonId = _target.PersonId,
+            Ids = _target.Ids,
             Smart = IsSmartAlbum ? _album!.SmartDefinition : null,
             MediaType = MediaFilterIndex switch { 1 => MediaType.Photo, 2 => MediaType.Video, _ => null },
             Favorite = FavoritesOnly == true ? true : null,

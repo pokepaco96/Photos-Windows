@@ -605,4 +605,91 @@
   <data name="Places_AllDates" xml:space="preserve"><value>All dates</value></data>
   <data name="Places_Year.PlaceholderText" xml:space="preserve"><value>Custom range</value></data>
   <data name="Places_Year.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Year</value></data>
+  <data name="Nav_Memories.Content" xml:space="preserve"><value>Memories</value></data>
+  <data name="Memory_Title_OnThisDay" xml:space="preserve"><value>On this day, {0} years ago</value></data>
+  <data name="Memory_Title_OnThisDayOne" xml:space="preserve"><value>On this day, 1 year ago</value></data>
+  <data name="Memory_Title_Trip" xml:space="preserve"><value>A {0}-day trip</value></data>
+  <data name="Memory_Title_TripOne" xml:space="preserve"><value>A trip</value></data>
+  <data name="Memory_Title_Event" xml:space="preserve"><value>Moments of {0}</value></data>
+  <data name="Memory_Title_Season" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="Memory_Title_Year" xml:space="preserve"><value>{0} in review</value></data>
+  <data name="Memory_Title_Person" xml:space="preserve"><value>With {0}</value></data>
+  <data name="Memory_Season_Winter" xml:space="preserve"><value>Winter</value></data>
+  <data name="Memory_Season_Spring" xml:space="preserve"><value>Spring</value></data>
+  <data name="Memory_Season_Summer" xml:space="preserve"><value>Summer</value></data>
+  <data name="Memory_Season_Autumn" xml:space="preserve"><value>Autumn</value></data>
+  <data name="Memory_Kind_OnThisDay" xml:space="preserve"><value>On this day</value></data>
+  <data name="Memory_Kind_Trip" xml:space="preserve"><value>Trips</value></data>
+  <data name="Memory_Kind_Event" xml:space="preserve"><value>Events</value></data>
+  <data name="Memory_Kind_Month" xml:space="preserve"><value>Months</value></data>
+  <data name="Memory_Kind_Season" xml:space="preserve"><value>Seasons</value></data>
+  <data name="Memory_Kind_Year" xml:space="preserve"><value>Years</value></data>
+  <data name="Memory_Kind_Person" xml:space="preserve"><value>People</value></data>
+  <data name="Memory_OneItem" xml:space="preserve"><value>1 item</value></data>
+  <data name="Memory_Items" xml:space="preserve"><value>{0} items</value></data>
+  <data name="Memory_UnknownArea" xml:space="preserve"><value>an area without enough coordinates to show</value></data>
+  <data name="Memory_Why_OnThisDay" xml:space="preserve"><value>{0} taken on {1}, {2} years ago today.</value></data>
+  <data name="Memory_Why_OnThisDayOne" xml:space="preserve"><value>{0} taken on {1}, one year ago today.</value></data>
+  <data name="Memory_Why_Trip" xml:space="preserve"><value>{0} taken between {1} and {2} ({3} days), about {4} km from the area where most of your located photos were taken, around {5}. Inferred only from dates and GPS coordinates in your library; no place names are looked up.</value></data>
+  <data name="Memory_Why_Event" xml:space="preserve"><value>{0} taken close together on {1}, between {2} and {3}.</value></data>
+  <data name="Memory_Why_Around" xml:space="preserve"><value>They are located around {0}.</value></data>
+  <data name="Memory_Why_Month" xml:space="preserve"><value>{0} taken in {1}.</value></data>
+  <data name="Memory_Why_Season" xml:space="preserve"><value>{0} taken between {1} and {2}.</value></data>
+  <data name="Memory_Why_SeasonKnown" xml:space="preserve"><value>The season comes from the hemisphere of their GPS coordinates.</value></data>
+  <data name="Memory_Why_SeasonUnknown" xml:space="preserve"><value>The season is not named because their coordinates do not establish the hemisphere.</value></data>
+  <data name="Memory_Why_Year" xml:space="preserve"><value>{0} taken in {1}.</value></data>
+  <data name="Memory_Why_Person" xml:space="preserve"><value>{0} in which People found {1}, the name you gave to this group. Shown because People is turned on for this library.</value></data>
+  <data name="Memory_Why_Sample" xml:space="preserve"><value>Showing {0}, spread across the days.</value></data>
+  <data name="Memories_Title.Text" xml:space="preserve"><value>Memories</value></data>
+  <data name="Memories_Help.Text" xml:space="preserve"><value>Collections suggested from the dates and locations already in your library. Everything is worked out on this device with fixed rules; each card says why it is shown.</value></data>
+  <data name="Memories_Regenerate.Content" xml:space="preserve"><value>Regenerate</value></data>
+  <data name="Memories_Options.Content" xml:space="preserve"><value>Options</value></data>
+  <data name="Memories_List.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Memories</value></data>
+  <data name="Memory_Open.Content" xml:space="preserve"><value>Open</value></data>
+  <data name="Memory_Slideshow.Content" xml:space="preserve"><value>Slideshow</value></data>
+  <data name="Memory_CreateAlbum.Content" xml:space="preserve"><value>Create album</value></data>
+  <data name="Memory_Hide.Content" xml:space="preserve"><value>Hide</value></data>
+  <data name="Memory_WhyLabel.Text" xml:space="preserve"><value>Why you see this</value></data>
+  <data name="Memories_HiddenInfo.Message" xml:space="preserve"><value>Memory hidden. Your photos are not affected.</value></data>
+  <data name="Memories_Undo.Content" xml:space="preserve"><value>Undo</value></data>
+  <data name="Memories_EmptyTitle" xml:space="preserve"><value>No memories yet</value></data>
+  <data name="Memories_EmptyMessage" xml:space="preserve"><value>Memories appear when several photos share a date from past years, a few hours, a trip away or a whole month. Import more photos or check the exclusions in Options.</value></data>
+  <data name="Memories_DisconnectedTitle" xml:space="preserve"><value>The originals are not available</value></data>
+  <data name="Memories_DisconnectedMessage" xml:space="preserve"><value>Memories only use photos whose files can be opened. Reconnect the drive that holds the originals and choose Regenerate.</value></data>
+  <data name="Memories_Error.Title" xml:space="preserve"><value>Memories could not be worked out</value></data>
+  <data name="Memories_Summary" xml:space="preserve"><value>{0} memories from {1} items</value></data>
+  <data name="Memories_SummaryPeople" xml:space="preserve"><value>{0} memories from {1} items (People is on for this library)</value></data>
+  <data name="Memories_AlbumTitle" xml:space="preserve"><value>Create album from this memory</value></data>
+  <data name="Memories_AlbumPlaceholder" xml:space="preserve"><value>Album name</value></data>
+  <data name="Memories_AlbumCreated" xml:space="preserve"><value>Album “{0}” created with {1} items.</value></data>
+  <data name="Memories_OptionsTitle.Text" xml:space="preserve"><value>Options</value></data>
+  <data name="Memories_PreferFavorites.Header" xml:space="preserve"><value>Choose favourites and edited photos first</value></data>
+  <data name="Memories_ExcludeKindLabel.Text" xml:space="preserve"><value>Do not suggest this kind of memory</value></data>
+  <data name="Memories_KindCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Kind of memory</value></data>
+  <data name="Memories_ExcludeKind.Content" xml:space="preserve"><value>Exclude kind</value></data>
+  <data name="Memories_ExcludeRangeLabel.Text" xml:space="preserve"><value>Never use photos taken between these days</value></data>
+  <data name="Memories_RangeFrom.PlaceholderText" xml:space="preserve"><value>From</value></data>
+  <data name="Memories_RangeFrom.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>From date</value></data>
+  <data name="Memories_RangeTo.PlaceholderText" xml:space="preserve"><value>To</value></data>
+  <data name="Memories_RangeTo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>To date</value></data>
+  <data name="Memories_ExcludeRange.Content" xml:space="preserve"><value>Exclude days</value></data>
+  <data name="Memories_ExclusionsHeader.Text" xml:space="preserve"><value>Exclusions and hidden memories</value></data>
+  <data name="Memories_NoExclusions.Text" xml:space="preserve"><value>Nothing is excluded or hidden.</value></data>
+  <data name="Memories_Decisions.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Exclusions and hidden memories</value></data>
+  <data name="Memories_Restore.Content" xml:space="preserve"><value>Restore</value></data>
+  <data name="Memories_Decision_Kind" xml:space="preserve"><value>Kind excluded: {0}</value></data>
+  <data name="Memories_Decision_Range" xml:space="preserve"><value>Days excluded: {0}</value></data>
+  <data name="Memories_Decision_Hidden" xml:space="preserve"><value>Hidden: {0}, {1}</value></data>
+  <data name="Memories_CloseOptions.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Close options</value></data>
+  <data name="Memories_CloseOptions.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Close</value></data>
+  <data name="Slideshow_Previous.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Previous</value></data>
+  <data name="Slideshow_Previous.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Previous (Left arrow)</value></data>
+  <data name="Slideshow_Next.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Next</value></data>
+  <data name="Slideshow_Next.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Next (Right arrow)</value></data>
+  <data name="Slideshow_Exit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Exit slideshow</value></data>
+  <data name="Slideshow_Exit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Exit (Esc)</value></data>
+  <data name="Slideshow_Play" xml:space="preserve"><value>Play</value></data>
+  <data name="Slideshow_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Slideshow_Position" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Slideshow_Image.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Slideshow photo</value></data>
 </root>
