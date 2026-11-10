@@ -11,7 +11,6 @@ Refleja lo **terminado** (✅), en curso (🔄) y pendiente (⏳). El detalle co
 - 🔄 **Personas** (hito 1, rama `claude/smart-people`): detección y agrupación facial local con modelos descargados por el usuario, consentimiento, corrección manual y borrado total ([ADR-0010](decisions/0010-people-local-face-grouping.md)). Pendiente de revisión y de prueba en Windows 11.
 
 ## Siguiente
-- ⏳ Mascotas: detección por especie (YOLOX-s), sin identidad individual.
 - ⏳ Lugares: agrupación de coordenadas, vista de lista y mapa offline con licencia clara (incluye corregir la búsqueda por área que cruza el antimeridiano).
 - ⏳ Recuerdos: reglas transparentes (en este día, viajes, eventos, temporadas, resumen anual) y presentación.
 - ⏳ QA en Windows 11 real: Narrador, DPI 125/150/200 %, contraste alto, HEIC/AVIF/RAW reales, disco externo, importación interrumpida.
