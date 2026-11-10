@@ -89,6 +89,8 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | **#31 (Personas, integrada)** | **37** | **0** | **0** | Personas reconstruida sobre el default (`fbe6516`), fusionada como #5. 22 archivos del dataset sin cambios. |
 | **#32 (Lugares, integrada)** | **47** | **0** | **0** | 28 base + 9 Personas + 10 Lugares sobre `1b587c8`, fusionada como #6. Incluye el recentrado de la bandeja. 22 archivos del dataset y 7 de Lugares sin cambios; ninguna conexión TCP remota en el muestreo. |
 | #33 (Recuerdos) | — | — | — | No llegó a ejecutar pasos: la app no compiló en Windows (`DispatcherQueueTimer` ambiguo). Corregido en `2ff3138`. |
+| #34 (Recuerdos) | 54 | 0 | 0 | 28 base + 9 Personas + 10 Lugares + 7 Recuerdos sobre `2ff3138`. La revisión de capturas encontró un fallo real que las aserciones no cubrían: los botones inferiores de la segunda tarjeta salían cortados. |
+| **#35 (Recuerdos)** | **54** | **0** | **0** | **Tarjetas de altura fija y nueva comprobación en S50** (`a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #75/#76 en verde sobre el mismo commit. |
 
 ### Errores encontrados y corregidos
 

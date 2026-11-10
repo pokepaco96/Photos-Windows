@@ -6,7 +6,7 @@ La columna **UI automatizada** recoge el resultado real de la suite `tests/Photo
 
 Preparación: una carpeta `QA-media` con JPEG con GPS, un HEIC de iPhone + su `.MOV`, un RAW+JPEG de cámara, un MP4 largo, un PNG, un archivo `.jpg` que en realidad sea texto, y una copia idéntica de un JPEG en otra subcarpeta.
 
-| # | Paso | Resultado esperado | UI automatizada (ejecución #22, 28/28) | Estado manual |
+| # | Paso | Resultado esperado | UI automatizada (pasos S01–S28 desde la ejecución #22; última completa #35, 54/54) | Estado manual |
 |---|---|---|---|---|
 | 1 | Instalar el paquete (Fase 10) | Arranca desde el menú Inicio; aparece la pantalla de bienvenida | ◐ Arranque del ejecutable publicado (carpeta portátil) y bienvenida: S01 ✅ y smoke de CI. Sin instalador (ADR-0009) | ☐ No ejecutado |
 | 2 | Crear biblioteca en `Imágenes` | Se crea `Nombre.pwlibrary` con `library.json`, `catalog.db`, `originals`, `cache`, `backups` | ✅ S02 (diálogo de nombre + selector de carpetas real) | ☐ |
@@ -28,3 +28,9 @@ Preparación: una carpeta `QA-media` con JPEG con GPS, un HEIC de iPhone + su `.
 | 18 | Personas con una biblioteca real (cientos de fotos propias, varias personas, niños, perfiles, gafas, poca luz) | Grupos coherentes; ningún nombre inventado; corregir, fusionar y separar funciona; sin bloqueos de la interfaz durante el análisis | ✅ S29–S37 con retratos de dominio público (ejecución #25): descarga de modelos, consentimiento, análisis cancelado y reanudado, 2 grupos correctos sin nombres inventados, nombrar, separar, fusionar, excluir, reiniciar, borrar todo. ✗ No sustituye a una biblioteca real | ☐ |
 | 19 | Personas con Narrador y escalado 200 % | Las tarjetas y los rostros se anuncian con nombre y número de fotos; nada se corta | ◐ Nombres accesibles en todas las tarjetas y rostros (S31–S34). ✗ Narrador y 200 % no probados | ☐ |
 | 20 | Borrar todos los datos de reconocimiento facial | Desaparece la sección; no quedan rostros ni nombres en el catálogo; fotos intactas | ✅ S37 (interfaz) e integración (`Delete_all_removes_every_derived_byte_and_keeps_the_library`: ni descriptores ni nombres en el archivo ni en el WAL) | ☐ |
+| 21 | Lugares con una biblioteca real (miles de fotos con GPS, varios países) | Grupos coherentes al hacer zoom; lista y mapa coinciden; quitar ubicación no toca el archivo | ◐ S40–S49 con 9 fotos sintéticas, incluido el meridiano 180° (UI #32 y #35) | ☐ |
+| 22 | Lugares con Narrador, DPI 150/200 % y contraste alto | Cada grupo se anuncia con zona, número y fechas; mapa nítido; nada cortado | ◐ Nombres accesibles y ventana 900×640 (S49) | ☐ |
+| 23 | Recuerdos con una biblioteca real de varios años | «Tal día como hoy», viajes y eventos razonables; ninguna tarjeta con nombre de lugar inventado; la explicación coincide con las fotos | ◐ S50–S56 con 13 fotos sintéticas (UI #35) | ☐ |
+| 24 | Pase de diapositivas con teclado y Narrador; vídeo dentro de un recuerdo | Espacio, flechas y Esc funcionan; los botones se anuncian; el vídeo se muestra como imagen fija | ◐ S52 (botones y teclado, sin Narrador) | ☐ |
+| 25 | Ocultar y excluir recuerdos, cerrar y abrir la app | Siguen ocultos; restaurar los devuelve; ninguna foto borrada | ✅ S54, S55 | ☐ |
+| 26 | Biblioteca grande real (10k/50k/100k) en Windows 11 | Importación, miniaturas, desplazamiento, búsqueda, visor, Lugares y Recuerdos fluidos; anotar RAM, CPU y tiempos | ☐ No medido | ☐ |
