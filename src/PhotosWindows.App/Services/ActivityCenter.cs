@@ -84,7 +84,6 @@ public sealed partial class ActivityCenter(UiThread ui, ILogger<ActivityCenter> 
                 Percent = (v.Fraction ?? 0) * 100;
             });
         });
-        });
 
         ActivityOutcome outcome;
         try
