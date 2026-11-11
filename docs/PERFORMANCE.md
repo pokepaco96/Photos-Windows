@@ -62,3 +62,14 @@ No incluye la lectura del catálogo ni la carga de portadas, y no es una medida 
 - Generación de miniaturas por segundo con `MaxBackgroundWorkers` 1, 2 y 4.
 - Desplazamiento de la cuadrícula con 50.000 elementos (fotogramas perdidos, memoria de trabajo).
 - Apertura del visor (primer pintado desde miniatura grande y render a 3840 px).
+
+## Rendimiento en Windows 11 (pendiente, manual)
+
+**No medido.** Las cifras anteriores son de Linux o de Windows Server en CI con datos sintéticos. Procedimiento previsto para un equipo Windows 11 real, con bibliotecas de 10 000, 50 000 y 100 000 elementos:
+
+1. Generar la biblioteca con archivos reales o duplicados de prueba. No usar fotos privadas en informes.
+2. Medir el arranque en frío hasta el primer pintado de la cuadrícula, el desplazamiento rápido y la memoria (Administrador de tareas, conjunto de trabajo).
+3. Medir el primer pintado de Lugares y Recuerdos, el tiempo de búsqueda y el análisis previo de la copia de originales.
+4. Anotar el hardware (CPU, disco SSD/HDD, RAM) y la versión del commit.
+
+Hasta que se haga, la fase 9 no pasa a `DONE`.
