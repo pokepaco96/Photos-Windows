@@ -61,8 +61,9 @@
             <InfoBar AutomationProperties.AutomationId="Devices_Result" IsOpen="{x:Bind ViewModel.HasResult, Mode=TwoWay}" Severity="{x:Bind ViewModel.ResultSeverity, Mode=OneWay}"
                      Title="{x:Bind ViewModel.ResultTitle, Mode=OneWay}" Message="{x:Bind ViewModel.ResultMessage, Mode=OneWay}" />
             <!-- Plain repeater, not a ListView (a nested virtualising list froze WinUI layout on the Backup page). -->
-            <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto" Visibility="{x:Bind ViewModel.HasResultLines, Mode=OneWay}">
-                <ItemsRepeater AutomationProperties.AutomationId="Devices_ResultLines" x:Uid="Devices_ResultLines" AutomationProperties.Name="Details" ItemsSource="{x:Bind ViewModel.ResultLines}">
+            <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto" Visibility="{x:Bind ViewModel.HasResultLines, Mode=OneWay}"
+                          AutomationProperties.AutomationId="Devices_ResultLines" x:Uid="Devices_ResultLines" AutomationProperties.Name="Details">
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.ResultLines}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="x:String"><TextBlock Text="{x:Bind}" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
                     </ItemsRepeater.ItemTemplate>
