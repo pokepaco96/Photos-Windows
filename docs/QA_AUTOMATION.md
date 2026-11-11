@@ -99,7 +99,11 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | #44 (Dispositivos) | 59 | 0 | 0 | Sobre `feae4c3`. |
 | #47 (Copia) | 59 | 1 | 0 | Sin congelación; el id `Backup_Problems` estaba en un `ItemsRepeater`, que no tiene par UIA (arnés). |
 | **#48 (Copia, integrada)** | **60** | **0** | **0** | Sobre `88dbca6`, fusionada como #9 (`b00ed5c`). 22 archivos del dataset sin cambios. |
-| **#49 (Dispositivos + Copia, final)** | **65** | **0** | **0** | **Última ejecución completa**, sobre `9030ba7`, fusionada como #10 (`4a7134c`). CI #106/#107 en verde. |
+| #49 (Dispositivos + Copia) | 65 | 0 | 0 | Sobre `9030ba7`, fusionada como #10 (`4a7134c`). CI #106/#107 en verde. |
+| #50, #51 (Importación) | — | — | — | Fallidas. El CI de los mismos commits mostraba que la app no compilaba en Windows (`Volatile` sobre un `struct` y luego una llave sobrante en `ActivityCenter`). |
+| **#52 (Importación)** | **65** | **0** | **0** | Progreso del escaneo, avisos agrupados, cuadrícula progresiva y miniaturas más rápidas sobre `0fb7b06`, fusionado como #12 (`a3e3b51`). |
+| #53 (Importación, lotes) | 64 | 1 | 0 | S11: la posición del vídeo no avanzó a tiempo, aunque la captura lo muestra reproduciéndose (fallo del runner). |
+| **#54 (Importación, lotes, final)** | **65** | **0** | **0** | **Última ejecución completa**: repetición sobre el mismo `4f69b85`, fusionado como #13 (`afddee5`). CI #121 en verde sobre el default. |
 
 ### Errores encontrados y corregidos
 
