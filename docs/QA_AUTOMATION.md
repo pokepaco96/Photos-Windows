@@ -6,7 +6,7 @@ Pruebas end-to-end que **usan la aplicación real** (`PhotosWindows.exe`) a trav
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| Proyecto de pruebas | `tests/PhotosWindows.UIAutomation.Tests` | xUnit + [FlaUI](https://github.com/FlaUI/FlaUI) 5.0 (UIA3, licencia MIT). 54 escenarios ordenados: 28 generales (`EndToEndScenarios.cs`, el 28 —SHA-256 y cierre— siempre el último) 9 de Personas (`PeopleScenarios.cs`, S29–S37), 10 de Lugares (`PlacesScenarios.cs`, S40–S49) y 7 de Recuerdos (`MemoriesScenarios.cs`, S50–S56). |
+| Proyecto de pruebas | `tests/PhotosWindows.UIAutomation.Tests` | xUnit + [FlaUI](https://github.com/FlaUI/FlaUI) 5.0 (UIA3, licencia MIT). 65 escenarios ordenados: 28 generales (`EndToEndScenarios.cs`, el 28 —SHA-256 y cierre— siempre el último), 9 de Personas (`PeopleScenarios.cs`, S29–S37), 10 de Lugares (`PlacesScenarios.cs`, S40–S49), 7 de Recuerdos (`MemoriesScenarios.cs`, S50–S56), 6 de Copia de seguridad de originales (`BackupScenarios.cs`, S60–S65) y 5 de Dispositivos (`DevicesScenarios.cs`, S70–S74, con un dispositivo simulado sobre una carpeta: no es un iPhone real). |
 | Sesión de app | `AppSession.cs` | Lanza el ejecutable con un perfil aislado, espera la ventana, busca controles por `AutomationId`/nombre en todas las ventanas del proceso (ventana principal, menús emergentes, diálogos), hace clics/teclado/texto, maneja el selector de carpetas de Windows, detecta cierres inesperados y el diálogo de error de la app, hace capturas y vuelca el árbol de accesibilidad. |
 | Dataset | `QaDataset.cs` | Genera datos sintéticos reproducibles (semillas fijas) y un manifiesto SHA-256. |
 | Evidencias | `Evidence.cs` | `screenshots/`, `trees/`, `logs/` (log de la ejecución + logs de la app), `results.json`, `report.md`. |
@@ -91,7 +91,15 @@ Las ejecuciones son reales (escritorio de Windows Server 2025 en `windows-latest
 | #33 (Recuerdos) | — | — | — | No llegó a ejecutar pasos: la app no compiló en Windows (`DispatcherQueueTimer` ambiguo). Corregido en `2ff3138`. |
 | #34 (Recuerdos) | 54 | 0 | 0 | 28 base + 9 Personas + 10 Lugares + 7 Recuerdos sobre `2ff3138`. La revisión de capturas encontró un fallo real que las aserciones no cubrían: los botones inferiores de la segunda tarjeta salían cortados. |
 | #35 (Recuerdos) | 54 | 0 | 0 | **Tarjetas de altura fija y nueva comprobación en S50** (`a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #75/#76 en verde sobre el mismo commit. |
-| **#36 (Recuerdos, final)** | **54** | **0** | **0** | **Última ejecución completa**, sobre `dd04124` (el commit fusionado como #7, `400dfa3`; solo añade documentación a `a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #77/#78 en verde sobre el mismo commit; CI #79 en verde sobre el default tras la fusión. |
+| #36 (Recuerdos) | 54 | **0** | **0** | Sobre `dd04124` (el commit fusionado como #7, `400dfa3`; solo añade documentación a `a7c6c72`). Sin cambios: 22 archivos del dataset, 7 de Lugares y 13 de Recuerdos (SHA-256). Ninguna conexión TCP remota en el muestreo. CI #77/#78 en verde sobre el mismo commit; CI #79 en verde sobre el default tras la fusión. |
+| #37, #45, #46 (Copia) | — | 1 | — | La interfaz se congelaba al reanudar una copia (S62). Las pilas de la app (ClrMD, #46) mostraron el hilo de UI dentro de `Application.Start`: un `ListView` anidado en el `ScrollViewer` de la página. Se sustituyó por `ItemsRepeater`. |
+| #38, #42 | — | — | — | El proceso de la app desapareció en el runner sin error de la app; #39 pasó. Se añadió diagnóstico de cierre (código de salida y registro de eventos). |
+| #41 (Dispositivos) | — | 1 | — | Arnés: buscaba la copia gestionada en la biblioteca equivocada tras S26. |
+| #43 (Copia) | 60 | 0 | 0 | La revisión de capturas encontró dos fallos reales: el aviso no seguía el tema oscuro y al volver a la página se mostraba un resultado antiguo. Corregidos, con comprobación en S64/S65. |
+| #44 (Dispositivos) | 59 | 0 | 0 | Sobre `feae4c3`. |
+| #47 (Copia) | 59 | 1 | 0 | Sin congelación; el id `Backup_Problems` estaba en un `ItemsRepeater`, que no tiene par UIA (arnés). |
+| **#48 (Copia, integrada)** | **60** | **0** | **0** | Sobre `88dbca6`, fusionada como #9 (`b00ed5c`). 22 archivos del dataset sin cambios. |
+| **#49 (Dispositivos + Copia, final)** | **65** | **0** | **0** | **Última ejecución completa**, sobre `9030ba7`, fusionada como #10 (`4a7134c`). CI #106/#107 en verde. |
 
 ### Errores encontrados y corregidos
 
