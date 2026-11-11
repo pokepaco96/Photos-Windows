@@ -33,5 +33,9 @@ Todas locales y opt-in.
 - Recuerdos solo usa Personas si la activaste en esa biblioteca, y solo los grupos a los que pusiste nombre. No activa Personas ni analiza rostros.
 - Lo único que se guarda son tus decisiones (recuerdos ocultos y exclusiones) en el catálogo de la biblioteca.
 
+## Copia de originales
+- Se escribe solo en la carpeta que elijas; no hay red. El manifiesto no incluye rutas de tu equipo, coordenadas GPS, personas ni datos faciales (los archivos copiados conservan, como es lógico, sus propios metadatos).
+- El destino y el historial de las últimas copias se guardan en la configuración local de este equipo.
+
 ## Registros
 Los logs registran nombres de archivo y errores, no contenido de imágenes ni metadatos personales. No se incluyen miniaturas en ningún informe. El análisis de Personas solo registra recuentos y el tipo de error: nunca rostros, posiciones, descriptores ni nombres.
