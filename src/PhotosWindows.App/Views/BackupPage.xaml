@@ -61,12 +61,24 @@
 
                 <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.HasProblems, Mode=OneWay}">
                     <TextBlock x:Uid="Backup_ProblemsHeader" Text="Files with problems" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <ListView AutomationProperties.AutomationId="Backup_Problems" x:Uid="Backup_Problems" AutomationProperties.Name="Files with problems" ItemsSource="{x:Bind ViewModel.Problems}" SelectionMode="None" MaxHeight="180" />
+                    <!-- Plain repeater, not a ListView: a virtualising list nested in the page's ScrollViewer hung the UI thread
+                         inside WinUI layout when its items changed (UI runs #37, #45, #46, step S62). -->
+                    <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto">
+                        <ItemsRepeater AutomationProperties.AutomationId="Backup_Problems" x:Uid="Backup_Problems" AutomationProperties.Name="Files with problems" ItemsSource="{x:Bind ViewModel.Problems}">
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="x:String"><TextBlock Text="{x:Bind}" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </ScrollViewer>
                 </StackPanel>
 
                 <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.HasHistory, Mode=OneWay}">
                     <TextBlock x:Uid="Backup_HistoryHeader" Text="Latest backups from this PC" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <ListView AutomationProperties.AutomationId="Backup_History" x:Uid="Backup_History" AutomationProperties.Name="Latest backups" ItemsSource="{x:Bind ViewModel.History}" SelectionMode="None" MaxHeight="160" />
+                    <ItemsRepeater AutomationProperties.AutomationId="Backup_History" x:Uid="Backup_History" AutomationProperties.Name="Latest backups" ItemsSource="{x:Bind ViewModel.History}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="x:String"><TextBlock Text="{x:Bind}" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
                 </StackPanel>
             </StackPanel>
 
