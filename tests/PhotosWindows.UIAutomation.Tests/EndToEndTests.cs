@@ -40,6 +40,7 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
             qa.Evidence.Log("exception: " + ex);
             if (qa.Session is { } s && !s.App.HasExited)
             {
+                s.LogManagedStacks();
                 s.Screenshot($"FAIL_{number:00}_{name}");
                 s.DumpTree($"FAIL_{number:00}_{name}");
                 s.Recover();
