@@ -12,6 +12,7 @@ public sealed partial class BackupPage : Page
     {
         ViewModel = App.Services.GetRequiredService<BackupViewModel>();
         InitializeComponent();
+        ActualThemeChanged += (_, _) => ViewModel.RefreshThemeDependentState();
     }
 
     public BackupViewModel ViewModel { get; }

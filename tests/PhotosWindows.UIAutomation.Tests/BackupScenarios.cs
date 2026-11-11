@@ -168,6 +168,8 @@ public sealed partial class EndToEndTests
             App.WaitUntil(() => App.Exists("Backup_Warning"), "the warning about unavailable originals", TimeSpan.FromSeconds(20));
             var warning = AppSession.AllText(App.Find("Backup_Warning"));
             if (!warning.Contains("1 original files are not available", StringComparison.Ordinal)) throw new InvalidOperationException("Unexpected warning: " + warning);
+            // Regression (UI run #43): the previous step's verification result was still shown here.
+            if (App.Exists("Backup_Result")) throw new InvalidOperationException("A previous result is still shown after coming back to the page.");
             if (!AppSession.AllText(App.Find("Backup_Problems")).Contains("Nieve_2019.jpg", StringComparison.Ordinal)) throw new InvalidOperationException("The missing file is not named.");
             if (App.Find("Backup_Start").IsEnabled) throw new InvalidOperationException("A complete backup can be started although an original is missing.");
             App.Screenshot("64_backup_unavailable");
@@ -193,7 +195,15 @@ public sealed partial class EndToEndTests
         App.WaitFor(() => App.TryFind(cf => cf.ByName("Dark").And(cf.ByControlType(ControlType.RadioButton))), "the Dark theme option").Patterns.SelectionItem.Pattern.Select();
         Thread.Sleep(1000);
         OpenBackup();
+        // Regression (UI run #43): a result banner opened in the light theme kept light colours in dark.
+        App.Click("Backup_VerifyExisting");
+        App.PickFolder(_backupFolder!);
+        BackupResult();
         App.Screenshot("65_backup_dark");
+        var banner = App.Find("Backup_Result").BoundingRectangle;
+        var stats = App.PixelStats(new System.Drawing.Rectangle(banner.X + banner.Width / 2, banner.Y + 4, Math.Min(200, banner.Width / 3), Math.Max(8, banner.Height / 3)));
+        qa.Evidence.Log($"dark banner pixels: {stats}");
+        if (stats.MinLuminance > 120) throw new InvalidOperationException($"The result banner is light in the dark theme: {stats}");
         var window = App.MainWindow;
         window.Patterns.Window.Pattern.SetWindowVisualState(WindowVisualState.Normal);
         window.Patterns.Transform.Pattern.Resize(900, 640);

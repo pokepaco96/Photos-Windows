@@ -63,6 +63,8 @@ public sealed partial class BackupViewModel(
     public async Task LoadAsync()
     {
         if (IsRunning) return;
+        // A result belongs to the moment it was produced: coming back to the page starts from a fresh analysis.
+        HasResult = false;
         var s = settings.Load();
         Destination = s.OriginalsBackupDestination ?? string.Empty;
         HasDestination = Destination.Length > 0;
@@ -263,6 +265,18 @@ public sealed partial class BackupViewModel(
         {
             IsRunning = false;
         }
+    }
+
+    /// <summary>
+    /// WinUI keeps an open InfoBar with the colours of the theme it was opened in; re-applying its severity makes it
+    /// pick up the new theme (seen in UI run #43: light banner with white text after switching to dark).
+    /// </summary>
+    public void RefreshThemeDependentState()
+    {
+        if (!HasResult) return;
+        var severity = ResultSeverity;
+        ResultSeverity = severity == Microsoft.UI.Xaml.Controls.InfoBarSeverity.Informational ? Microsoft.UI.Xaml.Controls.InfoBarSeverity.Success : Microsoft.UI.Xaml.Controls.InfoBarSeverity.Informational;
+        ResultSeverity = severity;
     }
 
     [RelayCommand]
