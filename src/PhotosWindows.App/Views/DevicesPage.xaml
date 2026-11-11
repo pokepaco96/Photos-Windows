@@ -60,8 +60,14 @@
                      Message="1) Connect it with a USB cable that carries data. 2) Unlock it and keep it unlocked. 3) Tap Trust or Allow on the iPhone if it asks. 4) If Windows does not recognise it, install or update Apple Devices from the Microsoft Store. Photos that are only in iCloud and not downloaded to the iPhone cannot be read over USB. To receive the original HEIC/HEVC files, set Settings › Photos › Transfer to Mac or PC › Keep Originals on the iPhone (the wording can vary with the iOS version)." />
             <InfoBar AutomationProperties.AutomationId="Devices_Result" IsOpen="{x:Bind ViewModel.HasResult, Mode=TwoWay}" Severity="{x:Bind ViewModel.ResultSeverity, Mode=OneWay}"
                      Title="{x:Bind ViewModel.ResultTitle, Mode=OneWay}" Message="{x:Bind ViewModel.ResultMessage, Mode=OneWay}" />
-            <ListView AutomationProperties.AutomationId="Devices_ResultLines" x:Uid="Devices_ResultLines" AutomationProperties.Name="Details" ItemsSource="{x:Bind ViewModel.ResultLines}" SelectionMode="None" MaxHeight="120"
-                      Visibility="{x:Bind ViewModel.HasResultLines, Mode=OneWay}" />
+            <!-- Plain repeater, not a ListView (a nested virtualising list froze WinUI layout on the Backup page). -->
+            <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto" Visibility="{x:Bind ViewModel.HasResultLines, Mode=OneWay}">
+                <ItemsRepeater AutomationProperties.AutomationId="Devices_ResultLines" x:Uid="Devices_ResultLines" AutomationProperties.Name="Details" ItemsSource="{x:Bind ViewModel.ResultLines}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="x:String"><TextBlock Text="{x:Bind}" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
         </StackPanel>
 
         <!-- What the device exposes. Selecting does not import anything. -->
