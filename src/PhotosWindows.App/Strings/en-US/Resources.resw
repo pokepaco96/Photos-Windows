@@ -692,6 +692,65 @@
   <data name="Slideshow_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Slideshow_Position" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Slideshow_Image.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Slideshow photo</value></data>
+  <data name="Nav_Devices.Content" xml:space="preserve"><value>Devices</value></data>
+  <data name="Devices_Title.Text" xml:space="preserve"><value>Devices</value></data>
+  <data name="Devices_Device.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Device</value></data>
+  <data name="Devices_Refresh.Content" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Devices_Type.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Media type</value></data>
+  <data name="Devices_TypeAll.Content" xml:space="preserve"><value>Photos and videos</value></data>
+  <data name="Devices_TypePhotos.Content" xml:space="preserve"><value>Photos</value></data>
+  <data name="Devices_TypeVideos.Content" xml:space="preserve"><value>Videos</value></data>
+  <data name="Devices_Sort.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Order</value></data>
+  <data name="Devices_SortNewest.Content" xml:space="preserve"><value>Newest first</value></data>
+  <data name="Devices_SortOldest.Content" xml:space="preserve"><value>Oldest first</value></data>
+  <data name="Devices_SortName.Content" xml:space="preserve"><value>By name</value></data>
+  <data name="Devices_Help.Title" xml:space="preserve"><value>To see an iPhone here</value></data>
+  <data name="Devices_Help.Message" xml:space="preserve"><value>1) Connect it with a USB cable that carries data. 2) Unlock it and keep it unlocked. 3) Tap Trust or Allow on the iPhone if it asks. 4) If Windows does not recognise it, install or update Apple Devices from the Microsoft Store. Photos that are only in iCloud and not downloaded to the iPhone cannot be read over USB. To receive the original HEIC/HEVC files, set Settings › Photos › Transfer to Mac or PC › Keep Originals on the iPhone (the wording can vary with the iOS version).</value></data>
+  <data name="Devices_ResultLines.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Details</value></data>
+  <data name="Devices_Items.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Photos and videos on the device</value></data>
+  <data name="Devices_PreviewImage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Preview</value></data>
+  <data name="Devices_ModeHeader.Text" xml:space="preserve"><value>After importing</value></data>
+  <data name="Devices_ModeKeep.Content" xml:space="preserve"><value>Keep the items on the device (nothing is changed on it)</value></data>
+  <data name="Devices_ModeDelete.Content" xml:space="preserve"><value>Delete from the device each item whose copy was verified</value></data>
+  <data name="Devices_DeleteUnavailable.Text" xml:space="preserve"><value>Deleting from the device is not available: it has not been verified to work reliably with this device and driver, so Photos Windows will not try. Delete the items on the device itself after checking your copy.</value></data>
+  <data name="Devices_ImportSelection.Content" xml:space="preserve"><value>Import selection</value></data>
+  <data name="Devices_ImportAll.Content" xml:space="preserve"><value>Import all</value></data>
+  <data name="Devices_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Devices_ProgressBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Import progress</value></data>
+  <data name="Devices_None" xml:space="preserve"><value>No device found.</value></data>
+  <data name="Devices_Unsupported" xml:space="preserve"><value>Connecting devices is not available on this system.</value></data>
+  <data name="Devices_NoAccess" xml:space="preserve"><value>“{0}” is connected but shows no content: it may be locked or waiting for you to tap Trust.</value></data>
+  <data name="Devices_Empty" xml:space="preserve"><value>“{0}” shows no photos or videos over USB. Some may be only in iCloud.</value></data>
+  <data name="Devices_Connected" xml:space="preserve"><value>Showing what “{0}” exposes over USB. Nothing is imported until you choose to. Keep it connected and unlocked.</value></data>
+  <data name="Devices_Lost" xml:space="preserve"><value>The device was disconnected. Items that were not imported are no longer available.</value></data>
+  <data name="Devices_Summary" xml:space="preserve"><value>{0} photos · {1} videos</value></data>
+  <data name="Devices_PreviewVideoNote" xml:space="preserve"><value>Videos can be played after importing them.</value></data>
+  <data name="Devices_PreviewUnavailable" xml:space="preserve"><value>This format cannot be previewed here; it can still be imported.</value></data>
+  <data name="Devices_DeleteTitle" xml:space="preserve"><value>Delete from the device after copying?</value></data>
+  <data name="Devices_DeleteMessage" xml:space="preserve"><value>{0} items will be copied to the library. Each one will be deleted from “{1}” only after its copy has been verified. Deleting from the device may be permanent. Items that cannot be verified stay on the device.</value></data>
+  <data name="Devices_DeleteConfirm" xml:space="preserve"><value>Copy, verify and delete</value></data>
+  <data name="Devices_Stage_download" xml:space="preserve"><value>Reading from the device: {0} of {1} · {2}</value></data>
+  <data name="Devices_Stage_import" xml:space="preserve"><value>Adding to the library…</value></data>
+  <data name="Devices_Stage_verify" xml:space="preserve"><value>Verifying copies: {0} of {1}</value></data>
+  <data name="Devices_Stage_delete" xml:space="preserve"><value>Deleting verified items from the device: {0} of {1}</value></data>
+  <data name="Devices_ResultDone" xml:space="preserve"><value>Import finished</value></data>
+  <data name="Devices_ResultCancelled" xml:space="preserve"><value>Import cancelled</value></data>
+  <data name="Devices_ResultLost" xml:space="preserve"><value>The device was disconnected during the import</value></data>
+  <data name="Devices_ResultFailed" xml:space="preserve"><value>The import failed</value></data>
+  <data name="Devices_ResultCounts" xml:space="preserve"><value>{0} imported · {1} already in the library · {2} failed · {3} not available.</value></data>
+  <data name="Devices_ResultKept" xml:space="preserve"><value>Nothing was changed on the device.</value></data>
+  <data name="Devices_ResultDeleted" xml:space="preserve"><value>{0} deleted from the device · {1} verified but kept on it.</value></data>
+  <data name="Devices_ResultConverted" xml:space="preserve"><value>{0} arrived converted by the device (not the original format).</value></data>
+  <data name="Devices_Line_Deleted" xml:space="preserve"><value>copied, verified and deleted from the device</value></data>
+  <data name="Devices_Line_Failed" xml:space="preserve"><value>could not be imported</value></data>
+  <data name="Devices_Line_Unavailable" xml:space="preserve"><value>not available on the device</value></data>
+  <data name="Devices_Line_Converted" xml:space="preserve"><value>converted by the device</value></data>
+  <data name="Devices_Kept_cancelled" xml:space="preserve"><value>kept on the device (cancelled)</value></data>
+  <data name="Devices_Kept_devicelost" xml:space="preserve"><value>kept on the device (disconnected)</value></data>
+  <data name="Devices_Kept_incompletecapture" xml:space="preserve"><value>kept on the device (another part of the same capture was not verified)</value></data>
+  <data name="Devices_Kept_converted" xml:space="preserve"><value>kept on the device (it arrived converted)</value></data>
+  <data name="Devices_Kept_changedondevice" xml:space="preserve"><value>kept on the device (it changed after being listed)</value></data>
+  <data name="Devices_Kept_deletefailed" xml:space="preserve"><value>kept on the device (the device refused to delete it)</value></data>
   <data name="Nav_Backup.Content" xml:space="preserve"><value>Backup</value></data>
   <data name="BackupPage_Title.Text" xml:space="preserve"><value>Backup</value></data>
   <data name="Backup_OriginalsHeader.Text" xml:space="preserve"><value>Backup of photos and videos (originals)</value></data>

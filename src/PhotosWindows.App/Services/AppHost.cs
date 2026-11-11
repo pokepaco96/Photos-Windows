@@ -32,6 +32,14 @@ public static class AppHost
         services.AddPhotosWindowsCore(paths);
         services.AddPhotosWindowsImaging();
         services.AddPhotosWindowsPlatform();
+        // QA only: a folder plays the role of a connected device so the Devices page can be driven by UI Automation.
+        if (Environment.GetEnvironmentVariable(PhotosWindows.Application.Devices.SimulatedFolderDeviceProvider.EnvironmentVariable) is { Length: > 0 } simulated)
+        {
+            var canDelete = Environment.GetEnvironmentVariable(PhotosWindows.Application.Devices.SimulatedFolderDeviceProvider.EnvironmentVariable + "_DELETE") == "1";
+            Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.Replace(services,
+                ServiceDescriptor.Singleton<PhotosWindows.Application.Devices.IPortableMediaDeviceProvider>(new PhotosWindows.Application.Devices.SimulatedFolderDeviceProvider(simulated, canDelete)));
+        }
+
         services.AddPhotosWindowsMachineLearning();
 
         services.AddSingleton(new UiThread(dispatcher));
@@ -54,6 +62,7 @@ public static class AppHost
         services.AddTransient<AlbumsViewModel>();
         services.AddTransient<PlacesViewModel>();
         services.AddTransient<MemoriesViewModel>();
+        services.AddTransient<DevicesViewModel>();
         services.AddTransient<BackupViewModel>();
         services.AddTransient<SlideshowViewModel>();
         services.AddTransient<DuplicatesViewModel>();

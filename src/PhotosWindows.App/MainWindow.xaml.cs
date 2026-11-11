@@ -81,6 +81,7 @@ public sealed partial class MainWindow : Window
             case "People": _navigation.ToPeople(); break;
             case "Places": _navigation.ToPlaces(); break;
             case "Memories": _navigation.ToMemories(); break;
+            case "Devices": _navigation.ToDevices(); break;
             case "Backup": _navigation.ToBackup(); break;
             case "Duplicates": _navigation.ToDuplicates(); break;
             case "Imports": _navigation.ToImports(); break;
@@ -109,6 +110,7 @@ public sealed partial class MainWindow : Window
             : page == typeof(PeoplePage) ? "People"
             : page == typeof(PlacesPage) ? "Places"
             : page == typeof(MemoriesPage) || page == typeof(SlideshowPage) ? "Memories"
+            : page == typeof(DevicesPage) ? "Devices"
             : page == typeof(BackupPage) ? "Backup"
             : page == typeof(DuplicatesPage) ? "Duplicates"
             : page == typeof(ImportsPage) ? "Imports"

@@ -14,6 +14,7 @@ Refleja lo **terminado** (✅), en curso (🔄) y pendiente (⏳). El detalle co
 - ✅ **Recuerdos**: reglas deterministas y explicables, pase de diapositivas, ocultar y excluir ([ADR-0012](decisions/0012-memories-deterministic-rules.md), [`MEMORIES.md`](MEMORIES.md)).
 
 ## En curso
+- 🔄 **Dispositivos por USB (iPhone)**: explorar e importar ([ADR-0013](decisions/0013-portable-devices-import.md)). Borrar del teléfono desactivado hasta probarlo con hardware real.
 - 🔄 **Copia de originales** en carpetas AÑO/MES, verificada y reanudable ([ADR-0014](decisions/0014-originals-backup.md)).
 
 ## Siguiente

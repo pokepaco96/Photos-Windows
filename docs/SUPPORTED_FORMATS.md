@@ -32,6 +32,9 @@ La importación reconoce el archivo por **extensión + firma real**. Si el conte
 |---|---|---|
 | Sidecar XMP | `IMG.xmp`, `IMG.CR2.xmp` | ✅ Lectura de título, descripción, palabras clave (dc:subject / jerárquicas), valoración y fecha; se adjunta al asset |
 
+## Desde un iPhone por USB
+Se importan los archivos que iOS expone por USB, tal como llegan. Con *Conservar originales* llegan HEIC/HEIF y vídeo HEVC (MOV); con la conversión automática de iOS llegan JPEG y H.264, y la app lo detecta comparando la firma real del archivo con su extensión y lo indica en el resultado. Las Live Photos se importan con su clip MOV. Ver [`research/IPHONE_USB_REVIEW.md`](research/IPHONE_USB_REVIEW.md).
+
 ## Exportación
 | Formato | Metadatos escritos |
 |---|---|

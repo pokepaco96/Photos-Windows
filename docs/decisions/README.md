@@ -16,4 +16,5 @@ Formato breve: contexto, decisión, alternativas, consecuencias. Un ADR aceptado
 | [0010](0010-people-local-face-grouping.md) | Personas: agrupación facial local con modelos descargados por el usuario | Aceptado (reemplaza la parte de Personas de 0008) |
 | [0011](0011-places-offline-map.md) | Lugares: mapa offline propio (Natural Earth) y modo lista | Aceptado |
 | [0012](0012-memories-deterministic-rules.md) | Recuerdos: reglas deterministas y explicables | Aceptado (reemplaza la parte de Recuerdos de 0008) |
+| [0013](0013-portable-devices-import.md) | Dispositivos por USB (iPhone): explorar e importar; borrar solo verificado | Aceptado |
 | [0014](0014-originals-backup.md) | Copia de originales en carpetas AÑO/MES, separada de la copia de biblioteca | Aceptado |

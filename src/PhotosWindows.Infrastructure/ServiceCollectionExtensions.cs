@@ -57,6 +57,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<PhotosWindows.Application.Backup.OriginalsBackupService>();
         services.AddSingleton<LibraryMaintenanceService>();
         services.AddSingleton<PeopleService>();
+        services.TryAddSingleton<PhotosWindows.Application.Devices.IPortableMediaDeviceProvider, PhotosWindows.Application.Devices.NoPortableDeviceProvider>();
+        services.AddSingleton<PhotosWindows.Application.Devices.PhoneImportCoordinator>();
         services.AddSingleton<PhotosWindows.Application.Memories.MemoriesService>();
         return services;
     }

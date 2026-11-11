@@ -33,6 +33,11 @@ Todas locales y opt-in.
 - Recuerdos solo usa Personas si la activaste en esa biblioteca, y solo los grupos a los que pusiste nombre. No activa Personas ni analiza rostros.
 - Lo único que se guarda son tus decisiones (recuerdos ocultos y exclusiones) en el catálogo de la biblioteca.
 
+## Dispositivos (iPhone por USB)
+- La app lee el teléfono a través de Windows (WPD) solo mientras está en la página «Dispositivos». No usa cuentas de Apple, iCloud ni red, y no guarda códigos, registros de confianza ni identificadores del teléfono.
+- «Explorar» no copia nada: las miniaturas y vistas previas se leen en memoria.
+- Al importar, los archivos pasan por una carpeta temporal privada (`%LOCALAPPDATA%\PhotosWindows\device-staging`) que se borra al terminar.
+- Borrar del teléfono está desactivado mientras no se haya verificado con un iPhone real; cuando se active, solo borrará elementos con copia verificada y tras confirmación expresa.
 ## Copia de originales
 - Se escribe solo en la carpeta que elijas; no hay red. El manifiesto no incluye rutas de tu equipo, coordenadas GPS, personas ni datos faciales (los archivos copiados conservan, como es lógico, sus propios metadatos).
 - El destino y el historial de las últimas copias se guardan en la configuración local de este equipo.

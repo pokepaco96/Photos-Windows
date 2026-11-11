@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using PhotosWindows.Application.Abstractions;
 
@@ -9,6 +10,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IRasterDecoder, WicRasterDecoder>();
         services.AddSingleton<IVideoFrameExtractor, WindowsVideoFrameExtractor>();
+        // Replaces the no-op provider of the core unless a (QA) provider was registered before.
+        services.Replace(ServiceDescriptor.Singleton<PhotosWindows.Application.Devices.IPortableMediaDeviceProvider, WinRtPortableDeviceProvider>());
         return services;
     }
 }
