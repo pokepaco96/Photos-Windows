@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using PhotosWindows.Application.Abstractions;
+using PhotosWindows.Application.Import;
 using PhotosWindows.Application.Thumbnails;
 
 namespace PhotosWindows.App.Services;
@@ -11,13 +12,15 @@ namespace PhotosWindows.App.Services;
 public sealed class BackgroundProcessing : IDisposable
 {
     private readonly ThumbnailService _thumbnails;
+    private readonly ImportService _import;
     private readonly ILogger<BackgroundProcessing> _logger;
     private readonly SemaphoreSlim _signal = new(0, int.MaxValue);
     private CancellationTokenSource? _cts;
 
-    public BackgroundProcessing(ThumbnailService thumbnails, ILibraryContext context, ILogger<BackgroundProcessing> logger)
+    public BackgroundProcessing(ThumbnailService thumbnails, ImportService import, ILibraryContext context, ILogger<BackgroundProcessing> logger)
     {
         _thumbnails = thumbnails;
+        _import = import;
         _logger = logger;
         context.LibraryChanged += (_, library) =>
         {
@@ -49,6 +52,14 @@ public sealed class BackgroundProcessing : IDisposable
         {
             try
             {
+                // Imports have priority: copying and hashing originals is the work the user is waiting for. Thumbnails
+                // the grid shows are still generated on demand; the rest of the queue resumes when the import ends.
+                if (_import.IsRunning)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
+                    continue;
+                }
+
                 var processed = await _thumbnails.ProcessPendingAsync(40, token).ConfigureAwait(false);
                 if (processed == 0)
                 {

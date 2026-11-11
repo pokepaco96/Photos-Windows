@@ -9,6 +9,7 @@
 | Miniaturas | `cache/` (reubicable y borrable) | No |
 | Ajustes de la app y bibliotecas recientes | `%LOCALAPPDATA%\PhotosWindows\settings.json` | No |
 | Registros de diagnóstico | `%LOCALAPPDATA%\PhotosWindows\logs` (7 días) | No (el usuario puede abrirlos y compartirlos manualmente) |
+| Tiempos por fase de cada importación | Mismo registro local, una línea al terminar | No. Solo duraciones y recuentos: sin rutas ni nombres de archivo |
 | Coordenadas GPS | Catálogo | No. Al exportar, la ubicación **no** se incluye salvo que el usuario lo active |
 | Personas: rostros (posición), descriptores numéricos (128 valores por rostro), grupos y nombres | Catálogo (`faces`, `people`, `face_analysis`) | No. Fuera de las copias de seguridad salvo que el usuario lo marque |
 | Miniaturas de rostros | `cache/faces/` de la biblioteca | No |

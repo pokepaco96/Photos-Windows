@@ -54,6 +54,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         ItemSize = settings.Load().GridItemSize;
         _organization.LibraryContentChanged += OnContentChanged;
         _import.ImportFinished += OnContentChanged;
+        _import.LibraryGrew += OnLibraryGrew;
         _editing.RecipeSaved += OnRecipeSaved;
         _thumbnails.ThumbnailReady += OnThumbnailReady;
     }
@@ -307,6 +308,17 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
     private void OnContentChanged(object? sender, EventArgs e) => QueueRefresh();
 
+    /// <summary>
+    /// During an import, new items are shown progressively while the view is small and nothing is selected.
+    /// A full reload resets scrolling and selection, so a large view keeps its state and refreshes when the import ends.
+    /// </summary>
+    private void OnLibraryGrew(object? sender, EventArgs e) => _ui.Post(() =>
+    {
+        if (SelectedIds.Count == 0 && _byId.Count < ProgressiveRefreshLimit) QueueRefresh();
+    });
+
+    private const int ProgressiveRefreshLimit = 2000;
+
     private void OnRecipeSaved(object? sender, long assetId) => QueueRefresh();
 
     private void QueueRefresh()
@@ -333,6 +345,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     {
         _organization.LibraryContentChanged -= OnContentChanged;
         _import.ImportFinished -= OnContentChanged;
+        _import.LibraryGrew -= OnLibraryGrew;
         _editing.RecipeSaved -= OnRecipeSaved;
         _thumbnails.ThumbnailReady -= OnThumbnailReady;
         _loadCts?.Cancel();

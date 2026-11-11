@@ -18,6 +18,12 @@ public sealed class ImportCoordinator(
 {
     public event EventHandler? ImportFinished;
 
+    /// <summary>
+    /// Raised (worker thread) while an import runs, when new assets have been committed since the last notice.
+    /// Spaced out (2 s, growing to 15 s) so large imports show up progressively without reloading the grid per file.
+    /// </summary>
+    public event EventHandler? LibraryGrew;
+
     public async Task ImportFolderAsync()
     {
         var folder = await window.PickFolderAsync();
@@ -81,13 +87,30 @@ public sealed class ImportCoordinator(
     {
         await activity.RunAsync(Loc.Get("Import_Title"), async (progress, ct) =>
         {
-            var importProgress = new InlineProgress<ImportProgress>(p => progress.Report(new ActivityProgress(
-                p.Total == 0 ? null : p.Fraction,
-                Loc.Format("Import_Progress", p.Processed, p.Total, p.Imported, p.Duplicates, p.Failed + p.Skipped,
-                    p.Processed < p.Total && p.EstimatedRemaining is { TotalSeconds: > 0 } eta
-                        ? Loc.Format("Import_Eta", Math.Ceiling(eta.TotalMinutes))
-                        : string.Empty))));
-            var result = await run(importProgress, ct);
+            var importProgress = new InlineProgress<ImportProgress>(p => progress.Report(Describe(p)));
+            var grew = 0;
+            var interval = TimeSpan.FromSeconds(2);
+            var last = System.Diagnostics.Stopwatch.StartNew();
+            void OnImported(object? sender, long id)
+            {
+                Interlocked.Exchange(ref grew, 1);
+                if (last.Elapsed < interval || Interlocked.Exchange(ref grew, 0) == 0) return;
+                last.Restart();
+                interval = TimeSpan.FromSeconds(Math.Min(15, interval.TotalSeconds * 1.5));
+                LibraryGrew?.Invoke(this, EventArgs.Empty);
+            }
+
+            import.AssetImported += OnImported;
+            ImportResult result;
+            try
+            {
+                result = await run(importProgress, ct);
+            }
+            finally
+            {
+                import.AssetImported -= OnImported;
+            }
+
             background.Signal();
             var severity = result.Status switch
             {
@@ -101,5 +124,27 @@ public sealed class ImportCoordinator(
             return new ActivityOutcome(message, severity, Loc.Get("Import_ViewReport"), navigation.ToImports);
         });
         ImportFinished?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static ActivityProgress Describe(ImportProgress p)
+    {
+        switch (p.Phase)
+        {
+            case ImportPhase.Scanning:
+                // The total is not known yet: indeterminate bar with real counters, no percentage or ETA.
+                return new ActivityProgress(null, Loc.Format("Import_Scanning", p.Examined, p.Total,
+                    string.IsNullOrEmpty(p.CurrentFolder) ? string.Empty : " · " + p.CurrentFolder));
+            case ImportPhase.Preparing:
+                return new ActivityProgress(null, Loc.Format("Import_Preparing", p.Total));
+            default:
+                var eta = p.Processed < p.Total && p.EstimatedRemaining is { TotalSeconds: > 0 } e
+                    ? Loc.Format("Import_Eta", Math.Ceiling(e.TotalMinutes))
+                    : string.Empty;
+                var rate = p.Elapsed.TotalSeconds >= 2 && p.BytesProcessed > 0
+                    ? Loc.Format("Import_Rate", p.BytesProcessed / 1048576.0 / p.Elapsed.TotalSeconds)
+                    : string.Empty;
+                return new ActivityProgress(p.Total == 0 ? null : p.Fraction,
+                    Loc.Format("Import_Progress", p.Processed, p.Total, p.Imported, p.Duplicates, p.Failed + p.Skipped, rate + eta));
+        }
     }
 }

@@ -29,6 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotosWindows.UIAutomation.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotosWindows.MachineLearning", "src\PhotosWindows.MachineLearning\PhotosWindows.MachineLearning.csproj", "{2680BDE9-136A-4F2A-A0DE-2213F33B12A1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportBench", "tools\import-bench\ImportBench.csproj", "{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -171,6 +175,18 @@ Global
 		{2680BDE9-136A-4F2A-A0DE-2213F33B12A1}.Release|x64.Build.0 = Release|Any CPU
 		{2680BDE9-136A-4F2A-A0DE-2213F33B12A1}.Release|x86.ActiveCfg = Release|Any CPU
 		{2680BDE9-136A-4F2A-A0DE-2213F33B12A1}.Release|x86.Build.0 = Release|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Debug|x64.Build.0 = Debug|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Debug|x86.Build.0 = Debug|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Release|x64.ActiveCfg = Release|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Release|x64.Build.0 = Release|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Release|x86.ActiveCfg = Release|Any CPU
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,5 +203,6 @@ Global
 		{E0673481-A343-4F44-8B1F-4AC64083B8DD} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{4B6FF541-2AAC-4EA4-956C-56C39A915223} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{2680BDE9-136A-4F2A-A0DE-2213F33B12A1} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{2C0FBEDA-371C-4E76-99C1-EDC6FD0AAFC0} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 	EndGlobalSection
 EndGlobal

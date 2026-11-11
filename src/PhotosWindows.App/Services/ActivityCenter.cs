@@ -54,14 +54,25 @@ public sealed partial class ActivityCenter(UiThread ui, ILogger<ActivityCenter> 
         Severity = InfoBarSeverity.Informational;
         HasAction = false;
         var run = ++_run;
-        var progress = new Progress<ActivityProgress>(p => ui.Post(() =>
+        // Coalesced: workers only store the latest report; at most one dispatch to the UI thread is pending at a time,
+        // so a burst of reports can never queue thousands of callbacks behind user input.
+        ActivityProgress? latest = null;
+        var pending = 0;
+        var progress = new InlineProgress<ActivityProgress>(p =>
         {
-            // A report can be delivered after the run finished; it must not overwrite the outcome (UI run #10).
-            if (run != _run || !IsBusy) return;
-            Message = p.Message;
-            IsIndeterminate = p.Fraction is null;
-            Percent = (p.Fraction ?? 0) * 100;
-        }));
+            Volatile.Write(ref latest, p);
+            if (Interlocked.Exchange(ref pending, 1) == 1) return;
+            ui.Post(() =>
+            {
+                Volatile.Write(ref pending, 0);
+                var value = Volatile.Read(ref latest);
+                // A report can be delivered after the run finished; it must not overwrite the outcome (UI run #10).
+                if (value is null || run != _run || !IsBusy) return;
+                Message = value.Message;
+                IsIndeterminate = value.Fraction is null;
+                Percent = (value.Fraction ?? 0) * 100;
+            });
+        });
 
         ActivityOutcome outcome;
         try

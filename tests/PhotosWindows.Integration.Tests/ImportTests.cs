@@ -220,8 +220,12 @@ public class ImportTests
         for (var i = 0; i < 12; i++) Fixtures.Jpeg(Path.Combine(dir, $"p{i:00}.jpg"), new Fixtures.PhotoSpec { Seed = i });
 
         using var cts = new CancellationTokenSource();
-        var progress = new SyncProgress<ImportProgress>(p => { if (p.Processed >= 3) cts.Cancel(); });
-        var first = await host.Import.ImportAsync(new ImportRequest([dir], ImportMode.CopyToLibrary), progress, cts.Token);
+        // Progress reports are throttled, so cancel from the per-asset event instead.
+        var committed = 0;
+        void OnImported(object? s, long id) { if (Interlocked.Increment(ref committed) >= 3) cts.Cancel(); }
+        host.Import.AssetImported += OnImported;
+        var first = await host.Import.ImportAsync(new ImportRequest([dir], ImportMode.CopyToLibrary), null, cts.Token);
+        host.Import.AssetImported -= OnImported;
         Assert.Equal(ImportJobStatus.Cancelled, first.Status);
         Assert.InRange(first.Imported, 1, 11);
         var pending = await host.Jobs.GetItemsAsync(first.JobId, ImportItemStatus.Pending, CancellationToken.None);
@@ -277,9 +281,73 @@ public class ImportTests
         for (var i = 0; i < 3; i++) Fixtures.Jpeg(Path.Combine(dir, $"{i}.jpg"), new Fixtures.PhotoSpec { Seed = i });
         var reports = new List<ImportProgress>();
         await host.Import.ImportAsync(new ImportRequest([dir], ImportMode.AddInPlace), new SyncProgress<ImportProgress>(reports.Add), CancellationToken.None);
-        Assert.All(reports, r => Assert.Equal(3, r.Total));
+        // The scan reports first, with the number of candidates found so far; then every report has the total.
+        Assert.Equal(ImportPhase.Scanning, reports[0].Phase);
+        Assert.Contains(reports, r => r.Phase == ImportPhase.Scanning && r.Examined == 3 && r.Total == 3);
+        Assert.All(reports.Where(r => r.Phase is not (ImportPhase.Scanning)), r => Assert.Equal(3, r.Total));
         Assert.Equal(3, reports[^1].Processed);
         Assert.Equal(1, reports[^1].Fraction);
+    }
+}
+
+public class ImportResponsivenessTests
+{
+    [Fact]
+    public async Task Progress_is_coalesced_and_the_final_report_is_complete()
+    {
+        await using var host = new TestHost();
+        await host.CreateLibraryAsync();
+        var dir = host.SourceDir("many");
+        for (var i = 0; i < 120; i++) Fixtures.Jpeg(Path.Combine(dir, $"p{i:000}.jpg"), new Fixtures.PhotoSpec { Seed = i });
+        var reports = new List<ImportProgress>();
+        var result = await host.Import.ImportAsync(new ImportRequest([dir], ImportMode.AddInPlace), new SyncProgress<ImportProgress>(reports.Add), CancellationToken.None);
+
+        Assert.Equal(120, result.Imported);
+        // Previously two reports per file reached the UI (240+); now they are rate-limited.
+        Assert.True(reports.Count < 60, $"{reports.Count} progress reports for 120 files");
+        Assert.Equal(120, reports[^1].Processed);
+        Assert.Equal(120, reports[^1].Total);
+        Assert.True(reports[^1].BytesProcessed > 0);
+    }
+
+    [Fact]
+    public async Task Scan_reports_examined_and_compatible_files_before_the_job_exists()
+    {
+        await using var host = new TestHost();
+        await host.CreateLibraryAsync();
+        var dir = host.SourceDir("tree");
+        for (var i = 0; i < 4; i++)
+        {
+            var sub = Path.Combine(dir, $"carpeta {i}", "más");
+            Fixtures.Jpeg(Path.Combine(sub, $"f{i}.jpg"), new Fixtures.PhotoSpec { Seed = i });
+            File.WriteAllText(Path.Combine(sub, $"notas{i}.txt"), "no es una foto");
+        }
+
+        var scans = new List<(int Examined, int Found, string? Folder)>();
+        var files = host.Import.Scan([dir], recursive: true, (e, f, folder) => scans.Add((e, f, folder)), CancellationToken.None);
+
+        Assert.Equal(4, files.Count);
+        Assert.NotEmpty(scans);
+        Assert.Equal((8, 4), (scans[^1].Examined, scans[^1].Found));
+        // Only a folder name is reported, never a full path.
+        Assert.All(scans.Where(s => s.Folder is not null), s => Assert.DoesNotContain(Path.DirectorySeparatorChar, s.Folder!));
+    }
+
+    [Fact]
+    public async Task Diagnostics_time_each_phase_without_recording_paths()
+    {
+        await using var host = new TestHost();
+        await host.CreateLibraryAsync();
+        var dir = host.SourceDir("diag");
+        for (var i = 0; i < 5; i++) Fixtures.Jpeg(Path.Combine(dir, $"secreto-{i}.jpg"), new Fixtures.PhotoSpec { Seed = i });
+        await host.Import.ImportAsync(new ImportRequest([dir], ImportMode.CopyToLibrary), null, CancellationToken.None);
+
+        var d = host.Import.Diagnostics;
+        Assert.Equal(5, d.Count(ImportPhase.CopyAndHash));
+        Assert.Equal(5, d.Count(ImportPhase.Signature));
+        Assert.Equal(1, d.Count(ImportPhase.Scanning));
+        Assert.True(d.BytesHashed > 0);
+        Assert.DoesNotContain("secreto", d.ToString(), StringComparison.Ordinal);
     }
 }
 

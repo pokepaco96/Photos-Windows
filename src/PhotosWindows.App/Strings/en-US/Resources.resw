@@ -211,6 +211,9 @@
   <data name="Import_ModeCopy" xml:space="preserve"><value>Copy to the library</value></data>
   <data name="Import_ModeCopyHelp" xml:space="preserve"><value>Copies go to the library's originals folder (by year and month). The source files are not deleted.</value></data>
   <data name="Import_OriginalsSafe" xml:space="preserve"><value>Your original files are never modified or deleted by importing.</value></data>
+  <data name="Import_Preparing" xml:space="preserve"><value>Preparing {0:N0} files…</value></data>
+  <data name="Import_Rate" xml:space="preserve"><value> · {0:N0} MB/s</value></data>
+  <data name="Import_Scanning" xml:space="preserve"><value>Looking for photos and videos… {0:N0} files examined · {1:N0} compatible{2}</value></data>
   <data name="Import_Progress" xml:space="preserve"><value>{0} of {1} · {2} imported · {3} duplicate(s) · {4} skipped or failed{5}</value></data>
   <data name="Import_SourcesCount" xml:space="preserve"><value>{0} selected items</value></data>
   <data name="Import_Start" xml:space="preserve"><value>Import</value></data>

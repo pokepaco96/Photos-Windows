@@ -176,6 +176,26 @@ public sealed class SkiaImageRenderer : IImageRenderer
         throw new MediaDecodeException($"No installed decoder can open this {family} file.");
     }
 
+    /// <summary>
+    /// Smallest size the codec can decode to directly (JPEG: 1/8, 2/8 … 8/8) whose long side still covers
+    /// <paramref name="target"/>. Asking for the exact ratio rounds down to a step that may be too small; the old code
+    /// then fell back to a full-size decode, so a 360 px grid thumbnail of a 12 MP photo decoded all 12 MP.
+    /// </summary>
+    internal static SKSizeI ScaledDecodeSize(SKCodec codec, SKSizeI full, int target)
+    {
+        var longSide = Math.Max(full.Width, full.Height);
+        if (target >= longSide) return full;
+        for (var eighths = 1; eighths < 8; eighths++)
+        {
+            var factor = eighths / 8f;
+            if (factor * longSide < target) continue;
+            var size = codec.GetScaledDimensions(factor);
+            if (Math.Max(size.Width, size.Height) >= target) return size;
+        }
+
+        return full;
+    }
+
     private static DecodedImage DecodeWithSkia(string path, int? minLongSide)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -189,15 +209,7 @@ public sealed class SkiaImageRenderer : IImageRenderer
         var size = info.Size;
         if (minLongSide is { } target && target > 0)
         {
-            var scale = target / (float)Math.Max(info.Width, info.Height);
-            if (scale < 1f)
-            {
-                size = codec.GetScaledDimensions(scale);
-                if (Math.Max(size.Width, size.Height) < target)
-                {
-                    size = info.Size; // Codec could not scale enough without going below the target.
-                }
-            }
+            size = ScaledDecodeSize(codec, info.Size, target);
         }
 
         var alpha = info.AlphaType == SKAlphaType.Opaque ? SKAlphaType.Opaque : SKAlphaType.Premul;
