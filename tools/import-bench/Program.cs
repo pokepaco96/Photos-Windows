@@ -24,6 +24,7 @@ switch (a.Command)
 {
     case "generate": Generate(a); break;
     case "run": await RunAsync(a); break;
+    case "viewer": await ViewerAsync(a); break;
     default:
         Console.Error.WriteLine("usage: generate --out DIR [--photos N --photo-kb K --videos N --video-mb M --dup-pct P --sidecar-pct P --live-pct P --depth D --per-folder N]\n       run --data DIR --work DIR [--workers N] [--mode copy|inplace] [--background] [--verify] [--report FILE]");
         Environment.Exit(2);
@@ -317,6 +318,90 @@ static async Task RunAsync(Args a)
     Console.WriteLine(json);
     if (a.Str("report", "") is { Length: > 0 } file) File.WriteAllText(file, json);
     if (mismatches > 0) Environment.Exit(1);
+}
+
+// Opens photos the way the viewer does (cached small → large preview) while the background thumbnail pass runs over
+// the whole library, and reports p50/p95/max time to the first preview.
+static async Task ViewerAsync(Args a)
+{
+    var data = a.Req("data");
+    var work = a.Req("work");
+    var workers = a.Int("workers", 2);
+    var opens = a.Int("opens", 100);
+    var warm = a.Int("background-seconds", 10);
+    if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
+    Directory.CreateDirectory(work);
+    var services = new ServiceCollection();
+    services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning));
+    services.AddPhotosWindowsCore(new DefaultAppPaths(Path.Combine(work, "appdata")));
+    services.AddPhotosWindowsImaging();
+    await using var provider = services.BuildServiceProvider();
+    var settings = provider.GetRequiredService<ISettingsStore>();
+    settings.Save(settings.Load() with { MaxBackgroundWorkers = workers });
+    await provider.GetRequiredService<LibraryManager>().CreateAsync(work, "bench", CancellationToken.None);
+    var import = provider.GetRequiredService<ImportService>();
+    var thumbs = provider.GetRequiredService<ThumbnailService>();
+    var assets = provider.GetRequiredService<IAssetRepository>();
+    await import.ImportAsync(new ImportRequest([data], ImportMode.AddInPlace), null, CancellationToken.None);
+    var ids = (await assets.QueryAsync(new AssetQuery(), CancellationToken.None)).Select(r => r.Id).ToList();
+    Console.Error.WriteLine($"library: {ids.Count} assets");
+
+    using var stop = new CancellationTokenSource();
+    var bgDone = 0;
+    var background = Task.Run(async () =>
+    {
+        while (!stop.IsCancellationRequested)
+        {
+            try
+            {
+                var n = await thumbs.ProcessPendingAsync(40, stop.Token);
+                Interlocked.Add(ref bgDone, n);
+                if (n == 0) break;
+            }
+            catch (OperationCanceledException) { break; }
+        }
+    });
+    await Task.Delay(TimeSpan.FromSeconds(warm));
+
+    var targets = new List<int> { 0, Math.Min(528, ids.Count - 1), ids.Count - 1 };
+    var rnd = new Random(7);
+    while (targets.Count < opens) targets.Add(rnd.Next(ids.Count));
+    var times = new List<double>();
+    var timeouts = 0;
+    foreach (var index in targets)
+    {
+        var sw = Stopwatch.StartNew();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(a.Int("timeout", 60)));
+        try
+        {
+            var path = await thumbs.GetOrCreateAsync(ids[index], ThumbnailSize.Large, cts.Token);
+            if (path is null) timeouts++;
+        }
+        catch (OperationCanceledException) { timeouts++; }
+        times.Add(sw.Elapsed.TotalMilliseconds);
+        if (times.Count <= 3) Console.Error.WriteLine($"open #{index + 1}: {sw.Elapsed.TotalMilliseconds:0} ms");
+    }
+
+    stop.Cancel();
+    await background;
+    times.Sort();
+    double P(double q) => times[(int)Math.Min(times.Count - 1, Math.Ceiling(q * times.Count) - 1)];
+    var report = new
+    {
+        commit = Environment.GetEnvironmentVariable("PW_COMMIT") ?? "unknown",
+        assets = ids.Count,
+        workers,
+        backgroundSecondsBeforeOpening = warm,
+        backgroundItemsDone = bgDone,
+        opens = times.Count,
+        p50ms = Math.Round(P(0.5)),
+        p95ms = Math.Round(P(0.95)),
+        maxms = Math.Round(times[^1]),
+        timedOut = timeouts,
+    };
+    var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
+    Console.WriteLine(json);
+    if (a.Str("report", "") is { Length: > 0 } file) File.WriteAllText(file, json);
 }
 
 sealed class InlineProgress(Action<ImportProgress> report) : IProgress<ImportProgress>

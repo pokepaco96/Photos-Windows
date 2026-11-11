@@ -148,7 +148,7 @@ public sealed partial class EndToEndTests
     {
         Nav("Nav_All");
         OpenInViewer("GPS_Madrid.jpg");
-        App.Find("Viewer_Photo");
+        WaitForPhotoShown();
         App.Click("Viewer_Info");
         App.Find("Viewer_InfoPane");
         Thread.Sleep(800);
@@ -158,6 +158,20 @@ public sealed partial class EndToEndTests
         App.Screenshot("08_viewer_with_info");
         App.Click("Viewer_Info");
     });
+
+    /// <summary>
+    /// The viewer must end with a real image on screen, not just the file name and position above a black stage.
+    /// Checks the load state the viewer exposes (HelpText of the photo) and that the Image element has a size.
+    /// </summary>
+    private void WaitForPhotoShown()
+    {
+        string State() => App.Find("Viewer_Photo").Properties.HelpText.ValueOrDefault ?? string.Empty;
+        App.WaitUntil(() => State() is "Ready" or "Preview" or "Error" or "Unavailable", "the viewer load to finish", TimeSpan.FromSeconds(30));
+        App.WaitUntil(() => State() == "Ready", "the full-quality image", TimeSpan.FromSeconds(30));
+        var box = App.Find("Viewer_Photo").BoundingRectangle;
+        if (box.Width < 50 || box.Height < 50) throw new InvalidOperationException($"Viewer shows no image (photo box {box.Width}×{box.Height}).");
+        qa.Evidence.Log($"viewer state {State()}, photo box {box.Width}×{box.Height}");
+    }
 
     /// <summary>
     /// Regression (UI run #12): the photo was drawn at the top of a stage-sized box, leaving an empty band below.
@@ -185,6 +199,7 @@ public sealed partial class EndToEndTests
         App.Click("Viewer_Next");
         App.WaitUntil(() => App.TextOf("Viewer_Position") != first, "the position to change after Next");
         var second = App.TextOf("Viewer_Position");
+        WaitForPhotoShown();
         CheckPhotoFitsAndCentred(); // regression (UI run #14): the next photo was sized with the previous one's box
         App.Find("Viewer_Photo").Click();
         LogFocus("after clicking the photo");
