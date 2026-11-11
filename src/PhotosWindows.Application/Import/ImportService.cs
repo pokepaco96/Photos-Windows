@@ -47,9 +47,21 @@ public sealed class ImportService
 
     public bool IsRunning => _single.CurrentCount == 0;
 
+    /// <summary>Phase timings of the last (or running) job. Local only; contains no paths.</summary>
+    public ImportDiagnostics Diagnostics { get; private set; } = new();
+
     /// <summary>Lists importable candidate files. Hidden/system folders, links and the library itself are skipped.</summary>
-    public IReadOnlyList<string> Scan(IReadOnlyList<string> sources, bool recursive, CancellationToken cancellationToken)
+    public IReadOnlyList<string> Scan(IReadOnlyList<string> sources, bool recursive, CancellationToken cancellationToken) =>
+        Scan(sources, recursive, null, cancellationToken);
+
+    /// <summary>
+    /// Lists importable candidate files, reporting (throttled) how many files were examined and found so far,
+    /// so a long scan of a large or slow drive is visibly working.
+    /// </summary>
+    public IReadOnlyList<string> Scan(IReadOnlyList<string> sources, bool recursive, Action<int, int, string?>? onProgress, CancellationToken cancellationToken)
     {
+        var examined = 0;
+        var throttle = new ProgressThrottle(TimeSpan.FromMilliseconds(250));
         var library = _context.RequireCurrent();
         var options = new EnumerationOptions
         {
@@ -79,6 +91,12 @@ public sealed class ImportService
             foreach (var file in Directory.EnumerateFiles(full, "*", options))
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                examined++;
+                if (onProgress is not null && throttle.ShouldReport())
+                {
+                    onProgress(examined, result.Count, Path.GetFileName(Path.GetDirectoryName(file)));
+                }
+
                 if (!MediaFormats.IsCandidate(file)) continue;
                 if (PathSafety.IsUnder(file, library.CachePath) || PathSafety.IsUnder(file, library.BackupsPath)) continue;
                 if (file.EndsWith(PathSafety.PartialSuffix, StringComparison.OrdinalIgnoreCase)) continue;
@@ -86,20 +104,44 @@ public sealed class ImportService
             }
         }
 
+        onProgress?.Invoke(examined, result.Count, null);
         return result.Distinct(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal).ToList();
     }
 
     public async Task<ImportResult> ImportAsync(ImportRequest request, IProgress<ImportProgress>? progress, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var files = await Task.Run(() => Scan(request.Sources, request.Recursive, cancellationToken), cancellationToken).ConfigureAwait(false);
-        var jobId = await _jobs.CreateJobAsync(request.Mode, request.ImportDuplicates, files, _clock.UtcNow, cancellationToken).ConfigureAwait(false);
+        Diagnostics = new ImportDiagnostics();
+        IReadOnlyList<string> files;
+        using (Diagnostics.Measure(ImportPhase.Scanning))
+        {
+            var started = Stopwatch.StartNew();
+            progress?.Report(new ImportProgress(0, 0, 0, 0, 0, 0, 0, null, TimeSpan.Zero, null) { Phase = ImportPhase.Scanning });
+            files = await Task.Run(() => Scan(request.Sources, request.Recursive, (examined, found, folder) =>
+                progress?.Report(new ImportProgress(0, found, 0, 0, 0, 0, 0, null, started.Elapsed, null)
+                {
+                    Phase = ImportPhase.Scanning,
+                    Examined = examined,
+                    CurrentFolder = folder,
+                }), cancellationToken), cancellationToken).ConfigureAwait(false);
+        }
+
+        long jobId;
+        using (Diagnostics.Measure(ImportPhase.Preparing))
+        {
+            progress?.Report(new ImportProgress(0, files.Count, 0, 0, 0, 0, 0, null, TimeSpan.Zero, null) { Phase = ImportPhase.Preparing });
+            jobId = await _jobs.CreateJobAsync(request.Mode, request.ImportDuplicates, files, _clock.UtcNow, cancellationToken).ConfigureAwait(false);
+        }
+
         return await RunJobAsync(jobId, progress, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Continues an interrupted or cancelled job with its pending items.</summary>
-    public Task<ImportResult> ResumeAsync(long jobId, IProgress<ImportProgress>? progress, CancellationToken cancellationToken) =>
-        RunJobAsync(jobId, progress, cancellationToken);
+    public Task<ImportResult> ResumeAsync(long jobId, IProgress<ImportProgress>? progress, CancellationToken cancellationToken)
+    {
+        Diagnostics = new ImportDiagnostics();
+        return RunJobAsync(jobId, progress, cancellationToken);
+    }
 
     private async Task<ImportResult> RunJobAsync(long jobId, IProgress<ImportProgress>? progress, CancellationToken cancellationToken)
     {
@@ -117,7 +159,12 @@ public sealed class ImportService
             var all = await _jobs.GetItemsAsync(jobId, null, cancellationToken).ConfigureAwait(false);
             var pending = all.Where(i => i.Status == ImportItemStatus.Pending).ToList();
             var itemByPath = pending.ToDictionary(i => i.SourcePath, StringComparer.Ordinal);
-            var units = ImportPlanner.Plan(pending.Select(i => i.SourcePath));
+            var diag = Diagnostics;
+            IReadOnlyList<ImportUnit> units;
+            using (diag.Measure(ImportPhase.Planning))
+            {
+                units = ImportPlanner.Plan(pending.Select(i => i.SourcePath));
+            }
 
             var counters = new Counters(all);
             var stopwatch = Stopwatch.StartNew();
@@ -133,17 +180,24 @@ public sealed class ImportService
                 counters.Record(ImportItemStatus.Skipped);
             }
 
-            void Report(string? current)
+            var throttle = new ProgressThrottle(TimeSpan.FromMilliseconds(200));
+            void Report(string? current, bool force = false)
             {
                 if (progress is null) return;
+                // Coalesced: at most ~5 reports a second reach the UI, whatever the file rate.
+                if (!force && !throttle.ShouldReport()) return;
                 var processed = counters.Processed;
                 var elapsed = stopwatch.Elapsed;
                 var doneThisRun = processed - counters.ProcessedAtStart;
                 TimeSpan? eta = doneThisRun > 3 ? TimeSpan.FromTicks(elapsed.Ticks / doneThisRun * Math.Max(0, counters.Total - processed)) : null;
-                progress.Report(new ImportProgress(jobId, counters.Total, processed, counters.Imported, counters.Duplicates, counters.Skipped, counters.Failed, current, elapsed, eta));
+                progress.Report(new ImportProgress(jobId, counters.Total, processed, counters.Imported, counters.Duplicates, counters.Skipped, counters.Failed, current, elapsed, eta)
+                {
+                    Phase = processed >= counters.Total ? ImportPhase.Finishing : ImportPhase.CopyAndHash,
+                    BytesProcessed = diag.BytesHashed,
+                });
             }
 
-            Report(null);
+            Report(null, force: true);
             var status = ImportJobStatus.Completed;
             try
             {
@@ -156,6 +210,7 @@ public sealed class ImportService
                     {
                         if (!itemByPath.TryGetValue(path, out var item)) continue;
                         // Persist even if the job is being cancelled, so the item is not redone on resume.
+                        using var _ = diag.Measure(ImportPhase.ItemUpdate);
                         await _jobs.UpdateItemAsync(item.Id, itemStatus, assetId, message, target, CancellationToken.None).ConfigureAwait(false);
                         counters.Record(itemStatus);
                     }
@@ -178,7 +233,8 @@ public sealed class ImportService
 
             await _jobs.RefreshCountersAsync(jobId, CancellationToken.None).ConfigureAwait(false);
             await _jobs.SetJobStatusAsync(jobId, status, _clock.UtcNow, CancellationToken.None).ConfigureAwait(false);
-            Report(null);
+            Report(null, force: true);
+            _logger.LogInformation("Import {JobId} phases: {Phases}", jobId, diag);
             _logger.LogInformation("Import {JobId} finished: {Status}, {Imported} imported, {Dup} duplicates, {Skipped} skipped, {Failed} failed in {Elapsed}",
                 jobId, status, counters.Imported, counters.Duplicates, counters.Skipped, counters.Failed, stopwatch.Elapsed);
             return new ImportResult(jobId, status, counters.Imported, counters.Duplicates, counters.Skipped, counters.Failed, newIds.ToList());
@@ -312,7 +368,9 @@ public sealed class ImportService
                 ThumbnailState = ThumbnailState.Pending,
             };
 
-            var id = await _assets.InsertAsync(new NewAssetRecord(asset, files, keywords), ct).ConfigureAwait(false);
+            long id;
+            using (Diagnostics.Measure(ImportPhase.CatalogInsert))
+            id = await _assets.InsertAsync(new NewAssetRecord(asset, files, keywords), ct).ConfigureAwait(false);
             created.Clear(); // committed: copies now belong to the catalog
             outcomes.Insert(0, new ItemOutcome(unit.Primary, ImportItemStatus.Imported, id, meta.Warnings.Count > 0 ? string.Join("; ", meta.Warnings.Take(3)) : null, primary.Target));
 
@@ -363,8 +421,10 @@ public sealed class ImportService
         }
 
         // Signature check: never trust the extension alone.
+        var diag = Diagnostics;
         var header = new byte[MediaFormats.SniffLength];
         int read;
+        using (diag.Measure(ImportPhase.Signature))
         await using (var s = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
         {
             read = await s.ReadAtLeastAsync(header, header.Length, throwOnEndOfStream: false, ct).ConfigureAwait(false);
@@ -383,14 +443,24 @@ public sealed class ImportService
         // Already catalogued at this exact location?
         if (!managed || insideOriginals)
         {
-            var existing = await _assets.FindFileByStoredPathAsync(storedPathIfInPlace, ct).ConfigureAwait(false);
+            AssetFile? existing;
+            using (diag.Measure(ImportPhase.LookupExisting))
+            {
+                existing = await _assets.FindFileByStoredPathAsync(storedPathIfInPlace, ct).ConfigureAwait(false);
+            }
+
             if (existing is not null)
             {
                 return new PreparedFile(null, null, family, ImportItemStatus.AlreadyInLibrary, "This file is already in the library.", existing.AssetId, null);
             }
         }
 
-        var metadata = role == FileRole.Original ? _metadata.Read(path, family) : null;
+        MediaMetadata? metadata = null;
+        if (role == FileRole.Original)
+        {
+            using (diag.Measure(ImportPhase.Metadata)) metadata = _metadata.Read(path, family);
+        }
+
         string sha;
         string storedPath;
         string? target = null;
@@ -400,7 +470,12 @@ public sealed class ImportService
             Directory.CreateDirectory(folder);
             var final = PathSafety.UniquePath(folder, info.Name);
             var partial = final + PathSafety.PartialSuffix;
-            sha = await FileHashing.CopyWithHashAsync(path, partial, ct).ConfigureAwait(false);
+            using (diag.Measure(ImportPhase.CopyAndHash))
+            {
+                sha = await FileHashing.CopyWithHashAsync(path, partial, ct).ConfigureAwait(false);
+            }
+
+            diag.AddBytes(info.Length);
             created.Add(partial);
             if (!sidecar && !job.ImportDuplicates && await CheckDuplicateAsync(sha, claimedHashes, ct).ConfigureAwait(false) is { IsDuplicate: true } dup)
             {
@@ -430,7 +505,12 @@ public sealed class ImportService
         }
         else
         {
-            sha = await FileHashing.Sha256Async(path, ct).ConfigureAwait(false);
+            using (diag.Measure(ImportPhase.Hash))
+            {
+                sha = await FileHashing.Sha256Async(path, ct).ConfigureAwait(false);
+            }
+
+            diag.AddBytes(info.Length);
             if (!sidecar && !job.ImportDuplicates && await CheckDuplicateAsync(sha, claimedHashes, ct).ConfigureAwait(false) is { IsDuplicate: true } dup)
             {
                 return new PreparedFile(null, null, family, ImportItemStatus.Duplicate, "An identical file is already in the library.", dup.ExistingAssetId, null);
@@ -458,7 +538,12 @@ public sealed class ImportService
     /// <summary>Returns the id of an asset that already owns this content, or null. Also deduplicates within the running job.</summary>
     private async Task<(bool IsDuplicate, long? ExistingAssetId)> CheckDuplicateAsync(string sha, ConcurrentDictionary<string, byte> claimedHashes, CancellationToken ct)
     {
-        var existing = await _assets.FindFilesByHashAsync(sha, ct).ConfigureAwait(false);
+        IReadOnlyList<AssetFile> existing;
+        using (Diagnostics.Measure(ImportPhase.DuplicateLookup))
+        {
+            existing = await _assets.FindFilesByHashAsync(sha, ct).ConfigureAwait(false);
+        }
+
         if (existing.Count > 0) return (true, existing[0].AssetId);
         // Two identical files in the same batch: only the first one wins.
         return claimedHashes.TryAdd(sha, 0) ? (false, null) : (true, null);
@@ -468,6 +553,7 @@ public sealed class ImportService
     {
         try
         {
+            using var _ = Diagnostics.Measure(ImportPhase.Dimensions);
             return _renderer.ProbeSize(path, family) ?? (0, 0);
         }
         catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException)

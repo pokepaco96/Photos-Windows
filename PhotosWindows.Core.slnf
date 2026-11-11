@@ -10,7 +10,8 @@
       "src\\PhotosWindows.MachineLearning\\PhotosWindows.MachineLearning.csproj",
       "tests\\PhotosWindows.Domain.Tests\\PhotosWindows.Domain.Tests.csproj",
       "tests\\PhotosWindows.Imaging.Tests\\PhotosWindows.Imaging.Tests.csproj",
-      "tests\\PhotosWindows.Integration.Tests\\PhotosWindows.Integration.Tests.csproj"
+      "tests\\PhotosWindows.Integration.Tests\\PhotosWindows.Integration.Tests.csproj",
+      "tools\\import-bench\\ImportBench.csproj"
     ]
   }
 }

@@ -29,6 +29,7 @@ public sealed class ThumbnailService
     private readonly IVideoFrameExtractor? _videoFrames;
     private readonly ILogger<ThumbnailService> _logger;
     private readonly SemaphoreSlim _workers;
+    private readonly int _parallelism;
     private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inFlight = new(StringComparer.Ordinal);
 
     public ThumbnailService(ILibraryContext context, IAssetRepository assets, IEditRepository edits, IImageRenderer renderer, IPerceptualHasher hasher,
@@ -41,7 +42,8 @@ public sealed class ThumbnailService
         _hasher = hasher;
         _videoFrames = videoFrames.FirstOrDefault();
         _logger = logger;
-        _workers = new SemaphoreSlim(Math.Clamp(settings.Load().MaxBackgroundWorkers, 1, 8));
+        _parallelism = Math.Clamp(settings.Load().MaxBackgroundWorkers, 1, 8);
+        _workers = new SemaphoreSlim(_parallelism);
     }
 
     /// <summary>Raised when a thumbnail becomes available (worker thread).</summary>
@@ -159,24 +161,15 @@ public sealed class ThumbnailService
     public async Task<int> ProcessPendingAsync(int batchSize, CancellationToken cancellationToken)
     {
         if (_context.Current is null) return 0;
-        var processed = 0;
+        // The batch runs on all background workers (the semaphore still bounds decoding, shared with on-demand
+        // requests from the grid); previously each item waited for the previous one, using a single core.
+        var options = new ParallelOptions { MaxDegreeOfParallelism = _parallelism, CancellationToken = cancellationToken };
         var pending = await _assets.GetIdsWithThumbnailStateAsync(ThumbnailState.Pending, batchSize, cancellationToken).ConfigureAwait(false);
-        foreach (var id in pending)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await GetOrCreateAsync(id, ThumbnailSize.Small, cancellationToken).ConfigureAwait(false);
-            processed++;
-        }
+        await Parallel.ForEachAsync(pending, options, async (id, ct) => await GetOrCreateAsync(id, ThumbnailSize.Small, ct).ConfigureAwait(false)).ConfigureAwait(false);
 
         var unhashed = await _assets.GetPhotosWithoutPerceptualHashAsync(batchSize, cancellationToken).ConfigureAwait(false);
-        foreach (var id in unhashed)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await ComputePerceptualHashAsync(id, cancellationToken).ConfigureAwait(false);
-            processed++;
-        }
-
-        return processed;
+        await Parallel.ForEachAsync(unhashed, options, async (id, ct) => await ComputePerceptualHashAsync(id, ct).ConfigureAwait(false)).ConfigureAwait(false);
+        return pending.Count + unhashed.Count;
     }
 
     private async Task ComputePerceptualHashAsync(long assetId, CancellationToken cancellationToken)
@@ -186,6 +179,15 @@ public sealed class ThumbnailService
         if (file is null) return;
         var path = library.Resolve(file);
         var family = MediaFormats.FromExtension(path)?.Family ?? FormatFamily.Unknown;
+
+        // The hash only needs a 64 px image: decode the unedited grid thumbnail (already oriented, 360 px) instead of
+        // decoding the full original a second time. Falls back to the original when there is no such thumbnail.
+        var asset = await _assets.GetAsync(assetId, cancellationToken).ConfigureAwait(false);
+        if (asset is { HasEdits: false } && File.Exists(PathFor(asset.Uid, ThumbnailSize.Small, 0)))
+        {
+            path = PathFor(asset.Uid, ThumbnailSize.Small, 0);
+            family = FormatFamily.Jpeg;
+        }
         if (!File.Exists(path) || !_renderer.CanDecode(family))
         {
             // Not decodable here: mark it so the background pass does not retry it forever.
