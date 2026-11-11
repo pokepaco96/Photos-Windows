@@ -48,6 +48,8 @@ public sealed class NavigationService
 
     public void ToDevices() => Navigate(typeof(DevicesPage), null);
 
+    public void ToBackup() => Navigate(typeof(BackupPage), null);
+
     public void ToSlideshow(SlideshowNavigation target) => Navigate(typeof(SlideshowPage), target, new DrillInNavigationTransitionInfo());
 
     public void ToDuplicates() => Navigate(typeof(DuplicatesPage), null);

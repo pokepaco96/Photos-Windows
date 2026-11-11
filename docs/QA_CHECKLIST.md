@@ -42,3 +42,6 @@ Preparación: una carpeta `QA-media` con JPEG con GPS, un HEIC de iPhone + su `.
 | 32 | iPhone: desconectar durante la copia; reimportar duplicados | Lo copiado queda verificado; lo demás «no disponible»; duplicados reconocidos | ◐ Integración con dispositivo simulado | ☐ |
 | 33 | iPhone: importar y eliminar | Hoy debe aparecer desactivado con su explicación. Solo se activará tras verificar el borrado con este modelo | ◐ S72 (desactivado), S73 (simulado con borrado) | ☐ |
 | 34 | Explorar o importar no cambia nada en el iPhone (comparar número y hashes antes/después) | Idéntico | ◐ S71, S72 (simulado) | ☐ |
+| 35 | Copia de originales a un disco externo real (NTFS o exFAT) con una biblioteca real | Árbol AÑO/MES; recuento y SHA-256 iguales al manifiesto; «Verificar» correcto; originales intactos | ◐ S60–S64 con datos sintéticos en el disco del runner | ☐ |
+| 36 | Copia de originales: desconectar el disco a mitad y reanudar (también con otra letra de unidad) | Queda `.partial`; reanudar termina sin duplicar y verifica lo ya copiado | ◐ Integración y S62 (simulado) | ☐ |
+| 37 | Copia de originales a una memoria FAT32 con un vídeo de más de 4 GB | Se avisa antes de empezar; no se da por completa | ◐ Integración (límite simulado) | ☐ |

@@ -61,8 +61,17 @@ public interface IMemoryRepository
     Task RemoveExclusionAsync(long id, CancellationToken cancellationToken);
 }
 
+/// <summary>One physical file of the catalog with what the originals backup needs from its asset (one query, no N+1).</summary>
+public sealed record OriginalFileRow(AssetFile File, Guid AssetUid, MediaType MediaType, DateTime CaptureLocal, DateSource DateSource, string AssetFileName);
+
 public interface IAssetRepository
 {
+    /// <summary>
+    /// Every registered file of every asset still in the catalog, hidden and recently deleted ones included,
+    /// ordered by asset and role. Used by the originals backup.
+    /// </summary>
+    Task<IReadOnlyList<OriginalFileRow>> GetAllOriginalFilesAsync(CancellationToken cancellationToken);
+
     Task<long> InsertAsync(NewAssetRecord record, CancellationToken cancellationToken);
     Task<Asset?> GetAsync(long id, CancellationToken cancellationToken);
     Task<IReadOnlyList<Asset>> GetManyAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken);

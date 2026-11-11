@@ -751,4 +751,61 @@
   <data name="Devices_Kept_converted" xml:space="preserve"><value>conservado en el dispositivo (llegó convertido)</value></data>
   <data name="Devices_Kept_changedondevice" xml:space="preserve"><value>conservado en el dispositivo (cambió después de listarlo)</value></data>
   <data name="Devices_Kept_deletefailed" xml:space="preserve"><value>conservado en el dispositivo (el dispositivo rechazó eliminarlo)</value></data>
+  <data name="Nav_Backup.Content" xml:space="preserve"><value>Copia de seguridad</value></data>
+  <data name="BackupPage_Title.Text" xml:space="preserve"><value>Copia de seguridad</value></data>
+  <data name="Backup_OriginalsHeader.Text" xml:space="preserve"><value>Copia de seguridad de fotos y vídeos (originales)</value></data>
+  <data name="Backup_OriginalsHelp.Text" xml:space="preserve"><value>Copia el archivo original de todos los elementos de la biblioteca, incluidos los añadidos sin mover, a la carpeta que elijas. Los archivos se copian tal cual (sin comprimir ni convertir), ordenados en carpetas AÑO/MES, y cada copia se verifica. El resultado es una carpeta normal que puedes abrir desde el Explorador. No contiene álbumes ni ediciones: para eso usa la copia de biblioteca de abajo.</value></data>
+  <data name="Backup_DestinationLabel.Text" xml:space="preserve"><value>Destino</value></data>
+  <data name="Backup_ChooseDestination.Content" xml:space="preserve"><value>Elegir destino…</value></data>
+  <data name="Backup_AcceptIncomplete.Content" xml:space="preserve"><value>Copiar solo los archivos disponibles. El resultado quedará marcado como incompleto.</value></data>
+  <data name="Backup_Start.Content" xml:space="preserve"><value>Crear copia de seguridad de originales</value></data>
+  <data name="Backup_Resume.Content" xml:space="preserve"><value>Reanudar copia sin terminar</value></data>
+  <data name="Backup_Cancel.Content" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Backup_VerifyExisting.Content" xml:space="preserve"><value>Verificar una copia existente…</value></data>
+  <data name="Backup_ProgressBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Progreso de la copia</value></data>
+  <data name="Backup_OpenFolder.Content" xml:space="preserve"><value>Abrir carpeta de la copia</value></data>
+  <data name="Backup_ProblemsHeader.Text" xml:space="preserve"><value>Archivos con incidencias</value></data>
+  <data name="Backup_Problems.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Archivos con incidencias</value></data>
+  <data name="Backup_HistoryHeader.Text" xml:space="preserve"><value>Últimas copias desde este equipo</value></data>
+  <data name="Backup_History.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Últimas copias</value></data>
+  <data name="Backup_LibraryHeader.Text" xml:space="preserve"><value>Copia de biblioteca de Photos Windows (restaurable)</value></data>
+  <data name="Backup_LibraryHelp.Text" xml:space="preserve"><value>Guarda el catálogo (álbumes, palabras clave, ediciones, favoritos) y, si quieres, los originales copiados dentro de la biblioteca. Es lo que se restaura para recuperar la biblioteca entera. No incluye los archivos añadidos sin mover: para esos usa la copia de originales de arriba.</value></data>
+  <data name="Backup_OpenLibraryBackup.Content" xml:space="preserve"><value>Abrir copia y restauración de biblioteca en Ajustes</value></data>
+  <data name="Backup_Analysis" xml:space="preserve"><value>{0} fotos y {1} vídeos · {2} archivos · {3} por copiar.</value></data>
+  <data name="Backup_AnalysisUndated" xml:space="preserve"><value>{0} elementos sin fecha fiable irán a «Sin fecha/00».</value></data>
+  <data name="Backup_NoDestination" xml:space="preserve"><value>Elige dónde guardar la copia: un disco externo, una memoria USB u otra carpeta.</value></data>
+  <data name="Backup_DestinationMissing" xml:space="preserve"><value>El destino no está disponible. Conecta la unidad o elige otra carpeta.</value></data>
+  <data name="Backup_Space" xml:space="preserve"><value>{0} libres · {1} necesarios.</value></data>
+  <data name="Backup_SpaceUnknown" xml:space="preserve"><value>No se pudo determinar el espacio libre.</value></data>
+  <data name="Backup_Unavailable" xml:space="preserve"><value>{0} archivos originales no están disponibles ahora (por ejemplo, en una unidad desconectada).</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>{0} archivos son demasiado grandes para el sistema de archivos del destino (FAT32 no admite archivos de más de 4 GB); usa exFAT o NTFS.</value></data>
+  <data name="Backup_BadDestination" xml:space="preserve"><value>El destino no puede estar dentro de la biblioteca ni dentro de una carpeta que contiene originales.</value></data>
+  <data name="Backup_NotEnoughSpace" xml:space="preserve"><value>No hay espacio libre suficiente en el destino.</value></data>
+  <data name="Backup_NothingToCopy" xml:space="preserve"><value>La biblioteca no tiene archivos que copiar.</value></data>
+  <data name="Backup_Preparing" xml:space="preserve"><value>Preparando…</value></data>
+  <data name="Backup_Verifying" xml:space="preserve"><value>Verificando…</value></data>
+  <data name="Backup_Progress" xml:space="preserve"><value>{0} de {1} archivos · {2} de {3} · unos {4}/s</value></data>
+  <data name="Backup_ResultComplete" xml:space="preserve"><value>Copia completada y verificada</value></data>
+  <data name="Backup_ResultPartial" xml:space="preserve"><value>Copia incompleta (como elegiste): se copiaron y verificaron los archivos disponibles</value></data>
+  <data name="Backup_ResultCancelled" xml:space="preserve"><value>Copia cancelada. Se puede reanudar.</value></data>
+  <data name="Backup_ResultIncomplete" xml:space="preserve"><value>La copia NO está completa. Se puede reanudar.</value></data>
+  <data name="Backup_ResultBlockedTitle" xml:space="preserve"><value>No se pudo iniciar la copia</value></data>
+  <data name="Backup_ResultFailedTitle" xml:space="preserve"><value>La copia falló</value></data>
+  <data name="Backup_ResultCounts" xml:space="preserve"><value>{0} archivos verificados · {1} · {2} archivos con incidencias · {3}</value></data>
+  <data name="Backup_ErrorSpace" xml:space="preserve"><value>El destino se quedó sin espacio.</value></data>
+  <data name="Backup_ErrorDestination" xml:space="preserve"><value>El destino ya no está disponible.</value></data>
+  <data name="Backup_Issue_SourceMissing" xml:space="preserve"><value>no disponible</value></data>
+  <data name="Backup_Issue_ChangedSinceImport" xml:space="preserve"><value>ha cambiado desde que se importó</value></data>
+  <data name="Backup_Issue_ChangedDuringCopy" xml:space="preserve"><value>cambió mientras se copiaba</value></data>
+  <data name="Backup_Issue_TooLargeForDestination" xml:space="preserve"><value>demasiado grande para el destino</value></data>
+  <data name="Backup_Issue_CopyFailed" xml:space="preserve"><value>no se pudo copiar</value></data>
+  <data name="Backup_VerifyOk" xml:space="preserve"><value>La copia está íntegra</value></data>
+  <data name="Backup_VerifyBad" xml:space="preserve"><value>La copia tiene problemas</value></data>
+  <data name="Backup_VerifyNotABackup" xml:space="preserve"><value>Esta carpeta no es una copia de originales (falta backup-manifest.json).</value></data>
+  <data name="Backup_VerifyCounts" xml:space="preserve"><value>{0} de {1} archivos comprobados · {2} problemas.</value></data>
+  <data name="Backup_HistoryLine" xml:space="preserve"><value>{0} · {1} · {2} archivos · {3} · {4}</value></data>
+  <data name="Backup_Status_Complete" xml:space="preserve"><value>completa</value></data>
+  <data name="Backup_Status_PartialAccepted" xml:space="preserve"><value>incompleta (aceptada)</value></data>
+  <data name="Backup_Status_Incomplete" xml:space="preserve"><value>sin completar</value></data>
+  <data name="Backup_Status_Cancelled" xml:space="preserve"><value>cancelada</value></data>
 </root>

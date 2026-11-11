@@ -82,6 +82,7 @@ public sealed partial class MainWindow : Window
             case "Places": _navigation.ToPlaces(); break;
             case "Memories": _navigation.ToMemories(); break;
             case "Devices": _navigation.ToDevices(); break;
+            case "Backup": _navigation.ToBackup(); break;
             case "Duplicates": _navigation.ToDuplicates(); break;
             case "Imports": _navigation.ToImports(); break;
             case "Import": ShowImportMenu(args.InvokedItemContainer); break;
@@ -110,6 +111,7 @@ public sealed partial class MainWindow : Window
             : page == typeof(PlacesPage) ? "Places"
             : page == typeof(MemoriesPage) || page == typeof(SlideshowPage) ? "Memories"
             : page == typeof(DevicesPage) ? "Devices"
+            : page == typeof(BackupPage) ? "Backup"
             : page == typeof(DuplicatesPage) ? "Duplicates"
             : page == typeof(ImportsPage) ? "Imports"
             // Use the navigation parameter: the page's own state is not set yet when Navigated fires.

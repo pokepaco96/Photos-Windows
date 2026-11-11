@@ -27,9 +27,16 @@ public sealed record AppSettings
     public int MaxBackgroundWorkers { get; init; } = Math.Clamp(Environment.ProcessorCount / 2, 1, 4);
     /// <summary>Memories choose favourites and edited photos first for covers and samples.</summary>
     public bool MemoriesPreferFavorites { get; init; } = true;
+    /// <summary>Folder last chosen for the originals backup (a local path; kept only on this PC).</summary>
+    public string? OriginalsBackupDestination { get; init; }
+    /// <summary>Last originals backups run from this PC, newest first (at most 10). Nothing is uploaded.</summary>
+    public IReadOnlyList<OriginalsBackupHistoryEntry> OriginalsBackupHistory { get; init; } = [];
     /// <summary>Last Places filters and view mode, restored when the page opens again.</summary>
     public PlacesPreferences Places { get; init; } = new();
 }
+
+/// <summary>One line of the local history of originals backups.</summary>
+public sealed record OriginalsBackupHistoryEntry(DateTime Utc, string Folder, int Files, long Bytes, string Status);
 
 public enum PlacesViewMode
 {

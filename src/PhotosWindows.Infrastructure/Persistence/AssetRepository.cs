@@ -191,6 +191,19 @@ public sealed class AssetRepository : IAssetRepository
             await RefreshFtsAsync(c, t, ids).ConfigureAwait(false);
         }, cancellationToken);
 
+    public Task<IReadOnlyList<OriginalFileRow>> GetAllOriginalFilesAsync(CancellationToken cancellationToken) =>
+        _db.ReadAsync<IReadOnlyList<OriginalFileRow>>(async c =>
+        {
+            var rows = await c.QueryAsync<FileRow, OriginalAssetRow, OriginalFileRow>(new CommandDefinition("""
+                SELECT f.*, a.uid, a.media_type, a.capture_local, a.date_source, a.file_name
+                FROM asset_files f JOIN assets a ON a.id = f.asset_id
+                ORDER BY f.asset_id, f.role, f.id
+                """, cancellationToken: cancellationToken),
+                (f, a) => new OriginalFileRow(f.ToFile(), Guid.Parse(a.Uid), (MediaType)a.MediaType, DbFormat.ParseLocal(a.CaptureLocal), (DateSource)a.DateSource, a.FileName),
+                splitOn: "uid").ConfigureAwait(false);
+            return rows.ToList();
+        }, cancellationToken);
+
     public Task<AssetFile?> FindFileByStoredPathAsync(string storedPath, CancellationToken cancellationToken) =>
         _db.ReadAsync(async c =>
             (await c.QuerySingleOrDefaultAsync<FileRow>("SELECT * FROM asset_files WHERE stored_path_key = @key", new { key = DbFormat.PathKey(storedPath) }).ConfigureAwait(false))?.ToFile(),
@@ -503,6 +516,15 @@ public sealed class AssetRepository : IAssetRepository
                 PerceptualHash = Phash is { } h ? unchecked((ulong)h) : null,
             };
         }
+    }
+
+    private sealed class OriginalAssetRow
+    {
+        public string Uid { get; set; } = "";
+        public long MediaType { get; set; }
+        public string CaptureLocal { get; set; } = "";
+        public long DateSource { get; set; }
+        public string FileName { get; set; } = "";
     }
 
     internal sealed class FileRow

@@ -53,6 +53,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ExportService>();
         services.AddSingleton<DuplicateService>();
         services.AddSingleton<BackupService>();
+        services.TryAddSingleton<PhotosWindows.Application.Backup.IVolumeInspector, PhotosWindows.Application.Backup.SystemVolumeInspector>();
+        services.AddSingleton<PhotosWindows.Application.Backup.OriginalsBackupService>();
         services.AddSingleton<LibraryMaintenanceService>();
         services.AddSingleton<PeopleService>();
         services.TryAddSingleton<PhotosWindows.Application.Devices.IPortableMediaDeviceProvider, PhotosWindows.Application.Devices.NoPortableDeviceProvider>();

@@ -415,6 +415,34 @@ public sealed class AppSession : IDisposable
         throw new InvalidOperationException($"PhotosWindows crashed or exited unexpectedly (exit code {code}).");
     }
 
+    /// <summary>
+    /// Logs the managed stack of every thread of the running app (ClrMD snapshot; the app is not stopped for long).
+    /// Used when a step fails, so a hang shows where the UI thread is stuck.
+    /// </summary>
+    public void LogManagedStacks()
+    {
+        try
+        {
+            if (App.HasExited) return;
+            using var target = Microsoft.Diagnostics.Runtime.DataTarget.CreateSnapshotAndAttach(App.ProcessId);
+            using var runtime = target.ClrVersions[0].CreateRuntime();
+            var sb = new StringBuilder("Managed stacks of the app:").AppendLine();
+            foreach (var thread in runtime.Threads.Where(t => t.IsAlive))
+            {
+                var frames = thread.EnumerateStackTrace().Take(60).Select(f => f.ToString()).Where(f => !string.IsNullOrWhiteSpace(f)).ToList();
+                if (frames.Count == 0) continue;
+                sb.AppendLine($"--- thread {thread.ManagedThreadId} (OS {thread.OSThreadId:X})");
+                foreach (var f in frames) sb.Append("    ").AppendLine(f);
+            }
+
+            _evidence.Log(sb.ToString());
+        }
+        catch (Exception ex)
+        {
+            _evidence.Log("managed stacks unavailable: " + ex.GetType().Name + ": " + ex.Message);
+        }
+    }
+
     /// <summary>.NET Runtime, Application Error and WER entries since <paramref name="since"/>: the cause of a native crash.</summary>
     private static string ApplicationEventLog(DateTime since)
     {

@@ -15,6 +15,7 @@ Refleja lo **terminado** (✅), en curso (🔄) y pendiente (⏳). El detalle co
 
 ## En curso
 - 🔄 **Dispositivos por USB (iPhone)**: explorar e importar ([ADR-0013](decisions/0013-portable-devices-import.md)). Borrar del teléfono desactivado hasta probarlo con hardware real.
+- 🔄 **Copia de originales** en carpetas AÑO/MES, verificada y reanudable ([ADR-0014](decisions/0014-originals-backup.md)).
 
 ## Siguiente
 - ⏳ QA en Windows 11 real: Narrador, DPI 150/200 %, contraste alto, HEIC/AVIF/TIFF/RAW y vídeo reales, disco externo, importación interrumpida, copia y restauración reales.
