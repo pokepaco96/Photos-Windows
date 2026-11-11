@@ -34,3 +34,6 @@ Preparación: una carpeta `QA-media` con JPEG con GPS, un HEIC de iPhone + su `.
 | 24 | Pase de diapositivas con teclado y Narrador; vídeo dentro de un recuerdo | Espacio, flechas y Esc funcionan; los botones se anuncian; el vídeo se muestra como imagen fija | ◐ S52 (botones y teclado, sin Narrador) | ☐ |
 | 25 | Ocultar y excluir recuerdos, cerrar y abrir la app | Siguen ocultos; restaurar los devuelve; ninguna foto borrada | ✅ S54, S55 | ☐ |
 | 26 | Biblioteca grande real (10k/50k/100k) en Windows 11 | Importación, miniaturas, desplazamiento, búsqueda, visor, Lugares y Recuerdos fluidos; anotar RAM, CPU y tiempos | ☐ No medido | ☐ |
+| 35 | Copia de originales a un disco externo real (NTFS o exFAT) con una biblioteca real | Árbol AÑO/MES; recuento y SHA-256 iguales al manifiesto; «Verificar» correcto; originales intactos | ◐ S60–S64 con datos sintéticos en el disco del runner | ☐ |
+| 36 | Copia de originales: desconectar el disco a mitad y reanudar (también con otra letra de unidad) | Queda `.partial`; reanudar termina sin duplicar y verifica lo ya copiado | ◐ Integración y S62 (simulado) | ☐ |
+| 37 | Copia de originales a una memoria FAT32 con un vídeo de más de 4 GB | Se avisa antes de empezar; no se da por completa | ◐ Integración (límite simulado) | ☐ |
