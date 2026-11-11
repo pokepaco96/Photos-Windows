@@ -1,6 +1,6 @@
 # Copias de seguridad y restauración
 
-> Una copia del **catálogo** no es una copia de tus **fotos**. Si usas «Añadir sin mover», tus originales siguen en sus carpetas: haz también copia de esas carpetas con tu herramienta habitual (Historial de archivos, disco externo…).
+> Una copia del **catálogo** no es una copia de tus **fotos**. Para copiar los archivos originales de toda la biblioteca, incluidos los «añadidos sin mover», usa la **copia de originales** (página «Copia de seguridad»).
 
 ## Dos copias distintas
 | | Copia de originales (página «Copia de seguridad») | Copia de biblioteca (Ajustes) |
