@@ -32,6 +32,7 @@
                     <TextBlock AutomationProperties.AutomationId="Viewer_FileName" Text="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}" Style="{StaticResource BodyStrongTextBlockStyle}" />
                     <TextBlock AutomationProperties.AutomationId="Viewer_Position" Text="{x:Bind ViewModel.Position, Mode=OneWay}" Opacity="0.6" />
                     <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="16" Height="16" />
+                    <TextBlock AutomationProperties.AutomationId="Viewer_LoadingMessage" Text="{x:Bind ViewModel.LoadingMessage, Mode=OneWay}" Opacity="0.7" VerticalAlignment="Center" />
                 </StackPanel>
             </CommandBar.Content>
             <AppBarButton x:Uid="Viewer_Previous" AutomationProperties.AutomationId="Viewer_Previous" Label="Previous" Icon="Back" Command="{x:Bind ViewModel.PreviousCommand}" IsEnabled="{x:Bind ViewModel.CanGoPrevious, Mode=OneWay}" ToolTipService.ToolTip="Previous (Left)" />
@@ -66,7 +67,8 @@
                           Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsVideo), Mode=OneWay}"
                           DoubleTapped="OnImageDoubleTapped">
                 <Image x:Name="Photo" AutomationProperties.AutomationId="Viewer_Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" ImageOpened="OnPhotoOpened" RenderTransformOrigin="0.5,0.5"
-                       AutomationProperties.Name="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}">
+                       AutomationProperties.Name="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}"
+                       AutomationProperties.HelpText="{x:Bind ViewModel.LoadState, Mode=OneWay}">
                     <Image.RenderTransform>
                         <RotateTransform Angle="{x:Bind ViewModel.RotationAngle, Mode=OneWay}" />
                     </Image.RenderTransform>

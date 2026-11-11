@@ -90,7 +90,11 @@ public sealed partial class ViewerPage : Page
 
     private void OnStageSizeChanged(object sender, SizeChangedEventArgs e) => FitImage();
 
-    private void OnPhotoOpened(object sender, RoutedEventArgs e) => FitImage();
+    private void OnPhotoOpened(object sender, RoutedEventArgs e)
+    {
+        FitImage();
+        ViewModel.OnImageOpened();
+    }
 
     /// <summary>
     /// At zoom 1 the photo fits the stage, centred. The Image gets the photo's fitted size (not the whole stage):

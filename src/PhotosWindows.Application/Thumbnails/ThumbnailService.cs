@@ -6,6 +6,16 @@ using PhotosWindows.Domain;
 
 namespace PhotosWindows.Application.Thumbnails;
 
+/// <summary>Who is waiting for a thumbnail. Interactive work never queues behind background work.</summary>
+public enum ThumbnailPriority
+{
+    /// <summary>The viewer or the visible grid: the user is looking at it now.</summary>
+    Interactive,
+
+    /// <summary>Filling the cache for the whole library after an import.</summary>
+    Background,
+}
+
 public enum ThumbnailSize
 {
     /// <summary>Grid tiles (long side 360 px: crisp at 180 logical px on 200% DPI).</summary>
@@ -28,9 +38,18 @@ public sealed class ThumbnailService
     private readonly IPerceptualHasher _hasher;
     private readonly IVideoFrameExtractor? _videoFrames;
     private readonly ILogger<ThumbnailService> _logger;
+    // Two lanes with their own capacity: background passes (whole-library thumbnails and perceptual hashes) can occupy
+    // every background slot, or even be stuck in a native decoder, without delaying the photo the user opens.
     private readonly SemaphoreSlim _workers;
+    private readonly SemaphoreSlim _interactive;
     private readonly int _parallelism;
-    private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inFlight = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<(string Path, ThumbnailPriority Lane), Lazy<Task<string?>>> _inFlight = new();
+
+    /// <summary>
+    /// Longest a single thumbnail or hash may hold a worker slot. A native decoder that never returns cannot be
+    /// aborted, but its slot is released and the item is marked failed instead of blocking the lane for ever.
+    /// </summary>
+    internal TimeSpan GenerationTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
     public ThumbnailService(ILibraryContext context, IAssetRepository assets, IEditRepository edits, IImageRenderer renderer, IPerceptualHasher hasher,
         IEnumerable<IVideoFrameExtractor> videoFrames, ISettingsStore settings, ILogger<ThumbnailService> logger)
@@ -44,6 +63,7 @@ public sealed class ThumbnailService
         _logger = logger;
         _parallelism = Math.Clamp(settings.Load().MaxBackgroundWorkers, 1, 8);
         _workers = new SemaphoreSlim(_parallelism);
+        _interactive = new SemaphoreSlim(Math.Max(2, _parallelism));
     }
 
     /// <summary>Raised when a thumbnail becomes available (worker thread).</summary>
@@ -65,11 +85,27 @@ public sealed class ThumbnailService
         return File.Exists(path) ? path : null;
     }
 
+    /// <summary>Returns the cached thumbnail of the asset's current version if it exists, without generating anything.</summary>
+    public async Task<string?> TryGetCachedAsync(long assetId, ThumbnailSize size, CancellationToken cancellationToken)
+    {
+        var asset = await _assets.GetAsync(assetId, cancellationToken).ConfigureAwait(false);
+        if (asset is null) return null;
+        var version = asset.HasEdits ? (await _edits.GetAsync(assetId, cancellationToken).ConfigureAwait(false))?.Version ?? 0 : 0;
+        var path = PathFor(asset.Uid, size, version);
+        return File.Exists(path) && new FileInfo(path).Length > 0 ? path : null;
+    }
+
     /// <summary>Returns the thumbnail path, generating it if needed. Null when the asset cannot be rendered.</summary>
     public Task<string?> GetOrCreateAsync(long assetId, ThumbnailSize size, CancellationToken cancellationToken) =>
-        GetOrCreateCoreAsync(assetId, size, cancellationToken);
+        GetOrCreateCoreAsync(assetId, size, ThumbnailPriority.Interactive, cancellationToken);
 
-    private async Task<string?> GetOrCreateCoreAsync(long assetId, ThumbnailSize size, CancellationToken cancellationToken)
+    public Task<string?> GetOrCreateAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken) =>
+        GetOrCreateCoreAsync(assetId, size, priority, cancellationToken);
+
+    /// <summary>Slots currently taken in each lane (diagnostics).</summary>
+    public (int Interactive, int Background) BusyWorkers => (Math.Max(2, _parallelism) - _interactive.CurrentCount, _parallelism - _workers.CurrentCount);
+
+    private async Task<string?> GetOrCreateCoreAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken)
     {
         var asset = await _assets.GetAsync(assetId, cancellationToken).ConfigureAwait(false);
         if (asset is null) return null;
@@ -78,21 +114,42 @@ public sealed class ThumbnailService
         var path = PathFor(asset.Uid, size, version);
         if (File.Exists(path)) return path;
 
-        var lazy = _inFlight.GetOrAdd(path, _ => new Lazy<Task<string?>>(() => GenerateAsync(asset, recipe?.Recipe ?? EditRecipe.Identity, size, path)));
+        // Identical requests in the same lane share one generation. The entry is removed as soon as the generation ends
+        // (success, failure or timeout), whether or not anyone is still waiting for it.
+        var key = (path, priority);
+        var lazy = _inFlight.GetOrAdd(key, k => new Lazy<Task<string?>>(() =>
+        {
+            var task = GenerateAsync(asset, recipe?.Recipe ?? EditRecipe.Identity, size, path, priority);
+            _ = task.ContinueWith(_ => _inFlight.TryRemove(k, out var _), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            return task;
+        }));
+
+        // A caller that stops waiting (navigated away) does not cancel a generation others may share.
+        return await lazy.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<string?> GenerateAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, ThumbnailPriority priority)
+    {
+        var lane = priority == ThumbnailPriority.Interactive ? _interactive : _workers;
+        await lane.WaitAsync().ConfigureAwait(false);
         try
         {
-            return await lazy.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return await GenerateInSlotAsync(asset, recipe, size, path).WaitAsync(GenerationTimeout).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogWarning("Thumbnail for asset {Id} took longer than {Timeout} s; marked as failed", asset.Id, GenerationTimeout.TotalSeconds);
+            if (size == ThumbnailSize.Small) await _assets.SetThumbnailStateAsync(asset.Id, ThumbnailState.Failed, CancellationToken.None).ConfigureAwait(false);
+            return null;
         }
         finally
         {
-            if (lazy.IsValueCreated && lazy.Value.IsCompleted) _inFlight.TryRemove(path, out _);
+            lane.Release();
         }
     }
 
-    private async Task<string?> GenerateAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path)
+    private async Task<string?> GenerateInSlotAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path)
     {
-        // Generation is not tied to the caller's token: other callers may share the result.
-        await _workers.WaitAsync().ConfigureAwait(false);
         try
         {
             var library = _context.RequireCurrent();
@@ -130,7 +187,8 @@ public sealed class ThumbnailService
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            var temp = path + ".tmp";
+            // Unique temporary name: the interactive and background lanes may write the same thumbnail at once.
+            var temp = $"{path}.{Guid.NewGuid():N}.tmp";
             await File.WriteAllBytesAsync(temp, rendered.Encoded).ConfigureAwait(false);
             File.Move(temp, path, overwrite: true);
             DeleteStaleVersions(path, asset.Uid, size);
@@ -142,15 +200,12 @@ public sealed class ThumbnailService
             ThumbnailReady?.Invoke(this, asset.Id);
             return path;
         }
-        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException
+                                       or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
         {
             _logger.LogInformation(ex, "Thumbnail could not be created for asset {Id}", asset.Id);
             if (size == ThumbnailSize.Small) await _assets.SetThumbnailStateAsync(asset.Id, ThumbnailState.Failed, CancellationToken.None).ConfigureAwait(false);
             return null;
-        }
-        finally
-        {
-            _workers.Release();
         }
     }
 
@@ -165,7 +220,7 @@ public sealed class ThumbnailService
         // requests from the grid); previously each item waited for the previous one, using a single core.
         var options = new ParallelOptions { MaxDegreeOfParallelism = _parallelism, CancellationToken = cancellationToken };
         var pending = await _assets.GetIdsWithThumbnailStateAsync(ThumbnailState.Pending, batchSize, cancellationToken).ConfigureAwait(false);
-        await Parallel.ForEachAsync(pending, options, async (id, ct) => await GetOrCreateAsync(id, ThumbnailSize.Small, ct).ConfigureAwait(false)).ConfigureAwait(false);
+        await Parallel.ForEachAsync(pending, options, async (id, ct) => await GetOrCreateAsync(id, ThumbnailSize.Small, ThumbnailPriority.Background, ct).ConfigureAwait(false)).ConfigureAwait(false);
 
         var unhashed = await _assets.GetPhotosWithoutPerceptualHashAsync(batchSize, cancellationToken).ConfigureAwait(false);
         await Parallel.ForEachAsync(unhashed, options, async (id, ct) => await ComputePerceptualHashAsync(id, ct).ConfigureAwait(false)).ConfigureAwait(false);
@@ -198,10 +253,11 @@ public sealed class ThumbnailService
         await _workers.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var raster = await _renderer.DecodeOrientedAsync(path, family, 64, cancellationToken).ConfigureAwait(false);
+            var raster = await _renderer.DecodeOrientedAsync(path, family, 64, cancellationToken).WaitAsync(GenerationTimeout, cancellationToken).ConfigureAwait(false);
             await _assets.SetPerceptualHashAsync(assetId, _hasher.Compute(raster), cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException or TimeoutException
+                                       or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
         {
             _logger.LogDebug(ex, "Perceptual hash skipped for asset {Id}", assetId);
             await _assets.SetThumbnailStateAsync(assetId, ThumbnailState.Failed, cancellationToken).ConfigureAwait(false);

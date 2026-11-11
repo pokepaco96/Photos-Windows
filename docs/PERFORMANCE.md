@@ -113,6 +113,19 @@ El rendimiento escala hasta el número de núcleos y después se estanca. No se 
 
 **Siguiente optimización medida, no hecha:** agrupar en lotes las escrituras en SQLite (inserción de recursos y estado de elementos). Con archivos pequeños suponen casi la mitad del tiempo.
 
+## Visor tras una importación grande (Linux medido; Windows 11 pendiente)
+
+Banco `tools/import-bench viewer` sobre 8.685 JPEG sintéticos (9 GB) añadidos sin mover, con 2 workers. La pasada de fondo de miniaturas y hashes lleva 10 s en marcha. Se abren 100 fotos: la 1, la 529, la 8.685 y 97 al azar. Se mide el tiempo hasta tener la vista previa de 2048 px. Informes en [`artifacts/perf/2026-11-11-viewer-linux`](../artifacts/perf/2026-11-11-viewer-linux/).
+
+| | p50 | p95 | máx. | Sin terminar |
+|---|---|---|---|---|
+| Antes (`aa2cfac`) | 314 ms | 373 ms | 396 ms | 0 |
+| Después | 303 ms | 345 ms | 367 ms | 0 |
+
+Con decodificadores que terminan, la cola de fondo apenas retrasa al visor: el semáforo atiende por turnos. El negro infinito aparece cuando un trabajo de fondo **no termina**, por ejemplo la extracción nativa de fotogramas de un vídeo. Ese caso lo reproduce `ViewerPriorityTests`: antes la vista previa no llegaba nunca; ahora llega en menos de 1 s. Ver [ADR-0015](decisions/0015-thumbnail-lanes.md).
+
+Además, el visor muestra primero la miniatura pequeña de la caché, sin generar nada, y carga el inspector después de la primera imagen.
+
 ## Pendiente de medir en Windows (QA manual)
 - Páginas de Lugares y Recuerdos con 10k/50k/100k elementos reales (tiempo hasta el primer pintado, memoria).
 - Importación de 1.000 JPEG reales (copiar y sin mover) en SSD y HDD.

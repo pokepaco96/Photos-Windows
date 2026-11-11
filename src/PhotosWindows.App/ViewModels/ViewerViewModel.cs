@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Media;
 using PhotosWindows.App.Services;
 using PhotosWindows.Application.Abstractions;
@@ -29,8 +30,13 @@ public sealed partial class ViewerViewModel(
     SelectionActions actions,
     NavigationService navigation,
     WindowContext window,
-    PeopleCoordinator people) : ObservableObject
+    PeopleCoordinator people,
+    UiThread ui,
+    ILogger<ViewerViewModel> logger) : ObservableObject
 {
+    /// <summary>After this long without any image, the viewer says so instead of showing an endless spinner.</summary>
+    private static readonly TimeSpan SlowLoadNotice = TimeSpan.FromSeconds(6);
+    private long _loadId;
     private const int ViewerRenderSize = 3840;
     private IReadOnlyList<long> _ids = [];
     private CancellationTokenSource? _cts;
@@ -47,6 +53,15 @@ public sealed partial class ViewerViewModel(
     [ObservableProperty] public partial bool IsPhoto { get; set; }
     [ObservableProperty] public partial bool IsLoading { get; set; }
     [ObservableProperty] public partial bool HasError { get; set; }
+
+    /// <summary>What the viewer is doing now ("Loading photo…", "Improving quality…"); empty when idle.</summary>
+    [ObservableProperty] public partial string LoadingMessage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Machine-readable state of the current load, exposed to UI Automation: Loading, Preview, Ready, Error,
+    /// Unavailable or Cancelled. Every load ends in Preview/Ready (an image is shown), Error or Unavailable.
+    /// </summary>
+    [ObservableProperty] public partial string LoadState { get; set; } = string.Empty;
     [ObservableProperty] public partial string ErrorMessage { get; set; } = string.Empty;
     [ObservableProperty] public partial bool IsInfoOpen { get; set; }
     [ObservableProperty] public partial bool IsFavorite { get; set; }
@@ -81,18 +96,25 @@ public sealed partial class ViewerViewModel(
         if (_ids.Count == 0) return;
         _cts?.Cancel();
         var cts = _cts = new CancellationTokenSource();
+        var loadId = ++_loadId;
+        var timing = new LoadTiming(loadId);
         Index = index;
         Position = Loc.Format("Viewer_Position", index + 1, _ids.Count);
         CanGoPrevious = index > 0;
         CanGoNext = index < _ids.Count - 1;
         IsLoading = true;
         HasError = false;
+        LoadState = "Loading";
+        LoadingMessage = Loc.Get("Viewer_LoadingPhoto");
         ShowingOriginal = false;
         ViewRotation = 0;
         VideoSource = null;
+        Image = null; // never leave the previous photo on screen as if it were this one
+        _ = WatchForSlowLoadAsync(loadId, cts.Token);
         try
         {
             var asset = await assets.GetAsync(_ids[index], cts.Token);
+            timing.Mark("asset");
             if (asset is null || cts.IsCancellationRequested) return;
             Asset = asset;
             IsVideo = asset.MediaType == MediaType.Video;
@@ -100,13 +122,17 @@ public sealed partial class ViewerViewModel(
             IsFavorite = asset.IsFavorite;
             HasEdits = asset.HasEdits;
             HasLiveVideo = asset.HasLiveVideo;
-            await LoadInspectorAsync(asset, cts.Token);
+
+            // 1. The grid thumbnail is usually on disk already: show it at once, before any other work.
+            if (IsPhoto && await TryShowCachedAsync(asset, ThumbnailSize.Small, cts.Token)) timing.Mark("small");
 
             var original = await editing.ResolveOriginalAsync(asset.Id, cts.Token);
+            timing.Mark("resolve");
             if (original is null)
             {
-                await ShowCachedPreviewAsync(asset, cts.Token);
-                ShowError(Loc.Get("Viewer_Unavailable"));
+                await ShowPreviewAsync(asset, cts.Token);
+                ShowError(Loc.Get("Viewer_Unavailable"), "Unavailable");
+                await LoadInspectorAsync(asset, cts.Token);
                 return;
             }
 
@@ -114,33 +140,82 @@ public sealed partial class ViewerViewModel(
             {
                 Image = null;
                 VideoSource = new Uri(original);
+                LoadState = "Ready";
+                await LoadInspectorAsync(asset, cts.Token);
                 return;
             }
 
-            // Fast first paint from the cached large thumbnail, then full quality.
-            await ShowCachedPreviewAsync(asset, cts.Token);
-            await RenderAsync(asset, cts.Token);
+            // 2. Better preview (2048 px), generated on the interactive lane if needed: background thumbnail work
+            //    for the rest of the library never delays it.
+            await ShowPreviewAsync(asset, cts.Token);
+            timing.Mark("preview");
+
+            // 3. Full quality; the inspector loads meanwhile and never delays the first image.
+            LoadingMessage = Loc.Get("Viewer_ImprovingQuality");
+            var render = RenderAsync(asset, cts.Token);
+            await LoadInspectorAsync(asset, cts.Token);
+            timing.Mark("inspector");
+            await render;
+            timing.Mark("render");
         }
         catch (OperationCanceledException)
         {
-            // Navigated to another item.
+            // Navigated to another item; that load owns the state now.
+            timing.Outcome = "cancelled";
         }
         catch (MediaDecodeException ex)
         {
-            ShowError(ex.Message);
+            ShowError(ex.Message, "Error");
+            timing.Outcome = "decode-error";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException
+                                       or System.Runtime.InteropServices.ExternalException or OutOfMemoryException or TimeoutException)
+        {
+            logger.LogWarning(ex, "Viewer load {LoadId} failed", loadId);
+            ShowError(Loc.Get("Viewer_LoadFailed"), "Error");
+            timing.Outcome = "error";
         }
         finally
         {
-            if (_cts == cts) IsLoading = false;
+            if (_cts == cts)
+            {
+                IsLoading = false;
+                LoadingMessage = string.Empty;
+                if (LoadState == "Loading") LoadState = Image is null ? "Error" : "Preview";
+            }
+
+            timing.Log(logger, Asset);
         }
     }
 
-    private async Task ShowCachedPreviewAsync(Asset asset, CancellationToken ct)
+    /// <summary>Shows a cached thumbnail if it exists, without generating anything. True when an image was shown.</summary>
+    private async Task<bool> TryShowCachedAsync(Asset asset, ThumbnailSize size, CancellationToken ct)
     {
-        var path = await thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ct);
+        var path = await thumbnails.TryGetCachedAsync(asset.Id, size, ct);
+        if (path is null) return false;
+        try
+        {
+            Image = await images.FromFileAsync(path, 0, ct);
+            if (LoadState == "Loading") LoadState = "Preview";
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or System.Runtime.InteropServices.ExternalException)
+        {
+            // A damaged cache file is regenerated by the next step.
+            logger.LogDebug(ex, "Cached thumbnail could not be shown");
+            return false;
+        }
+    }
+
+    private async Task ShowPreviewAsync(Asset asset, CancellationToken ct)
+    {
+        if (await TryShowCachedAsync(asset, ThumbnailSize.Large, ct)) return;
+        LoadingMessage = Loc.Get("Viewer_LoadingPreview");
+        var path = await thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ThumbnailPriority.Interactive, ct);
         if (path is not null)
         {
             Image = await images.FromFileAsync(path, 0, ct);
+            if (LoadState == "Loading") LoadState = "Preview";
         }
     }
 
@@ -148,14 +223,61 @@ public sealed partial class ViewerViewModel(
     {
         var recipe = ShowingOriginal ? EditRecipe.Identity : await editing.GetRecipeAsync(asset.Id, ct);
         var rendered = await editing.RenderFromOriginalAsync(asset.Id, recipe, ViewerRenderSize, EncodeOptions.PreviewJpeg, ct);
-        if (rendered is null || ct.IsCancellationRequested) return;
+        ct.ThrowIfCancellationRequested();
+        if (rendered is null)
+        {
+            // Keep whatever preview is on screen; say that full quality is not available.
+            ShowError(Loc.Get("Viewer_LoadFailed"), Image is null ? "Error" : "Preview");
+            return;
+        }
+
         Image = await ImageLoader.FromBytesAsync(rendered.Encoded, 0);
+        LoadState = "Ready";
     }
 
-    private void ShowError(string message)
+    /// <summary>If nothing is on screen after a few seconds, say so (the load keeps going and can still finish).</summary>
+    private async Task WatchForSlowLoadAsync(long loadId, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(SlowLoadNotice, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        ui.Post(() =>
+        {
+            if (loadId != _loadId || !IsLoading) return;
+            LoadingMessage = Image is null ? Loc.Get("Viewer_SlowLoad") : Loc.Get("Viewer_ImprovingQuality");
+            logger.LogWarning("Viewer load {LoadId} still running after {Seconds} s (image shown: {Shown})", loadId, SlowLoadNotice.TotalSeconds, Image is not null);
+        });
+    }
+
+    /// <summary>Called by the page when the Image element has decoded and shown its source.</summary>
+    public void OnImageOpened() => logger.LogDebug("Viewer load {LoadId}: image opened ({State})", _loadId, LoadState);
+
+    /// <summary>Monotonic per-stage timings for one load, written to the local log. No paths or names.</summary>
+    private sealed class LoadTiming(long id)
+    {
+        private readonly System.Diagnostics.Stopwatch _sw = System.Diagnostics.Stopwatch.StartNew();
+        private readonly List<string> _marks = [];
+
+        public string Outcome { get; set; } = "completed";
+
+        public void Mark(string stage) => _marks.Add($"{stage}={_sw.ElapsedMilliseconds}ms");
+
+        public void Log(ILogger logger, Asset? asset) => logger.LogInformation(
+            "Viewer load {LoadId} {Outcome} in {Ms} ms: {Stages} (asset {AssetId}, {Format}, {Bytes} bytes, edited {Edited})",
+            id, Outcome, _sw.ElapsedMilliseconds, string.Join(", ", _marks), asset?.Id, asset?.Format, asset?.FileSize, asset?.HasEdits);
+    }
+
+    private void ShowError(string message, string state = "Error")
     {
         HasError = true;
         ErrorMessage = message;
+        LoadState = state;
     }
 
     private async Task LoadInspectorAsync(Asset asset, CancellationToken ct)
