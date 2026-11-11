@@ -1,0 +1,12 @@
+{
+  "commit": "aa2cfac",
+  "assets": 8685,
+  "workers": 2,
+  "backgroundSecondsBeforeOpening": 10,
+  "backgroundItemsDone": 2240,
+  "opens": 100,
+  "p50ms": 314,
+  "p95ms": 373,
+  "maxms": 396,
+  "timedOut": 0
+}

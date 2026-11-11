@@ -1,0 +1,12 @@
+{
+  "commit": "fix",
+  "assets": 8685,
+  "workers": 2,
+  "backgroundSecondsBeforeOpening": 10,
+  "backgroundItemsDone": 3520,
+  "opens": 100,
+  "p50ms": 303,
+  "p95ms": 345,
+  "maxms": 367,
+  "timedOut": 0
+}
