@@ -388,9 +388,55 @@ public sealed class AppSession : IDisposable
 
     // ---------------- Health & evidence ----------------
 
+    private readonly DateTime _launchedLocal = DateTime.Now;
+    private bool _crashReported;
+
     public void ThrowIfCrashed()
     {
-        if (App.HasExited) throw new InvalidOperationException($"PhotosWindows crashed or exited unexpectedly (exit code {App.ExitCode}).");
+        if (!App.HasExited) return;
+        // ExitCode is not always readable (the process object may not own the process): never let that hide the crash.
+        string code;
+        try
+        {
+            code = "0x" + App.ExitCode.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        catch (InvalidOperationException)
+        {
+            code = "unknown";
+        }
+
+        if (!_crashReported)
+        {
+            _crashReported = true;
+            _evidence.Log($"APP EXITED (exit code {code}). Windows Application event log since launch:");
+            _evidence.Log(ApplicationEventLog(_launchedLocal));
+        }
+
+        throw new InvalidOperationException($"PhotosWindows crashed or exited unexpectedly (exit code {code}).");
+    }
+
+    /// <summary>.NET Runtime, Application Error and WER entries since <paramref name="since"/>: the cause of a native crash.</summary>
+    private static string ApplicationEventLog(DateTime since)
+    {
+        try
+        {
+            var script = "Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = [datetime]'" + since.ToString("s", System.Globalization.CultureInfo.InvariantCulture) + "' } -ErrorAction SilentlyContinue | " +
+                "Where-Object { $_.ProviderName -in 'Application Error', '.NET Runtime', 'Windows Error Reporting', 'Application Hang' } | " +
+                "Select-Object -First 6 | ForEach-Object { '--- ' + $_.TimeCreated + ' ' + $_.ProviderName + ' ' + $_.Id + [Environment]::NewLine + $_.Message }";
+            var psi = new System.Diagnostics.ProcessStartInfo("powershell", "-NoProfile -Command \"" + script.Replace("\"", "\\\"", StringComparison.Ordinal) + "\"")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+            };
+            using var ps = System.Diagnostics.Process.Start(psi)!;
+            var text = ps.StandardOutput.ReadToEnd();
+            ps.WaitForExit(30000);
+            return text.Length == 0 ? "(no entries)" : text.Length > 12000 ? text[..12000] : text;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+        {
+            return "(event log unavailable: " + ex.Message + ")";
+        }
     }
 
     /// <summary>Fails when the app shows its unexpected-error dialog ("Something went wrong").</summary>
