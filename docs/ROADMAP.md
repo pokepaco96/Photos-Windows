@@ -11,8 +11,7 @@ Refleja lo **terminado** (✅), en curso (🔄) y pendiente (⏳). El detalle co
 - ✅ **Personas**: detección y agrupación facial local con modelos descargados por el usuario, consentimiento, corrección manual y borrado total ([ADR-0010](decisions/0010-people-local-face-grouping.md)).
 - ✅ **Lugares**: mapa offline propio (Natural Earth), grupos por zona, lista, filtros, edición de ubicación en el catálogo y búsqueda por área que cruza el antimeridiano ([ADR-0011](decisions/0011-places-offline-map.md)).
 
-## En curso
-- 🔄 **Recuerdos**: reglas deterministas y explicables, pase de diapositivas, ocultar y excluir ([ADR-0012](decisions/0012-memories-deterministic-rules.md), [`MEMORIES.md`](MEMORIES.md)).
+- ✅ **Recuerdos**: reglas deterministas y explicables, pase de diapositivas, ocultar y excluir ([ADR-0012](decisions/0012-memories-deterministic-rules.md), [`MEMORIES.md`](MEMORIES.md)).
 
 ## Siguiente
 - ⏳ QA en Windows 11 real: Narrador, DPI 150/200 %, contraste alto, HEIC/AVIF/TIFF/RAW y vídeo reales, disco externo, importación interrumpida, copia y restauración reales.
