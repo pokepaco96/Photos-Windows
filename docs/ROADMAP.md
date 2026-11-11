@@ -13,6 +13,9 @@ Refleja lo **terminado** (✅), en curso (🔄) y pendiente (⏳). El detalle co
 
 - ✅ **Recuerdos**: reglas deterministas y explicables, pase de diapositivas, ocultar y excluir ([ADR-0012](decisions/0012-memories-deterministic-rules.md), [`MEMORIES.md`](MEMORIES.md)).
 
+## En curso
+- 🔄 **Dispositivos por USB (iPhone)**: explorar e importar ([ADR-0013](decisions/0013-portable-devices-import.md)). Borrar del teléfono desactivado hasta probarlo con hardware real.
+
 ## Siguiente
 - ⏳ QA en Windows 11 real: Narrador, DPI 150/200 %, contraste alto, HEIC/AVIF/TIFF/RAW y vídeo reales, disco externo, importación interrumpida, copia y restauración reales.
 - ⏳ Rendimiento medido en Windows con 10k/50k/100k elementos: importación, miniaturas, desplazamiento, búsqueda, visor, Lugares y Recuerdos (RAM, CPU, latencia).
