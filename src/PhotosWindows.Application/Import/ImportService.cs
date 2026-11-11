@@ -174,11 +174,16 @@ public sealed class ImportService
 
             // Files that ended up in no unit (e.g. a sidecar without its image).
             var planned = new HashSet<string>(units.SelectMany(u => u.AllFiles()), StringComparer.Ordinal);
-            foreach (var orphan in pending.Where(p => !planned.Contains(p.SourcePath)))
-            {
-                await _jobs.UpdateItemAsync(orphan.Id, ImportItemStatus.Skipped, null, "Sidecar without a matching photo or video.", null, cancellationToken).ConfigureAwait(false);
-                counters.Record(ImportItemStatus.Skipped);
-            }
+            var orphans = pending.Where(p => !planned.Contains(p.SourcePath))
+                .Select(o => new ImportItemUpdate(o.Id, ImportItemStatus.Skipped, null, "Sidecar without a matching photo or video.", null)).ToList();
+            await _jobs.UpdateItemsAsync(orphans, cancellationToken).ConfigureAwait(false);
+            foreach (var _ in orphans) counters.Record(ImportItemStatus.Skipped);
+
+            // Item states are written in batches (one transaction per 64 items, or per unit when the job ends): with
+            // many small files one commit per item was a large share of the import time. If the app stops before a
+            // batch is written, those items are pending again; resuming finds the asset already catalogued (same
+            // stored path or same SHA-256) and records it as already in the library or a duplicate, never twice.
+            var itemBatch = new ItemBatch(_jobs, 64);
 
             var throttle = new ProgressThrottle(TimeSpan.FromMilliseconds(200));
             void Report(string? current, bool force = false)
@@ -209,10 +214,14 @@ public sealed class ImportService
                     foreach (var (path, itemStatus, assetId, message, target) in outcome)
                     {
                         if (!itemByPath.TryGetValue(path, out var item)) continue;
-                        // Persist even if the job is being cancelled, so the item is not redone on resume.
-                        using var _ = diag.Measure(ImportPhase.ItemUpdate);
-                        await _jobs.UpdateItemAsync(item.Id, itemStatus, assetId, message, target, CancellationToken.None).ConfigureAwait(false);
+                        itemBatch.Add(new ImportItemUpdate(item.Id, itemStatus, assetId, message, target));
                         counters.Record(itemStatus);
+                    }
+
+                    // Persist even if the job is being cancelled, so the item is not redone on resume.
+                    using (diag.Measure(ImportPhase.ItemUpdate))
+                    {
+                        await itemBatch.FlushIfFullAsync().ConfigureAwait(false);
                     }
 
                     foreach (var imported in outcome.Where(o => o.Status == ImportItemStatus.Imported && o.AssetId is not null))
@@ -229,6 +238,16 @@ public sealed class ImportService
             catch (OperationCanceledException)
             {
                 status = ImportJobStatus.Cancelled;
+            }
+            finally
+            {
+                // Also on an unexpected error: what was already done must not be redone on resume.
+                await itemBatch.FlushAsync().ConfigureAwait(false);
+            }
+
+            using (diag.Measure(ImportPhase.ItemUpdate))
+            {
+                await itemBatch.FlushAsync().ConfigureAwait(false);
             }
 
             await _jobs.RefreshCountersAsync(jobId, CancellationToken.None).ConfigureAwait(false);
@@ -578,6 +597,49 @@ public sealed class ImportService
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogWarning(ex, "Could not remove an incomplete copy; library verification will report it");
+            }
+        }
+    }
+
+    /// <summary>Collects item updates from parallel workers and writes them in one transaction per batch.</summary>
+    private sealed class ItemBatch(IImportJobRepository jobs, int size)
+    {
+        private readonly Lock _lock = new();
+        private readonly SemaphoreSlim _writer = new(1, 1);
+        private List<ImportItemUpdate> _items = [];
+
+        public void Add(ImportItemUpdate update)
+        {
+            lock (_lock) _items.Add(update);
+        }
+
+        public Task FlushIfFullAsync()
+        {
+            lock (_lock)
+            {
+                if (_items.Count < size) return Task.CompletedTask;
+            }
+
+            return FlushAsync();
+        }
+
+        public async Task FlushAsync()
+        {
+            await _writer.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                List<ImportItemUpdate> batch;
+                lock (_lock)
+                {
+                    if (_items.Count == 0) return;
+                    (batch, _items) = (_items, []);
+                }
+
+                await jobs.UpdateItemsAsync(batch, CancellationToken.None).ConfigureAwait(false);
+            }
+            finally
+            {
+                _writer.Release();
             }
         }
     }

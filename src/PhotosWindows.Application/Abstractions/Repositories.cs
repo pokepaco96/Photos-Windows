@@ -182,6 +182,9 @@ public interface IImportJobRepository
     Task<IReadOnlyList<ImportJob>> GetJobsAsync(int limit, CancellationToken cancellationToken);
     Task<IReadOnlyList<ImportItem>> GetItemsAsync(long jobId, ImportItemStatus? status, CancellationToken cancellationToken);
     Task UpdateItemAsync(long itemId, ImportItemStatus status, long? assetId, string? message, string? targetPath, CancellationToken cancellationToken);
+
+    /// <summary>Updates several import items in one transaction.</summary>
+    Task UpdateItemsAsync(IReadOnlyList<ImportItemUpdate> updates, CancellationToken cancellationToken);
     Task SetJobStatusAsync(long jobId, ImportJobStatus status, DateTime? finishedUtc, CancellationToken cancellationToken);
     /// <summary>Recomputes job counters from its items.</summary>
     Task RefreshCountersAsync(long jobId, CancellationToken cancellationToken);
@@ -204,3 +207,5 @@ public interface IDuplicateDismissalRepository
     Task DismissAsync(long assetA, long assetB, CancellationToken cancellationToken);
     Task<IReadOnlySet<(long, long)>> GetDismissedAsync(CancellationToken cancellationToken);
 }
+
+public sealed record ImportItemUpdate(long ItemId, ImportItemStatus Status, long? AssetId, string? Message, string? TargetPath);

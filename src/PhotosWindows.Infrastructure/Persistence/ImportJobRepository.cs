@@ -52,6 +52,14 @@ public sealed class ImportJobRepository : IImportJobRepository
             "UPDATE import_items SET status = @status, asset_id = @assetId, message = @message, target_path = @targetPath WHERE id = @itemId",
             new { itemId, status = (int)status, assetId, message, targetPath }, t), cancellationToken);
 
+    public Task UpdateItemsAsync(IReadOnlyList<ImportItemUpdate> updates, CancellationToken cancellationToken) =>
+        updates.Count == 0
+            ? Task.CompletedTask
+            : _db.WriteAsync((c, t) => c.ExecuteAsync(
+                "UPDATE import_items SET status = @status, asset_id = @assetId, message = @message, target_path = @targetPath WHERE id = @itemId",
+                updates.Select(u => new { itemId = u.ItemId, status = (int)u.Status, assetId = u.AssetId, message = u.Message, targetPath = u.TargetPath }), t),
+                cancellationToken);
+
     public Task SetJobStatusAsync(long jobId, ImportJobStatus status, DateTime? finishedUtc, CancellationToken cancellationToken) =>
         _db.WriteAsync((c, t) => c.ExecuteAsync(
             "UPDATE import_jobs SET status = @status, finished_utc = @finished WHERE id = @jobId",
