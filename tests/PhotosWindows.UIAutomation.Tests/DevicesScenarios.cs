@@ -12,6 +12,16 @@ public sealed partial class EndToEndTests
     private string SimDevice => Path.Combine(qa.WorkRoot, "sim-device");
     private string SimReadOnly => SimDevice + "-readonly";
 
+    /// <summary>
+    /// The managed copy of an imported file in whichever QA library is open (after S26 it is the restored one, not
+    /// <see cref="QaFixture.LibraryRoot"/>).
+    /// </summary>
+    private string ManagedCopyInAnyLibrary(string fileName) =>
+        Directory.EnumerateFiles(qa.Libraries, fileName, SearchOption.AllDirectories)
+            .Where(f => f.Contains(Path.DirectorySeparatorChar + "originals" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(File.GetLastWriteTimeUtc)
+            .First();
+
     // Static: xUnit creates a new test-class instance per step.
     private static Dictionary<string, string>? _deviceHashes;
 
@@ -114,7 +124,7 @@ public sealed partial class EndToEndTests
         if (now.Count != _deviceHashes!.Count || now.Any(kv => _deviceHashes[kv.Key] != kv.Value)) throw new InvalidOperationException("'Import only' changed the device.");
         Nav("Nav_All");
         App.WaitUntil(() => TileExists("IMG_2001.JPG") && TileExists("IMG_2002.JPG"), "the imported items in the library", TimeSpan.FromSeconds(20));
-        var managed = ManagedCopy("IMG_2001.JPG");
+        var managed = ManagedCopyInAnyLibrary("IMG_2001.JPG");
         if (QaDataset.Sha256(managed) != _deviceHashes.Single(kv => kv.Key.EndsWith("IMG_2001.JPG", StringComparison.Ordinal)).Value) throw new InvalidOperationException("The managed copy is not identical to the item on the device.");
     });
 
@@ -149,7 +159,7 @@ public sealed partial class EndToEndTests
         }
 
         // The only remaining copy is the one in the library, and it is identical to what the device had.
-        var managed = ManagedCopy("IMG_1001.JPG");
+        var managed = ManagedCopyInAnyLibrary("IMG_1001.JPG");
         if (QaDataset.Sha256(managed) != _deviceHashes!.Single(kv => kv.Key.EndsWith("IMG_1001.JPG", StringComparison.Ordinal)).Value) throw new InvalidOperationException("The library copy differs from the deleted original.");
         App.WaitUntil(() => App.TextOf("Devices_Summary").Contains("2 photos", StringComparison.Ordinal), "the device list refreshed after deleting", TimeSpan.FromSeconds(20));
         App.Screenshot("73_devices_after_delete");
