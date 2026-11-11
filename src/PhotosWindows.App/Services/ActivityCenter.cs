@@ -57,21 +57,33 @@ public sealed partial class ActivityCenter(UiThread ui, ILogger<ActivityCenter> 
         // Coalesced: workers only store the latest report; at most one dispatch to the UI thread is pending at a time,
         // so a burst of reports can never queue thousands of callbacks behind user input.
         ActivityProgress? latest = null;
-        var pending = 0;
+        var gate = new Lock();
+        var pending = false;
         var progress = new InlineProgress<ActivityProgress>(p =>
         {
-            Volatile.Write(ref latest, p);
-            if (Interlocked.Exchange(ref pending, 1) == 1) return;
+            lock (gate)
+            {
+                latest = p;
+                if (pending) return;
+                pending = true;
+            }
+
             ui.Post(() =>
             {
-                Volatile.Write(ref pending, 0);
-                var value = Volatile.Read(ref latest);
+                ActivityProgress? value;
+                lock (gate)
+                {
+                    value = latest;
+                    pending = false;
+                }
+
                 // A report can be delivered after the run finished; it must not overwrite the outcome (UI run #10).
-                if (value is null || run != _run || !IsBusy) return;
-                Message = value.Message;
-                IsIndeterminate = value.Fraction is null;
-                Percent = (value.Fraction ?? 0) * 100;
+                if (value is not { } v || run != _run || !IsBusy) return;
+                Message = v.Message;
+                IsIndeterminate = v.Fraction is null;
+                Percent = (v.Fraction ?? 0) * 100;
             });
+        });
         });
 
         ActivityOutcome outcome;
