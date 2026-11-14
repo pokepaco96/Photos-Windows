@@ -40,11 +40,13 @@ jobs:
         shell: pwsh
         run: |
           winget install --id 9PMMSR1CGPWG --source msstore --accept-package-agreements --accept-source-agreements --silent
+          # HEIF Image Extension only reads the container; the image itself is HEVC and needs an HEVC decoder.
+          winget install --id 9N4WGH0Z6VHQ --source msstore --accept-package-agreements --accept-source-agreements --silent
       - name: Run benchmark
         shell: pwsh
         run: |
-          $pkg = (Get-AppxPackage -AllUsers *HEIF* | Select-Object -First 1)
-          $env:PW_HEIF_PACKAGE = if ($pkg) { "$($pkg.Name) $($pkg.Version)" } else { "not installed" }
+          $pkgs = Get-AppxPackage -AllUsers *HEIF*, *HEVC* | ForEach-Object { "$($_.Name) $($_.Version)" }
+          $env:PW_HEIF_PACKAGE = if ($pkgs) { $pkgs -join '; ' } else { "not installed" }
           Write-Host "HEIF package: $env:PW_HEIF_PACKAGE"
           dotnet run -c Release --project tools/heic-bench -- "$env:RUNNER_TEMP/heic" 10 "$env:RUNNER_TEMP/heic-report.json"
       - uses: actions/upload-artifact@v4

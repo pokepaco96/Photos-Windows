@@ -70,7 +70,7 @@ foreach (var file in Directory.EnumerateFiles(dir, "*.heic").Select(Path.GetFull
             }
             catch (Exception ex)
             {
-                error = ex.GetType().Name + ": " + ex.Message.Split('\n')[0];
+                error = $"{ex.GetType().Name} 0x{ex.HResult:X8}: {ex.Message.Split('\n')[0].Trim()}";
             }
 
             Add("total", sw.Elapsed.TotalMilliseconds);
@@ -138,6 +138,10 @@ if (largest is not null && heifCodec is not null)
     catch (OperationCanceledException)
     {
         outcome = "cancelled";
+    }
+    catch (Exception ex)
+    {
+        outcome = $"failed {ex.GetType().Name} 0x{ex.HResult:X8}";
     }
 
     var observed = full.Elapsed.TotalMilliseconds;
