@@ -11,7 +11,7 @@ using Windows.Storage.Streams;
 // WIC / HEIC benchmark for Windows. Times each WIC stage separately, compares output sizes, checks that the scaled
 // output really has the requested size, and tests whether cancelling GetPixelDataAsync stops the work.
 //   HeicBench.exe <fixtures dir> [runs=10] [report.json]
-var dir = args.Length > 0 ? args[0] : throw new ArgumentException("fixtures dir required");
+var dir = Path.GetFullPath(args.Length > 0 ? args[0] : throw new ArgumentException("fixtures dir required")); // StorageFile needs a normalized Windows path
 var runs = args.Length > 1 ? int.Parse(args[1]) : 10;
 var reportPath = args.Length > 2 ? args[2] : null;
 var proc = Process.GetCurrentProcess();
@@ -24,7 +24,7 @@ Console.WriteLine($"HEIF decoder: {(heifCodec is null ? "NOT INSTALLED" : $"{hei
 
 var results = new List<object>();
 var wic = new WicRasterDecoder(NullLogger<WicRasterDecoder>.Instance);
-foreach (var file in Directory.EnumerateFiles(dir, "*.heic").Order())
+foreach (var file in Directory.EnumerateFiles(dir, "*.heic").Select(Path.GetFullPath).Order())
 {
     var name = Path.GetFileName(file);
     foreach (var target in new int?[] { 360, 1280, 2048, null })
@@ -83,10 +83,17 @@ foreach (var file in Directory.EnumerateFiles(dir, "*.heic").Order())
         double? appMs = null;
         if (error is null)
         {
-            var sw = Stopwatch.StartNew();
-            var r = await wic.DecodeAsync(file, FormatFamily.Heif, target, CancellationToken.None);
-            appMs = sw.Elapsed.TotalMilliseconds;
-            if (target is { } tg && Math.Max(r.Width, r.Height) > tg + 1) error = $"app decoder returned {r.Width}x{r.Height} for {tg}";
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                var r = await wic.DecodeAsync(file, FormatFamily.Heif, target, CancellationToken.None);
+                appMs = sw.Elapsed.TotalMilliseconds;
+                if (target is { } tg && Math.Max(r.Width, r.Height) > tg + 1) error = $"app decoder returned {r.Width}x{r.Height} for {tg}";
+            }
+            catch (Exception ex)
+            {
+                error = "app decoder: " + ex.GetType().Name + ": " + ex.Message.Split('\n')[0];
+            }
         }
 
         var entry = new
@@ -112,7 +119,7 @@ foreach (var file in Directory.EnumerateFiles(dir, "*.heic").Order())
 // Cancellation: start a full decode of the largest file, cancel after 50 ms, and measure when the operation really
 // ends and how much CPU it used after the cancel.
 object? cancellation = null;
-var largest = Directory.EnumerateFiles(dir, "*.heic").Where(f => !f.Contains("truncated")).OrderByDescending(f => new FileInfo(f).Length).FirstOrDefault();
+var largest = Directory.EnumerateFiles(dir, "*.heic").Select(Path.GetFullPath).Where(f => !f.Contains("truncated")).OrderByDescending(f => new FileInfo(f).Length).FirstOrDefault();
 if (largest is not null && heifCodec is not null)
 {
     var sf = await StorageFile.GetFileFromPathAsync(largest);
