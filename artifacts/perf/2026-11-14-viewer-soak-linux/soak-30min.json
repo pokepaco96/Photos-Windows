@@ -1,0 +1,323 @@
+{
+  "commit": "7b36f18",
+  "minutes": 30,
+  "assets": 8685,
+  "opens": 2102,
+  "failures": 0,
+  "p50ms": 379,
+  "p95ms": 488,
+  "p99ms": 558,
+  "maxms": 1135,
+  "samples": [
+    {
+      "minute": 0,
+      "workingSetMiB": 146,
+      "managedMiB": 19,
+      "threads": 15,
+      "handles": 128,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1
+    },
+    {
+      "minute": 1,
+      "workingSetMiB": 219,
+      "managedMiB": 2,
+      "threads": 17,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 70
+    },
+    {
+      "minute": 2,
+      "workingSetMiB": 220,
+      "managedMiB": 5,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 138
+    },
+    {
+      "minute": 3,
+      "workingSetMiB": 213,
+      "managedMiB": 9,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 206
+    },
+    {
+      "minute": 4,
+      "workingSetMiB": 211,
+      "managedMiB": 1,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 273
+    },
+    {
+      "minute": 5,
+      "workingSetMiB": 225,
+      "managedMiB": 3,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 342
+    },
+    {
+      "minute": 6,
+      "workingSetMiB": 225,
+      "managedMiB": 5,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 413
+    },
+    {
+      "minute": 7,
+      "workingSetMiB": 226,
+      "managedMiB": 8,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 482
+    },
+    {
+      "minute": 8,
+      "workingSetMiB": 227,
+      "managedMiB": 9,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 554
+    },
+    {
+      "minute": 9,
+      "workingSetMiB": 224,
+      "managedMiB": 1,
+      "threads": 14,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 622
+    },
+    {
+      "minute": 10,
+      "workingSetMiB": 226,
+      "managedMiB": 8,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 690
+    },
+    {
+      "minute": 11,
+      "workingSetMiB": 225,
+      "managedMiB": 1,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 759
+    },
+    {
+      "minute": 12,
+      "workingSetMiB": 226,
+      "managedMiB": 5,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 827
+    },
+    {
+      "minute": 13,
+      "workingSetMiB": 225,
+      "managedMiB": 1,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 897
+    },
+    {
+      "minute": 14,
+      "workingSetMiB": 227,
+      "managedMiB": 10,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 966
+    },
+    {
+      "minute": 15,
+      "workingSetMiB": 226,
+      "managedMiB": 7,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1037
+    },
+    {
+      "minute": 16,
+      "workingSetMiB": 225,
+      "managedMiB": 3,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1107
+    },
+    {
+      "minute": 17,
+      "workingSetMiB": 227,
+      "managedMiB": 6,
+      "threads": 14,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1176
+    },
+    {
+      "minute": 18,
+      "workingSetMiB": 226,
+      "managedMiB": 4,
+      "threads": 14,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1244
+    },
+    {
+      "minute": 19,
+      "workingSetMiB": 227,
+      "managedMiB": 9,
+      "threads": 14,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1312
+    },
+    {
+      "minute": 20,
+      "workingSetMiB": 226,
+      "managedMiB": 8,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1377
+    },
+    {
+      "minute": 21,
+      "workingSetMiB": 227,
+      "managedMiB": 9,
+      "threads": 19,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1447
+    },
+    {
+      "minute": 22,
+      "workingSetMiB": 226,
+      "managedMiB": 7,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1519
+    },
+    {
+      "minute": 23,
+      "workingSetMiB": 255,
+      "managedMiB": 11,
+      "threads": 17,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1593
+    },
+    {
+      "minute": 24,
+      "workingSetMiB": 255,
+      "managedMiB": 8,
+      "threads": 15,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1662
+    },
+    {
+      "minute": 25,
+      "workingSetMiB": 253,
+      "managedMiB": 2,
+      "threads": 16,
+      "handles": 138,
+      "decodesRunning": 2,
+      "generations": 0,
+      "opens": 1735
+    },
+    {
+      "minute": 26,
+      "workingSetMiB": 268,
+      "managedMiB": 1,
+      "threads": 18,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1810
+    },
+    {
+      "minute": 27,
+      "workingSetMiB": 270,
+      "managedMiB": 6,
+      "threads": 17,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1882
+    },
+    {
+      "minute": 28,
+      "workingSetMiB": 270,
+      "managedMiB": 8,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 1956
+    },
+    {
+      "minute": 29,
+      "workingSetMiB": 268,
+      "managedMiB": 4,
+      "threads": 16,
+      "handles": 138,
+      "decodesRunning": 2,
+      "generations": 0,
+      "opens": 2028
+    },
+    {
+      "minute": 30,
+      "workingSetMiB": 269,
+      "managedMiB": 4,
+      "threads": 16,
+      "handles": 136,
+      "decodesRunning": 0,
+      "generations": 0,
+      "opens": 2102
+    }
+  ]
+}
