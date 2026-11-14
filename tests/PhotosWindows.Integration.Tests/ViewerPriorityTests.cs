@@ -84,7 +84,8 @@ public class ViewerPriorityTests
         Assert.Equal(2, stats.DecodesPastTimeout);
         Assert.Equal(2, stats.BackgroundBusy);
 
-        // The photo the user opens is unaffected.
+        // The photo the user opens is unaffected (normal time limit again: only the stuck decodes needed the short one).
+        thumbs.GenerationTimeout = TimeSpan.FromSeconds(30);
         using var viewer = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         Assert.NotNull(await thumbs.GetOrCreateAsync(photoId, ThumbnailSize.Large, ThumbnailPriority.Viewer, viewer.Token));
         Assert.NotNull(await thumbs.GetOrCreateAsync(photoId, ThumbnailSize.Small, ThumbnailPriority.Interactive, viewer.Token));

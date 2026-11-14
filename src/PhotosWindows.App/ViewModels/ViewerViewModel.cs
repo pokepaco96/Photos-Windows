@@ -312,11 +312,21 @@ public sealed partial class ViewerViewModel(
         }
     }
 
-    /// <summary>The state applies when WinUI has actually opened the image (ImageOpened), not when the source is set.</summary>
+    /// <summary>
+    /// The state applies only once WinUI has decoded the image: a bitmap that already has pixels (SetSourceAsync has
+    /// finished) counts at once — WinUI does not raise ImageOpened for those (UI run #56) — otherwise ImageOpened does.
+    /// A source that is set but not decoded never counts as shown.
+    /// </summary>
     private void SetImage(ImageSource? image, string stateWhenOpened)
     {
         _stateWhenOpened = stateWhenOpened;
         Image = image;
+        if (image is Microsoft.UI.Xaml.Media.Imaging.BitmapSource { PixelWidth: > 0, PixelHeight: > 0 }) ApplyOpenedState();
+    }
+
+    private void ApplyOpenedState()
+    {
+        if (_stateWhenOpened.Length > 0 && LoadState is "Loading" or "Preview") LoadState = _stateWhenOpened;
     }
 
     private async Task RenderAsync(Asset asset, int longSide, bool preserveView, CancellationToken ct)
@@ -415,7 +425,7 @@ public sealed partial class ViewerViewModel(
     /// <summary>Called by the page when the Image element has decoded and shown its source.</summary>
     public void OnImageOpened()
     {
-        if (_stateWhenOpened.Length > 0 && LoadState is "Loading" or "Preview") LoadState = _stateWhenOpened;
+        ApplyOpenedState();
         logger.LogDebug("Viewer load {LoadId}: image opened ({State})", _loadId, LoadState);
     }
 
