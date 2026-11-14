@@ -33,7 +33,8 @@ public sealed class WicRasterDecoder : IRasterDecoder
     {
         try
         {
-            var file = await StorageFile.GetFileFromPathAsync(path).AsTask(cancellationToken).ConfigureAwait(false);
+            // StorageFile rejects paths with mixed separators ("The specified path is invalid"): normalize first.
+            var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask(cancellationToken).ConfigureAwait(false);
             using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read).AsTask(cancellationToken).ConfigureAwait(false);
             var decoder = await BitmapDecoder.CreateAsync(stream).AsTask(cancellationToken).ConfigureAwait(false);
 
