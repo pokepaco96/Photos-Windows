@@ -65,8 +65,8 @@
                           HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                           Visibility="{x:Bind conv:Bind.Collapsed(ViewModel.IsVideo), Mode=OneWay}"
-                          DoubleTapped="OnImageDoubleTapped">
-                <Image x:Name="Photo" AutomationProperties.AutomationId="Viewer_Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" ImageOpened="OnPhotoOpened" RenderTransformOrigin="0.5,0.5"
+                          DoubleTapped="OnImageDoubleTapped" ViewChanged="OnZoomerViewChanged">
+                <Image x:Name="Photo" AutomationProperties.AutomationId="Viewer_Photo" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Uniform" ImageOpened="OnPhotoOpened" ImageFailed="OnPhotoFailed" RenderTransformOrigin="0.5,0.5"
                        AutomationProperties.Name="{x:Bind ViewModel.Asset.FileName, Mode=OneWay, FallbackValue=''}"
                        AutomationProperties.HelpText="{x:Bind ViewModel.LoadState, Mode=OneWay}">
                     <Image.RenderTransform>
@@ -76,7 +76,11 @@
             </ScrollViewer>
             <MediaPlayerElement x:Name="Player" AutomationProperties.AutomationId="Viewer_Player" AreTransportControlsEnabled="True" AutoPlay="True" Visibility="{x:Bind ViewModel.IsVideo, Mode=OneWay}" />
             <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Warning" VerticalAlignment="Top" Margin="24"
-                     x:Uid="Viewer_ErrorBar" AutomationProperties.AutomationId="Viewer_ErrorBar" Title="Cannot show this item" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+                     x:Uid="Viewer_ErrorBar" AutomationProperties.AutomationId="Viewer_ErrorBar" Title="Cannot show this item" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}">
+                <InfoBar.ActionButton>
+                    <Button x:Uid="Viewer_Retry" AutomationProperties.AutomationId="Viewer_Retry" Content="Try again" Command="{x:Bind ViewModel.RetryCommand}" />
+                </InfoBar.ActionButton>
+            </InfoBar>
         </Grid>
 
         <!-- Inspector -->

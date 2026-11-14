@@ -54,7 +54,8 @@ public sealed class BackgroundProcessing : IDisposable
             {
                 // Imports have priority: copying and hashing originals is the work the user is waiting for. Thumbnails
                 // the grid shows are still generated on demand; the rest of the queue resumes when the import ends.
-                if (_import.IsRunning)
+                // The viewer or the visible grid is waiting for decodes: leave the CPU to them.
+                if (_import.IsRunning || _thumbnails.ForegroundBusy)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
                     continue;

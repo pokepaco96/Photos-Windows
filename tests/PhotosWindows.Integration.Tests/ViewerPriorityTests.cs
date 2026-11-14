@@ -64,26 +64,31 @@ public class ViewerPriorityTests
     }
 
     [Fact]
-    public async Task A_stuck_background_item_times_out_frees_its_slot_and_is_not_retried()
+    public async Task Stuck_background_decodes_stay_counted_are_never_relaunched_and_never_block_the_foreground()
     {
         var (host, frames, photoId) = await LibraryWithStuckBackgroundAsync(videos: 3);
         await using var _ = host;
         var thumbs = host.Get<ThumbnailService>();
         thumbs.GenerationTimeout = TimeSpan.FromMilliseconds(300);
 
-        // Every pending item ends (photo ready, stuck videos failed) instead of holding the lane for ever.
+        // The background pass ends (it does not wait for ever behind the stuck decodes).
         var sw = Stopwatch.StartNew();
-        while (await thumbs.ProcessPendingAsync(40, CancellationToken.None) > 0 && sw.Elapsed < TimeSpan.FromSeconds(20)) { }
-        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(20));
-        Assert.Equal((0, 0), thumbs.BusyWorkers);
-        var all = await host.AllAsync();
-        Assert.All(all.Where(a => a.MediaType == MediaType.Video), v => Assert.Equal(ThumbnailState.Failed, v.ThumbnailState));
-        Assert.Equal(ThumbnailState.Ready, all.Single(a => a.Id == photoId).ThumbnailState);
+        await thumbs.ProcessPendingAsync(40, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(20));
+        await thumbs.ProcessPendingAsync(40, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(20));
 
-        // Failed items are not picked up again by the next pass.
-        var started = frames.Started;
-        await thumbs.ProcessPendingAsync(40, CancellationToken.None);
-        Assert.Equal(started, frames.Started);
+        // A timeout is not a cancellation: the two stuck native calls still hold their slots and are counted, and no
+        // third one is started (the lane is full of stuck work, so it stops instead of piling up more).
+        var stats = thumbs.Stats;
+        Assert.Equal(2, frames.Started);
+        Assert.Equal(2, stats.DecodesRunning);
+        Assert.Equal(2, stats.DecodesPastTimeout);
+        Assert.Equal(2, stats.BackgroundBusy);
+
+        // The photo the user opens is unaffected.
+        using var viewer = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        Assert.NotNull(await thumbs.GetOrCreateAsync(photoId, ThumbnailSize.Large, ThumbnailPriority.Viewer, viewer.Token));
+        Assert.NotNull(await thumbs.GetOrCreateAsync(photoId, ThumbnailSize.Small, ThumbnailPriority.Interactive, viewer.Token));
+        Assert.Equal(2, frames.Started);
     }
 
     [Fact]

@@ -9,7 +9,10 @@ namespace PhotosWindows.Application.Thumbnails;
 /// <summary>Who is waiting for a thumbnail. Interactive work never queues behind background work.</summary>
 public enum ThumbnailPriority
 {
-    /// <summary>The viewer or the visible grid: the user is looking at it now.</summary>
+    /// <summary>The photo open in the viewer: its own lane, ahead of everything else.</summary>
+    Viewer,
+
+    /// <summary>The visible grid: the user is looking at it now.</summary>
     Interactive,
 
     /// <summary>Filling the cache for the whole library after an import.</summary>
@@ -38,16 +41,23 @@ public sealed class ThumbnailService
     private readonly IPerceptualHasher _hasher;
     private readonly IVideoFrameExtractor? _videoFrames;
     private readonly ILogger<ThumbnailService> _logger;
-    // Two lanes with their own capacity: background passes (whole-library thumbnails and perceptual hashes) can occupy
-    // every background slot, or even be stuck in a native decoder, without delaying the photo the user opens.
-    private readonly SemaphoreSlim _workers;
-    private readonly SemaphoreSlim _interactive;
+    // Three lanes with their own capacity: the viewer, the visible grid and background passes. A lane slot is held until
+    // the underlying decode has really finished (even after a caller timed out), so the number of decodes running at
+    // once can never exceed the lanes' capacity, whatever the native codec does.
+    private readonly Lane _viewer;
+    private readonly Lane _interactive;
+    private readonly Lane _background;
     private readonly int _parallelism;
-    private readonly ConcurrentDictionary<(string Path, ThumbnailPriority Lane), Lazy<Task<string?>>> _inFlight = new();
+    private readonly Lock _gate = new();
+    private readonly Dictionary<(string Path, ThumbnailPriority Lane), Generation> _inFlight = [];
+    private readonly ConcurrentDictionary<string, byte> _overdue = new(StringComparer.Ordinal);
+    private int _live;
+    private int _foreground;
+    private long _lastInteractiveTicks;
 
     /// <summary>
-    /// Longest a single thumbnail or hash may hold a worker slot. A native decoder that never returns cannot be
-    /// aborted, but its slot is released and the item is marked failed instead of blocking the lane for ever.
+    /// Longest a caller waits for one thumbnail or hash. A native decode that does not finish keeps its slot (it is
+    /// still using the CPU) and the same file is not started again while it runs; callers get "no thumbnail".
     /// </summary>
     internal TimeSpan GenerationTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
@@ -62,8 +72,67 @@ public sealed class ThumbnailService
         _videoFrames = videoFrames.FirstOrDefault();
         _logger = logger;
         _parallelism = Math.Clamp(settings.Load().MaxBackgroundWorkers, 1, 8);
-        _workers = new SemaphoreSlim(_parallelism);
-        _interactive = new SemaphoreSlim(Math.Max(2, _parallelism));
+        _viewer = new Lane(2);
+        _interactive = new Lane(Math.Max(2, _parallelism));
+        _background = new Lane(_parallelism);
+    }
+
+    private sealed class Lane(int capacity)
+    {
+        public int Capacity { get; } = capacity;
+        public SemaphoreSlim Slots { get; } = new(capacity);
+        public int Waiting;
+        public int Overdue;
+        public int Busy => Capacity - Slots.CurrentCount;
+
+        /// <summary>Every slot is held by a decode that is past the timeout: waiting would mean waiting for ever.</summary>
+        public bool Stalled => Volatile.Read(ref Overdue) >= Capacity;
+    }
+
+    /// <summary>One generation shared by every caller asking for the same file in the same lane.</summary>
+    private sealed class Generation
+    {
+        public TaskCompletionSource<string?> Result { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public CancellationTokenSource Cancel { get; } = new();
+        public int Waiters;
+    }
+
+    /// <summary>Snapshot for diagnostics: lane use, decodes really running and those past the timeout.</summary>
+    public ThumbnailStats Stats
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return new ThumbnailStats(_viewer.Busy, _viewer.Waiting, _interactive.Busy, _interactive.Waiting, _background.Busy, _background.Waiting,
+                    Volatile.Read(ref _live), _overdue.Count, _inFlight.Count, ForegroundBusy);
+            }
+        }
+    }
+
+    /// <summary>
+    /// True while the user is waiting for something on screen: the viewer is loading, or grid thumbnails were requested
+    /// in the last two seconds. Background passes stop taking new work meanwhile.
+    /// </summary>
+    public bool ForegroundBusy =>
+        Volatile.Read(ref _foreground) > 0 || _viewer.Busy > 0 || _interactive.Busy > 0 || _interactive.Waiting > 0
+        || Environment.TickCount64 - Interlocked.Read(ref _lastInteractiveTicks) < 2000;
+
+    /// <summary>Marks a foreground load (the viewer opening a photo) until disposed; background work yields meanwhile.</summary>
+    public IDisposable BeginForeground()
+    {
+        Interlocked.Increment(ref _foreground);
+        return new ForegroundScope(this);
+    }
+
+    private sealed class ForegroundScope(ThumbnailService owner) : IDisposable
+    {
+        private int _disposed;
+
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) == 0) Interlocked.Decrement(ref owner._foreground);
+        }
     }
 
     /// <summary>Raised when a thumbnail becomes available (worker thread).</summary>
@@ -102,11 +171,19 @@ public sealed class ThumbnailService
     public Task<string?> GetOrCreateAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken) =>
         GetOrCreateCoreAsync(assetId, size, priority, cancellationToken);
 
-    /// <summary>Slots currently taken in each lane (diagnostics).</summary>
-    public (int Interactive, int Background) BusyWorkers => (Math.Max(2, _parallelism) - _interactive.CurrentCount, _parallelism - _workers.CurrentCount);
+    /// <summary>Slots currently taken in the interactive and background lanes (diagnostics and tests).</summary>
+    public (int Interactive, int Background) BusyWorkers => (_interactive.Busy, _background.Busy);
+
+    private Lane LaneFor(ThumbnailPriority priority) => priority switch
+    {
+        ThumbnailPriority.Viewer => _viewer,
+        ThumbnailPriority.Interactive => _interactive,
+        _ => _background,
+    };
 
     private async Task<string?> GetOrCreateCoreAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken)
     {
+        if (priority == ThumbnailPriority.Interactive) Interlocked.Exchange(ref _lastInteractiveTicks, Environment.TickCount64);
         var asset = await _assets.GetAsync(assetId, cancellationToken).ConfigureAwait(false);
         if (asset is null) return null;
         var recipe = asset.HasEdits ? (await _edits.GetAsync(assetId, cancellationToken).ConfigureAwait(false)) : null;
@@ -114,41 +191,160 @@ public sealed class ThumbnailService
         var path = PathFor(asset.Uid, size, version);
         if (File.Exists(path)) return path;
 
-        // Identical requests in the same lane share one generation. The entry is removed as soon as the generation ends
-        // (success, failure or timeout), whether or not anyone is still waiting for it.
+        // A decode of this file is still running past the timeout: do not start a second one.
+        if (_overdue.ContainsKey(path)) return null;
+        cancellationToken.ThrowIfCancellationRequested();
+
         var key = (path, priority);
-        var lazy = _inFlight.GetOrAdd(key, k => new Lazy<Task<string?>>(() =>
+        Generation generation;
+        var start = false;
+        lock (_gate)
         {
-            var task = GenerateAsync(asset, recipe?.Recipe ?? EditRecipe.Identity, size, path, priority);
-            _ = task.ContinueWith(_ => _inFlight.TryRemove(k, out var _), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-            return task;
-        }));
+            if (!_inFlight.TryGetValue(key, out generation!))
+            {
+                generation = new Generation();
+                _inFlight[key] = generation;
+                start = true;
+            }
 
-        // A caller that stops waiting (navigated away) does not cancel a generation others may share.
-        return await lazy.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
-    }
+            generation.Waiters++;
+        }
 
-    private async Task<string?> GenerateAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, ThumbnailPriority priority)
-    {
-        var lane = priority == ThumbnailPriority.Interactive ? _interactive : _workers;
-        await lane.WaitAsync().ConfigureAwait(false);
+        if (start) _ = RunGenerationAsync(generation, key, asset, recipe?.Recipe ?? EditRecipe.Identity, size, path, LaneFor(priority));
+
         try
         {
-            return await GenerateInSlotAsync(asset, recipe, size, path).WaitAsync(GenerationTimeout).ConfigureAwait(false);
-        }
-        catch (TimeoutException)
-        {
-            _logger.LogWarning("Thumbnail for asset {Id} took longer than {Timeout} s; marked as failed", asset.Id, GenerationTimeout.TotalSeconds);
-            if (size == ThumbnailSize.Small) await _assets.SetThumbnailStateAsync(asset.Id, ThumbnailState.Failed, CancellationToken.None).ConfigureAwait(false);
-            return null;
+            return await generation.Result.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
-            lane.Release();
+            Leave(generation, key);
         }
     }
 
-    private async Task<string?> GenerateInSlotAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path)
+    /// <summary>
+    /// A caller stops waiting. When nobody waits any more, the generation is cancelled: if it has not started it never
+    /// decodes; if it has, the decoder is asked to stop (it keeps its slot until it really does).
+    /// </summary>
+    private void Leave(Generation generation, (string, ThumbnailPriority) key)
+    {
+        lock (_gate)
+        {
+            if (--generation.Waiters > 0 || generation.Result.Task.IsCompleted) return;
+            if (_inFlight.TryGetValue(key, out var current) && ReferenceEquals(current, generation)) _inFlight.Remove(key);
+        }
+
+        generation.Cancel.Cancel();
+    }
+
+    private async Task RunGenerationAsync(Generation generation, (string Path, ThumbnailPriority) key, Asset asset, EditRecipe recipe, ThumbnailSize size, string path, Lane lane)
+    {
+        var token = generation.Cancel.Token;
+        try
+        {
+            var result = await RunInLaneAsync(lane, ct => GenerateInSlotAsync(asset, recipe, size, path, ct), token, () =>
+            {
+                _logger.LogWarning("Thumbnail for asset {Id} still running after {Timeout} s; it keeps its worker slot and is not started again", asset.Id, GenerationTimeout.TotalSeconds);
+                if (size == ThumbnailSize.Small) _ = _assets.SetThumbnailStateAsync(asset.Id, ThumbnailState.Failed, CancellationToken.None);
+            }, path).ConfigureAwait(false);
+            generation.Result.TrySetResult(result);
+        }
+        catch (OperationCanceledException)
+        {
+            generation.Result.TrySetCanceled();
+        }
+        catch (LaneStalledException)
+        {
+            // Every slot of this lane is held by stuck decodes: answer "no thumbnail now" instead of waiting for ever.
+            generation.Result.TrySetResult(null);
+        }
+        catch (Exception ex)
+        {
+            generation.Result.TrySetException(ex);
+        }
+        finally
+        {
+            lock (_gate)
+            {
+                if (_inFlight.TryGetValue(key, out var current) && ReferenceEquals(current, generation)) _inFlight.Remove(key);
+            }
+
+            generation.Cancel.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Runs <paramref name="work"/> in a slot of <paramref name="lane"/>. The slot is released only when the work has
+    /// finished, not when the caller stops waiting: a timed-out native decode is still counted (and still occupies its
+    /// slot) until it returns. While it runs, <paramref name="overdueKey"/> marks the file so it is not started again.
+    /// </summary>
+    private async Task<T?> RunInLaneAsync<T>(Lane lane, Func<CancellationToken, Task<T?>> work, CancellationToken token, Action onOverdue, string overdueKey)
+    {
+        if (lane.Stalled) throw new LaneStalledException();
+        Interlocked.Increment(ref lane.Waiting);
+        try
+        {
+            // Re-check periodically: the lane may become stalled while this request waits.
+            while (!await lane.Slots.WaitAsync(TimeSpan.FromMilliseconds(250), token).ConfigureAwait(false))
+            {
+                if (lane.Stalled) throw new LaneStalledException();
+            }
+        }
+        finally
+        {
+            Interlocked.Decrement(ref lane.Waiting);
+        }
+
+        Task<T?> running;
+        Interlocked.Increment(ref _live);
+        try
+        {
+            running = work(token);
+        }
+        catch
+        {
+            Interlocked.Decrement(ref _live);
+            lane.Slots.Release();
+            throw;
+        }
+
+        var overdue = 0;
+        _ = running.ContinueWith(_ =>
+        {
+            Interlocked.Decrement(ref _live);
+            if (Interlocked.Exchange(ref overdue, 0) == 1)
+            {
+                Interlocked.Decrement(ref lane.Overdue);
+                _overdue.TryRemove(overdueKey, out var _);
+            }
+
+            lane.Slots.Release();
+        }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+        try
+        {
+            return await running.WaitAsync(GenerationTimeout, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            if (!running.IsCompleted && Interlocked.CompareExchange(ref overdue, 1, 0) == 0)
+            {
+                Interlocked.Increment(ref lane.Overdue);
+                _overdue.TryAdd(overdueKey, 0);
+                onOverdue();
+                // The decode may have finished between the check and the mark: undo so the slot is not counted twice.
+                if (running.IsCompleted && Interlocked.Exchange(ref overdue, 0) == 1)
+                {
+                    Interlocked.Decrement(ref lane.Overdue);
+                    _overdue.TryRemove(overdueKey, out var _);
+                }
+            }
+
+            return default;
+        }
+    }
+
+    private async Task<string?> GenerateInSlotAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, CancellationToken ct)
     {
         try
         {
@@ -168,16 +364,16 @@ public sealed class ThumbnailService
             {
                 if (_videoFrames is not null)
                 {
-                    var frame = await _videoFrames.ExtractPosterFrameAsync(source, (int)size, CancellationToken.None).ConfigureAwait(false);
+                    var frame = await _videoFrames.ExtractPosterFrameAsync(source, (int)size, ct).ConfigureAwait(false);
                     if (frame is not null)
                     {
-                        rendered = await _renderer.RenderAsync(frame, recipe, (int)size, EncodeOptions.ThumbnailJpeg, CancellationToken.None).ConfigureAwait(false);
+                        rendered = await _renderer.RenderAsync(frame, recipe, (int)size, EncodeOptions.ThumbnailJpeg, ct).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                rendered = await _renderer.RenderAsync(source, family, recipe, (int)size, EncodeOptions.ThumbnailJpeg, CancellationToken.None).ConfigureAwait(false);
+                rendered = await _renderer.RenderAsync(source, family, recipe, (int)size, EncodeOptions.ThumbnailJpeg, ct).ConfigureAwait(false);
             }
 
             if (rendered is null)
@@ -216,15 +412,33 @@ public sealed class ThumbnailService
     public async Task<int> ProcessPendingAsync(int batchSize, CancellationToken cancellationToken)
     {
         if (_context.Current is null) return 0;
-        // The batch runs on all background workers (the semaphore still bounds decoding, shared with on-demand
-        // requests from the grid); previously each item waited for the previous one, using a single core.
+        // The batch runs on the background lane. Items are skipped (left pending for the next pass) while the user is
+        // waiting for something on screen, so the viewer and the visible grid get the CPU.
         var options = new ParallelOptions { MaxDegreeOfParallelism = _parallelism, CancellationToken = cancellationToken };
+        if (_background.Stalled)
+        {
+            _logger.LogWarning("Background thumbnails paused: all {Count} background slots are held by decodes that did not return", _background.Capacity);
+            return 0;
+        }
+
+        var processed = 0;
         var pending = await _assets.GetIdsWithThumbnailStateAsync(ThumbnailState.Pending, batchSize, cancellationToken).ConfigureAwait(false);
-        await Parallel.ForEachAsync(pending, options, async (id, ct) => await GetOrCreateAsync(id, ThumbnailSize.Small, ThumbnailPriority.Background, ct).ConfigureAwait(false)).ConfigureAwait(false);
+        await Parallel.ForEachAsync(pending, options, async (id, ct) =>
+        {
+            if (ForegroundBusy) return;
+            if (_background.Stalled) return;
+            await GetOrCreateAsync(id, ThumbnailSize.Small, ThumbnailPriority.Background, ct).ConfigureAwait(false);
+            Interlocked.Increment(ref processed);
+        }).ConfigureAwait(false);
 
         var unhashed = await _assets.GetPhotosWithoutPerceptualHashAsync(batchSize, cancellationToken).ConfigureAwait(false);
-        await Parallel.ForEachAsync(unhashed, options, async (id, ct) => await ComputePerceptualHashAsync(id, ct).ConfigureAwait(false)).ConfigureAwait(false);
-        return pending.Count + unhashed.Count;
+        await Parallel.ForEachAsync(unhashed, options, async (id, ct) =>
+        {
+            if (ForegroundBusy || _background.Stalled) return;
+            await ComputePerceptualHashAsync(id, ct).ConfigureAwait(false);
+            Interlocked.Increment(ref processed);
+        }).ConfigureAwait(false);
+        return processed;
     }
 
     private async Task ComputePerceptualHashAsync(long assetId, CancellationToken cancellationToken)
@@ -250,21 +464,29 @@ public sealed class ThumbnailService
             return;
         }
 
-        await _workers.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if (_overdue.ContainsKey(path)) return;
         try
         {
-            var raster = await _renderer.DecodeOrientedAsync(path, family, 64, cancellationToken).WaitAsync(GenerationTimeout, cancellationToken).ConfigureAwait(false);
+            // Same lane rules as thumbnails: the slot stays taken until the decode has really returned.
+            var raster = await RunInLaneAsync(_background, ct => _renderer.DecodeOrientedAsync(path, family, 64, ct)!, cancellationToken,
+                () => _logger.LogWarning("Perceptual hash for asset {Id} still running after {Timeout} s", assetId, GenerationTimeout.TotalSeconds), path).ConfigureAwait(false);
+            if (raster is null)
+            {
+                await _assets.SetThumbnailStateAsync(assetId, ThumbnailState.Failed, CancellationToken.None).ConfigureAwait(false);
+                return;
+            }
+
             await _assets.SetPerceptualHashAsync(assetId, _hasher.Compute(raster), cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException or TimeoutException
+        catch (LaneStalledException)
+        {
+            // Left as is: retried when the lane recovers.
+        }
+        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException
                                        or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
         {
             _logger.LogDebug(ex, "Perceptual hash skipped for asset {Id}", assetId);
             await _assets.SetThumbnailStateAsync(assetId, ThumbnailState.Failed, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            _workers.Release();
         }
     }
 
@@ -307,5 +529,26 @@ public sealed class ThumbnailService
         {
             _logger.LogDebug(ex, "Stale thumbnail kept (access denied)");
         }
+    }
+}
+
+/// <summary>Thumbnail service state for diagnostics. Counts only; no paths.</summary>
+public sealed record ThumbnailStats(
+    int ViewerBusy, int ViewerWaiting,
+    int InteractiveBusy, int InteractiveWaiting,
+    int BackgroundBusy, int BackgroundWaiting,
+    int DecodesRunning, int DecodesPastTimeout, int Generations, bool ForegroundBusy)
+{
+    public override string ToString() =>
+        $"viewer {ViewerBusy}+{ViewerWaiting}w, grid {InteractiveBusy}+{InteractiveWaiting}w, background {BackgroundBusy}+{BackgroundWaiting}w, " +
+        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}";
+}
+
+/// <summary>All slots of a lane are held by decodes that did not return in time.</summary>
+internal sealed class LaneStalledException : Exception
+{
+    public LaneStalledException()
+        : base("All worker slots of this lane are held by decodes that did not return.")
+    {
     }
 }
