@@ -53,7 +53,9 @@ $totalCpu = (Get-CimInstance Win32_Processor | Measure-Object -Property LoadPerc
 $os = Get-CimInstance Win32_OperatingSystem
 $cpuInfo = Get-CimInstance Win32_Processor | Select-Object -First 1
 $disks = Get-PhysicalDisk -ErrorAction SilentlyContinue | ForEach-Object { "$($_.MediaType) $($_.BusType) $([math]::Round($_.Size / 1GB)) GB" }
-$codecs = Get-AppxPackage *HEIF*, *HEVC*, *RawImage*, *AV1* -ErrorAction SilentlyContinue | ForEach-Object { "$($_.Name) $($_.Version)" }
+# HEIC needs both: HEIF Image Extensions (container) and an HEVC decoder (the image data).
+$codecs = foreach ($n in '*HEIF*', '*HEVC*', '*RawImage*', '*AV1*') { Get-AppxPackage -Name $n -ErrorAction SilentlyContinue | ForEach-Object { "$($_.Name) $($_.Version)" } }
+if (-not ($codecs -match 'HEVC')) { $codecs += 'HEVC decoder: NOT INSTALLED (HEIC photos cannot be decoded)' }
 $exe = $proc.Path
 $appVersion = if ($exe) { (Get-Item $exe).VersionInfo.ProductVersion } else { 'unknown' }
 

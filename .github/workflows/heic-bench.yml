@@ -40,12 +40,13 @@ jobs:
         shell: pwsh
         run: |
           winget install --id 9PMMSR1CGPWG --source msstore --accept-package-agreements --accept-source-agreements --silent
-          # HEIF Image Extension only reads the container; the image itself is HEVC and needs an HEVC decoder.
-          winget install --id 9N4WGH0Z6VHQ --source msstore --accept-package-agreements --accept-source-agreements --silent
+          # The image inside a HEIC is HEVC and also needs "HEVC Video Extensions"; the free "from Device
+          # Manufacturer" package is not offered to winget here and the Store one is paid, so on this runner HEIC
+          # decoding fails with 0xC00D5212 and the benchmark records that. Real timings need a Windows 11 PC.
       - name: Run benchmark
         shell: pwsh
         run: |
-          $pkgs = Get-AppxPackage -AllUsers *HEIF*, *HEVC* | ForEach-Object { "$($_.Name) $($_.Version)" }
+          $pkgs = foreach ($n in '*HEIF*', '*HEVC*') { Get-AppxPackage -AllUsers -Name $n | ForEach-Object { "$($_.Name) $($_.Version)" } }
           $env:PW_HEIF_PACKAGE = if ($pkgs) { $pkgs -join '; ' } else { "not installed" }
           Write-Host "HEIF package: $env:PW_HEIF_PACKAGE"
           dotnet run -c Release --project tools/heic-bench -- "$env:RUNNER_TEMP/heic" 10 "$env:RUNNER_TEMP/heic-report.json"
