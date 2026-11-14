@@ -1,0 +1,57 @@
+name: HEIC / WIC benchmark (Windows)
+
+# Measures the Windows Imaging Component path used for HEIC: per-stage timings at 360/1280/2048/full,
+# raster sizes, CPU per decode and whether cancelling a decode stops it. Synthetic fixtures only.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/heic-bench/**"
+      - "src/PhotosWindows.Platform.Windows/WicRasterDecoder.cs"
+      - ".github/workflows/heic-bench.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  heic:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate synthetic HEIC fixtures
+        shell: pwsh
+        run: |
+          python -m pip install --quiet pillow pillow-heif
+          python -I tools/heic-bench/make_fixtures.py "$env:RUNNER_TEMP/heic"
+      - name: HEIF codec (before)
+        shell: pwsh
+        run: |
+          Get-AppxPackage -AllUsers *HEIF* | Format-Table Name, Version -AutoSize | Out-String | Write-Host
+          Get-AppxPackage -AllUsers *HEVC* | Format-Table Name, Version -AutoSize | Out-String | Write-Host
+      - name: Try to install HEIF Image Extensions (may not be possible on Windows Server)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          winget install --id 9PMMSR1CGPWG --source msstore --accept-package-agreements --accept-source-agreements --silent
+      - name: Run benchmark
+        shell: pwsh
+        run: |
+          $pkg = (Get-AppxPackage -AllUsers *HEIF* | Select-Object -First 1)
+          $env:PW_HEIF_PACKAGE = if ($pkg) { "$($pkg.Name) $($pkg.Version)" } else { "not installed" }
+          Write-Host "HEIF package: $env:PW_HEIF_PACKAGE"
+          dotnet run -c Release --project tools/heic-bench -- "$env:RUNNER_TEMP/heic" 10 "$env:RUNNER_TEMP/heic-report.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: heic-bench
+          path: |
+            ${{ runner.temp }}/heic-report.json
+            ${{ runner.temp }}/heic/manifest.json
+          retention-days: 7
