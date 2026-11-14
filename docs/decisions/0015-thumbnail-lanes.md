@@ -11,3 +11,5 @@
 **Alternativas.** Pausar el fondo mientras el visor está abierto: no protege frente a un trabajo ya atascado. Un único semáforo con prioridad: más complejo, y un hueco atascado seguiría bloqueado.
 
 **Consecuencias.** Puede haber trabajo duplicado si la misma miniatura se pide a la vez en los dos carriles. Es raro, y el nombre temporal único evita colisiones. Con un elemento atascado, en el peor caso quedan hilos nativos ocupados, pero la interfaz ya no depende de ellos.
+
+**Revisado por [ADR-0016](0016-thumbnail-generation-ownership.md)**: el límite de 30 s liberaba el hueco aunque la decodificación nativa siguiera en marcha, y el carril interactivo era compartido por el visor y la cuadrícula.
