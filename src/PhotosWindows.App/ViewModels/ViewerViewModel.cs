@@ -37,7 +37,26 @@ public sealed partial class ViewerViewModel(
     /// <summary>After this long without any image, the viewer says so instead of showing an endless spinner.</summary>
     private static readonly TimeSpan SlowLoadNotice = TimeSpan.FromSeconds(6);
     private long _loadId;
-    private const int ViewerRenderSize = 3840;
+
+    /// <summary>Upper bound for the viewer's own renders (zoomed in on a 4K screen); never more than the original.</summary>
+    private const int MaxViewerRenderSize = 3840;
+
+    /// <summary>
+    /// One full-quality viewer render at a time across the app. The slot is released when the render has really
+    /// finished, not when the user navigates away, so fast navigation cannot pile up native decodes.
+    /// </summary>
+    private static readonly SemaphoreSlim RenderSlot = new(1, 1);
+
+    private string _stateWhenOpened = string.Empty;
+    private int _shownLongSide;
+    private IDisposable? _foreground;
+    private CancellationTokenSource? _idle;
+
+    /// <summary>Long side of the stage in physical pixels, set by the page (window size × display scale).</summary>
+    public int StageLongSidePx { get; set; } = 1920;
+
+    /// <summary>True while an image change only raises quality (zoom); the page keeps the current zoom and scroll.</summary>
+    public bool PreserveView { get; private set; }
     private IReadOnlyList<long> _ids = [];
     private CancellationTokenSource? _cts;
 
@@ -109,7 +128,9 @@ public sealed partial class ViewerViewModel(
         ShowingOriginal = false;
         ViewRotation = 0;
         VideoSource = null;
-        Image = null; // never leave the previous photo on screen as if it were this one
+        _shownLongSide = 0;
+        SetImage(null, string.Empty); // never leave the previous photo on screen as if it were this one
+        HoldForeground();
         _ = WatchForSlowLoadAsync(loadId, cts.Token);
         try
         {
@@ -122,15 +143,19 @@ public sealed partial class ViewerViewModel(
             IsFavorite = asset.IsFavorite;
             HasEdits = asset.HasEdits;
             HasLiveVideo = asset.HasLiveVideo;
+            timing.Format = asset.Format;
 
-            // 1. The grid thumbnail is usually on disk already: show it at once, before any other work.
-            if (IsPhoto && await TryShowCachedAsync(asset, ThumbnailSize.Small, cts.Token)) timing.Mark("small");
+            // 1. Whatever is already cached, best first: no decoding at all.
+            if (IsPhoto)
+            {
+                if (await TryShowCachedAsync(asset, ThumbnailSize.Large, cts.Token)) timing.Mark("large-cached");
+                else if (await TryShowCachedAsync(asset, ThumbnailSize.Small, cts.Token)) timing.Mark("small-cached");
+            }
 
             var original = await editing.ResolveOriginalAsync(asset.Id, cts.Token);
             timing.Mark("resolve");
             if (original is null)
             {
-                await ShowPreviewAsync(asset, cts.Token);
                 ShowError(Loc.Get("Viewer_Unavailable"), "Unavailable");
                 await LoadInspectorAsync(asset, cts.Token);
                 return;
@@ -138,25 +163,41 @@ public sealed partial class ViewerViewModel(
 
             if (IsVideo)
             {
-                Image = null;
+                SetImage(null, string.Empty);
                 VideoSource = new Uri(original);
                 LoadState = "Ready";
                 await LoadInspectorAsync(asset, cts.Token);
                 return;
             }
 
-            // 2. Better preview (2048 px), generated on the interactive lane if needed: background thumbnail work
-            //    for the rest of the library never delays it.
-            await ShowPreviewAsync(asset, cts.Token);
-            timing.Mark("preview");
+            // 2. Without a large preview, make one on the viewer's own lane. It is decoded once and, when the window
+            //    does not need more than 2048 px, it is also the final image: no second full decode of the original.
+            var target = TargetLongSide(asset, 1.0);
+            if (_shownLongSide < (int)ThumbnailSize.Large)
+            {
+                LoadingMessage = Loc.Get(IsHeif(asset) ? "Viewer_DecodingHeic" : "Viewer_LoadingPreview");
+                var path = await thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ThumbnailPriority.Viewer, cts.Token);
+                timing.Mark("large");
+                if (path is not null) await ShowFileAsync(path, (int)ThumbnailSize.Large, target <= (int)ThumbnailSize.Large ? "Ready" : "Preview", cts.Token);
+                else if (Image is null) throw new MediaDecodeException(Loc.Get(IsHeif(asset) ? "Viewer_HeicFailed" : "Viewer_LoadFailed"));
+            }
+            else if (target <= _shownLongSide)
+            {
+                _stateWhenOpened = "Ready";
+                if (Image is not null && LoadState == "Preview") LoadState = "Ready";
+            }
 
-            // 3. Full quality; the inspector loads meanwhile and never delays the first image.
-            LoadingMessage = Loc.Get("Viewer_ImprovingQuality");
-            var render = RenderAsync(asset, cts.Token);
+            // 3. The inspector loads after the first image.
             await LoadInspectorAsync(asset, cts.Token);
             timing.Mark("inspector");
-            await render;
-            timing.Mark("render");
+
+            // 4. Full quality only when the window really needs more pixels than the preview has.
+            if (target > _shownLongSide)
+            {
+                LoadingMessage = Loc.Get("Viewer_ImprovingQuality");
+                await RenderAsync(asset, target, preserveView: false, cts.Token);
+                timing.Mark("render");
+            }
         }
         catch (OperationCanceledException)
         {
@@ -165,14 +206,14 @@ public sealed partial class ViewerViewModel(
         }
         catch (MediaDecodeException ex)
         {
-            ShowError(ex.Message, "Error");
+            ShowError(ex.Message, Image is null ? "Error" : "Preview");
             timing.Outcome = "decode-error";
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException
                                        or System.Runtime.InteropServices.ExternalException or OutOfMemoryException or TimeoutException)
         {
             logger.LogWarning(ex, "Viewer load {LoadId} failed", loadId);
-            ShowError(Loc.Get("Viewer_LoadFailed"), "Error");
+            ShowError(Loc.Get(ex is OutOfMemoryException ? "Viewer_OutOfMemory" : "Viewer_LoadFailed"), Image is null ? "Error" : "Preview");
             timing.Outcome = "error";
         }
         finally
@@ -181,10 +222,53 @@ public sealed partial class ViewerViewModel(
             {
                 IsLoading = false;
                 LoadingMessage = string.Empty;
-                if (LoadState == "Loading") LoadState = Image is null ? "Error" : "Preview";
+                if (LoadState == "Loading" && Image is null) LoadState = "Error";
+                ReleaseForegroundWhenIdle();
             }
 
-            timing.Log(logger, Asset);
+            timing.Log(logger, Asset, thumbnails.Stats);
+        }
+    }
+
+    private static bool IsHeif(Asset asset) => asset.Format.Contains("HEI", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Pixels the stage needs at this zoom, never more than the original nor the viewer's cap.</summary>
+    private int TargetLongSide(Asset asset, double zoom)
+    {
+        var (w, h) = asset.DisplaySize;
+        var original = Math.Max(w, h);
+        var needed = (int)Math.Ceiling(Math.Max(320, StageLongSidePx) * Math.Max(1, zoom));
+        needed = Math.Min(needed, MaxViewerRenderSize);
+        return original > 0 ? Math.Min(needed, original) : needed;
+    }
+
+    /// <summary>Called by the page when the user zooms: loads more pixels if the shown image is too small.</summary>
+    public async Task EnsureResolutionAsync(double zoom)
+    {
+        if (Asset is not { MediaType: MediaType.Photo } asset || IsLoading || _cts is not { } cts) return;
+        var target = TargetLongSide(asset, zoom);
+        if (target <= _shownLongSide * 1.1) return;
+        IsLoading = true;
+        LoadingMessage = Loc.Get("Viewer_ImprovingQuality");
+        try
+        {
+            await RenderAsync(asset, target, preserveView: true, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // navigated away
+        }
+        catch (Exception ex) when (ex is MediaDecodeException or IOException or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
+        {
+            logger.LogInformation(ex, "Higher-resolution render failed; keeping the current image");
+        }
+        finally
+        {
+            if (_cts == cts)
+            {
+                IsLoading = false;
+                LoadingMessage = string.Empty;
+            }
         }
     }
 
@@ -195,34 +279,75 @@ public sealed partial class ViewerViewModel(
         if (path is null) return false;
         try
         {
-            Image = await images.FromFileAsync(path, 0, ct);
-            if (LoadState == "Loading") LoadState = "Preview";
-            return true;
+            return await ShowFileAsync(path, (int)size, "Preview", ct);
         }
         catch (Exception ex) when (ex is IOException or System.Runtime.InteropServices.ExternalException)
         {
-            // A damaged cache file is regenerated by the next step.
+            // A damaged cache file: removed so the next step regenerates it once.
             logger.LogDebug(ex, "Cached thumbnail could not be shown");
+            TryDelete(path);
             return false;
         }
     }
 
-    private async Task ShowPreviewAsync(Asset asset, CancellationToken ct)
+    private async Task<bool> ShowFileAsync(string path, int longSide, string state, CancellationToken ct)
     {
-        if (await TryShowCachedAsync(asset, ThumbnailSize.Large, ct)) return;
-        LoadingMessage = Loc.Get("Viewer_LoadingPreview");
-        var path = await thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ThumbnailPriority.Interactive, ct);
-        if (path is not null)
+        var bitmap = await images.FromFileAsync(path, 0, ct);
+        ct.ThrowIfCancellationRequested();
+        if (bitmap is null) return false;
+        _shownLongSide = longSide;
+        SetImage(bitmap, state);
+        return true;
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
         {
-            Image = await images.FromFileAsync(path, 0, ct);
-            if (LoadState == "Loading") LoadState = "Preview";
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // regenerated later
         }
     }
 
-    private async Task RenderAsync(Asset asset, CancellationToken ct)
+    /// <summary>
+    /// The state applies only once WinUI has decoded the image: a bitmap that already has pixels (SetSourceAsync has
+    /// finished) counts at once — WinUI does not raise ImageOpened for those (UI run #56) — otherwise ImageOpened does.
+    /// A source that is set but not decoded never counts as shown.
+    /// </summary>
+    private void SetImage(ImageSource? image, string stateWhenOpened)
+    {
+        _stateWhenOpened = stateWhenOpened;
+        Image = image;
+        if (image is Microsoft.UI.Xaml.Media.Imaging.BitmapSource { PixelWidth: > 0, PixelHeight: > 0 }) ApplyOpenedState();
+    }
+
+    private void ApplyOpenedState()
+    {
+        if (_stateWhenOpened.Length > 0 && LoadState is "Loading" or "Preview") LoadState = _stateWhenOpened;
+    }
+
+    private async Task RenderAsync(Asset asset, int longSide, bool preserveView, CancellationToken ct)
     {
         var recipe = ShowingOriginal ? EditRecipe.Identity : await editing.GetRecipeAsync(asset.Id, ct);
-        var rendered = await editing.RenderFromOriginalAsync(asset.Id, recipe, ViewerRenderSize, EncodeOptions.PreviewJpeg, ct);
+
+        // Wait for the app-wide render slot; the slot is given back only when the render has really finished.
+        await RenderSlot.WaitAsync(ct);
+        Task<RenderedImage?> running;
+        try
+        {
+            running = editing.RenderFromOriginalAsync(asset.Id, recipe, longSide, EncodeOptions.PreviewJpeg, ct);
+        }
+        catch
+        {
+            RenderSlot.Release();
+            throw;
+        }
+
+        _ = running.ContinueWith(_ => RenderSlot.Release(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        var rendered = await running.WaitAsync(ct);
         ct.ThrowIfCancellationRequested();
         if (rendered is null)
         {
@@ -231,8 +356,47 @@ public sealed partial class ViewerViewModel(
             return;
         }
 
-        Image = await ImageLoader.FromBytesAsync(rendered.Encoded, 0);
-        LoadState = "Ready";
+        var bitmap = await ImageLoader.FromBytesAsync(rendered.Encoded, 0);
+        ct.ThrowIfCancellationRequested();
+        _shownLongSide = longSide;
+        PreserveView = preserveView;
+        try
+        {
+            SetImage(bitmap, "Ready");
+        }
+        finally
+        {
+            PreserveView = false;
+        }
+    }
+
+    /// <summary>Background thumbnail work yields while the viewer loads and for a few seconds after (the user may go on).</summary>
+    private void HoldForeground()
+    {
+        _idle?.Cancel();
+        _foreground ??= thumbnails.BeginForeground();
+    }
+
+    private void ReleaseForegroundWhenIdle()
+    {
+        _idle?.Cancel();
+        var idle = _idle = new CancellationTokenSource();
+        _ = ReleaseLaterAsync(idle.Token);
+    }
+
+    private async Task ReleaseLaterAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _foreground?.Dispose();
+        _foreground = null;
     }
 
     /// <summary>If nothing is on screen after a few seconds, say so (the load keeps going and can still finish).</summary>
@@ -250,13 +414,30 @@ public sealed partial class ViewerViewModel(
         ui.Post(() =>
         {
             if (loadId != _loadId || !IsLoading) return;
-            LoadingMessage = Image is null ? Loc.Get("Viewer_SlowLoad") : Loc.Get("Viewer_ImprovingQuality");
-            logger.LogWarning("Viewer load {LoadId} still running after {Seconds} s (image shown: {Shown})", loadId, SlowLoadNotice.TotalSeconds, Image is not null);
+            var stats = thumbnails.Stats;
+            LoadingMessage = Image is not null ? Loc.Get("Viewer_ImprovingQuality")
+                : stats.DecodesPastTimeout > 0 ? Loc.Get("Viewer_DecoderSlow")
+                : Loc.Get("Viewer_SlowLoad");
+            logger.LogWarning("Viewer load {LoadId} still running after {Seconds} s (image shown: {Shown}; {Stats})", loadId, SlowLoadNotice.TotalSeconds, Image is not null, stats);
         });
     }
 
     /// <summary>Called by the page when the Image element has decoded and shown its source.</summary>
-    public void OnImageOpened() => logger.LogDebug("Viewer load {LoadId}: image opened ({State})", _loadId, LoadState);
+    public void OnImageOpened()
+    {
+        ApplyOpenedState();
+        logger.LogDebug("Viewer load {LoadId}: image opened ({State})", _loadId, LoadState);
+    }
+
+    /// <summary>Called by the page when WinUI could not show the image source.</summary>
+    public void OnImageFailed(string message)
+    {
+        logger.LogWarning("Viewer load {LoadId}: image failed to open ({Message})", _loadId, message);
+        ShowError(Loc.Get("Viewer_LoadFailed"), "Error");
+    }
+
+    [RelayCommand]
+    private Task RetryAsync() => ShowAsync(Index);
 
     /// <summary>Monotonic per-stage timings for one load, written to the local log. No paths or names.</summary>
     private sealed class LoadTiming(long id)
@@ -266,11 +447,13 @@ public sealed partial class ViewerViewModel(
 
         public string Outcome { get; set; } = "completed";
 
+        public string? Format { get; set; }
+
         public void Mark(string stage) => _marks.Add($"{stage}={_sw.ElapsedMilliseconds}ms");
 
-        public void Log(ILogger logger, Asset? asset) => logger.LogInformation(
-            "Viewer load {LoadId} {Outcome} in {Ms} ms: {Stages} (asset {AssetId}, {Format}, {Bytes} bytes, edited {Edited})",
-            id, Outcome, _sw.ElapsedMilliseconds, string.Join(", ", _marks), asset?.Id, asset?.Format, asset?.FileSize, asset?.HasEdits);
+        public void Log(ILogger logger, Asset? asset, ThumbnailStats stats) => logger.LogInformation(
+            "Viewer load {LoadId} {Outcome} in {Ms} ms: {Stages} (asset {AssetId}, {Format}, {Bytes} bytes, {Width}x{Height}, edited {Edited}; {Stats})",
+            id, Outcome, _sw.ElapsedMilliseconds, string.Join(", ", _marks), asset?.Id, asset?.Format, asset?.FileSize, asset?.PixelWidth, asset?.PixelHeight, asset?.HasEdits, stats);
     }
 
     private void ShowError(string message, string state = "Error")
@@ -368,7 +551,7 @@ public sealed partial class ViewerViewModel(
         IsLoading = true;
         try
         {
-            await RenderAsync(Asset, _cts.Token);
+            await RenderAsync(Asset, TargetLongSide(Asset, 1.0), preserveView: true, _cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -453,7 +636,13 @@ public sealed partial class ViewerViewModel(
         await ShowAsync(Index);
     }
 
-    public void Cancel() => _cts?.Cancel();
+    public void Cancel()
+    {
+        _cts?.Cancel();
+        _idle?.Cancel();
+        _foreground?.Dispose();
+        _foreground = null;
+    }
 
     private async Task LoadPeopleAsync(Asset asset, CancellationToken ct)
     {

@@ -126,6 +126,39 @@ Con decodificadores que terminan, la cola de fondo apenas retrasa al visor: el s
 
 Además, el visor muestra primero la miniatura pequeña de la caché, sin generar nada, y carga el inspector después de la primera imagen.
 
+## Incidencia HEIC del 14-11-2026: visor negro y CPU alta ([ADR-0016](decisions/0016-thumbnail-generation-ownership.md))
+
+**Reproducción (Linux, decodificador real con 100 ms extra por decodificación para emular un códec caro):** `GridScrollStarvationTests`.
+
+| Tras 199 miniaturas pedidas y abandonadas por la cuadrícula | `2c0bf51` (antes) | Después |
+|---|---|---|
+| Espera de la vista previa del visor | **11,1 s** (crece con lo que se desplaza) | < 1 s |
+| Decodificaciones ejecutadas | 199 + 1 | ≤ 6 |
+
+**Prueba de 30 minutos** (`tools/import-bench soak`, Linux, 4 vCPU). Biblioteca de 8.685 JPEG sintéticos (9 GB) con la pasada de fondo activa. Cada 0,5 s la cuadrícula pide y abandona 30 miniaturas, y el visor abre otra foto abandonando la anterior. Informe en [`artifacts/perf/2026-11-14-viewer-soak-linux`](../artifacts/perf/2026-11-14-viewer-soak-linux/); medido sobre `7b36f18`, con el mismo `ThumbnailService` que la versión final.
+
+| Aperturas | Fallos | p50 | p95 | p99 | Máx. |
+|---|---|---|---|---|---|
+| 2.102 | 0 | 379 ms | 488 ms | 558 ms | 1.135 ms |
+
+| Minuto | Conjunto de trabajo | Heap administrado | Hilos | Descriptores | Decodificaciones vivas |
+|---|---|---|---|---|---|
+| 0 | 146 MiB | 19 MiB | 15 | 128 | 0 |
+| 4 | 211 MiB | 1 MiB | 16 | 136 | 0 |
+| 14 | 227 MiB | 10 MiB | 16 | 136 | 0 |
+| 24 | 255 MiB | 8 MiB | 15 | 136 | 0 |
+| 30 | 269 MiB | 4 MiB | 16 | 136 | 0 |
+
+Hilos, descriptores y decodificaciones vivas se mantienen planos. El conjunto de trabajo nativo sube despacio (+58 MiB en 26 min) con el heap administrado estable. No está explicado (memoria nativa de Skia o caché de archivos) y queda como punto a vigilar en la prueba larga en Windows.
+
+**WIC/HEIC en el runner de Windows** (`.github/workflows/heic-bench.yml`, fixtures HEIC sintéticos de 12, 24 y 48 MP generados con `tools/heic-bench/make_fixtures.py`):
+- Se instaló «HEIF Image Extension» 1.2.65.0 y WIC muestra «Microsoft HEIF Decoder».
+- `GetFileFromPathAsync`, `OpenAsync` y `BitmapDecoder.CreateAsync` tardan unos 1–3 ms en caliente (~120 ms la primera vez).
+- `GetPixelDataAsync` **falla siempre con `0xC00D5212`** (MF_E_TOPO_CODEC_NOT_FOUND): no hay decodificador HEVC. El paquete gratuito «HEVC Video Extensions from Device Manufacturer» no está disponible para `winget` en el runner, y el de la Store es de pago.
+- **Conclusión:** en GitHub Actions no se pueden medir tiempos de decodificación HEIC; hacen falta un Windows 11 con HEVC. En un equipo sin HEVC, todos los HEIC fallan al instante, no se cuelgan. La app ahora lo explica con un mensaje propio en lugar de pedir la extensión HEIF.
+
+**Pendiente en el PC del usuario (QA #43–45):** tiempos por fase de HEIC de 12, 24 y 48 MP (p50, p95 y máximo), CPU y memoria durante 30–60 min, y versión de los códecs. El registro del visor y `tools/diagnostics/Collect-PhotosWindowsPerformance.ps1` recogen estos datos sin rutas.
+
 ## Pendiente de medir en Windows (QA manual)
 - Páginas de Lugares y Recuerdos con 10k/50k/100k elementos reales (tiempo hasta el primer pintado, memoria).
 - Importación de 1.000 JPEG reales (copiar y sin mover) en SSD y HDD.

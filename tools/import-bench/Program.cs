@@ -25,6 +25,7 @@ switch (a.Command)
     case "generate": Generate(a); break;
     case "run": await RunAsync(a); break;
     case "viewer": await ViewerAsync(a); break;
+    case "soak": await SoakAsync(a); break;
     default:
         Console.Error.WriteLine("usage: generate --out DIR [--photos N --photo-kb K --videos N --video-mb M --dup-pct P --sidecar-pct P --live-pct P --depth D --per-folder N]\n       run --data DIR --work DIR [--workers N] [--mode copy|inplace] [--background] [--verify] [--report FILE]");
         Environment.Exit(2);
@@ -399,6 +400,99 @@ static async Task ViewerAsync(Args a)
         maxms = Math.Round(times[^1]),
         timedOut = timeouts,
     };
+    var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
+    Console.WriteLine(json);
+    if (a.Str("report", "") is { Length: > 0 } file) File.WriteAllText(file, json);
+}
+
+// Long run: opens photos continuously (viewer lane, previous request abandoned like fast navigation) while the grid
+// requests and abandons thumbnails and the background pass runs. Samples memory, threads, open handles and lane
+// state every minute so growth would show.
+static async Task SoakAsync(Args a)
+{
+    var data = a.Req("data");
+    var work = a.Req("work");
+    var minutes = a.Int("minutes", 30);
+    if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
+    Directory.CreateDirectory(work);
+    var services = new ServiceCollection();
+    services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning));
+    services.AddPhotosWindowsCore(new DefaultAppPaths(Path.Combine(work, "appdata")));
+    services.AddPhotosWindowsImaging();
+    await using var provider = services.BuildServiceProvider();
+    var settings = provider.GetRequiredService<ISettingsStore>();
+    settings.Save(settings.Load() with { MaxBackgroundWorkers = a.Int("workers", 2) });
+    await provider.GetRequiredService<LibraryManager>().CreateAsync(work, "soak", CancellationToken.None);
+    var thumbs = provider.GetRequiredService<ThumbnailService>();
+    await provider.GetRequiredService<ImportService>().ImportAsync(new ImportRequest([data], ImportMode.AddInPlace), null, CancellationToken.None);
+    var ids = (await provider.GetRequiredService<IAssetRepository>().QueryAsync(new AssetQuery(), CancellationToken.None)).Select(r => r.Id).ToList();
+
+    using var stop = new CancellationTokenSource(TimeSpan.FromMinutes(minutes));
+    var background = Task.Run(async () =>
+    {
+        while (!stop.IsCancellationRequested)
+        {
+            try
+            {
+                if (thumbs.ForegroundBusy) { await Task.Delay(1000, stop.Token); continue; }
+                if (await thumbs.ProcessPendingAsync(40, stop.Token) == 0) await Task.Delay(1000, stop.Token);
+            }
+            catch (OperationCanceledException) { break; }
+        }
+    });
+
+    var rnd = new Random(11);
+    var opens = new List<double>();
+    var failures = 0;
+    var samples = new List<object>();
+    var process = Process.GetCurrentProcess();
+    var nextSample = TimeSpan.Zero;
+    var clock = Stopwatch.StartNew();
+    CancellationTokenSource? previous = null;
+    while (!stop.IsCancellationRequested)
+    {
+        // Grid: 30 tiles requested and recycled almost at once (fast scrolling).
+        var start = rnd.Next(ids.Count);
+        for (var i = 0; i < 30; i++)
+        {
+            using var tile = new CancellationTokenSource();
+            var t = thumbs.GetOrCreateAsync(ids[(start + i) % ids.Count], ThumbnailSize.Small, tile.Token);
+            tile.Cancel();
+            _ = t.ContinueWith(_ => { }, TaskScheduler.Default);
+        }
+
+        // Viewer: open a photo; the previous one is abandoned (navigation).
+        previous?.Cancel();
+        var cts = previous = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        using (thumbs.BeginForeground())
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                var path = await thumbs.GetOrCreateAsync(ids[rnd.Next(ids.Count)], ThumbnailSize.Large, ThumbnailPriority.Viewer, cts.Token);
+                if (path is null) failures++;
+                opens.Add(sw.Elapsed.TotalMilliseconds);
+            }
+            catch (OperationCanceledException) { failures++; }
+        }
+
+        if (clock.Elapsed >= nextSample)
+        {
+            process.Refresh();
+            var fds = OperatingSystem.IsLinux() ? Directory.GetFiles("/proc/self/fd").Length : process.HandleCount;
+            var st = thumbs.Stats;
+            samples.Add(new { minute = Math.Round(clock.Elapsed.TotalMinutes, 1), workingSetMiB = process.WorkingSet64 >> 20, managedMiB = GC.GetTotalMemory(false) >> 20, threads = process.Threads.Count, handles = fds, decodesRunning = st.DecodesRunning, generations = st.Generations, opens = opens.Count });
+            Console.Error.WriteLine(JsonSerializer.Serialize(samples[^1]));
+            nextSample += TimeSpan.FromMinutes(1);
+        }
+
+        try { await Task.Delay(500, stop.Token); } catch (OperationCanceledException) { }
+    }
+
+    await background;
+    opens.Sort();
+    double P(double q) => opens.Count == 0 ? 0 : Math.Round(opens[(int)Math.Min(opens.Count - 1, Math.Ceiling(q * opens.Count) - 1)]);
+    var report = new { commit = Environment.GetEnvironmentVariable("PW_COMMIT") ?? "unknown", minutes, assets = ids.Count, opens = opens.Count, failures, p50ms = P(0.5), p95ms = P(0.95), p99ms = P(0.99), maxms = opens.Count > 0 ? Math.Round(opens[^1]) : 0, samples };
     var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
     Console.WriteLine(json);
     if (a.Str("report", "") is { Length: > 0 } file) File.WriteAllText(file, json);

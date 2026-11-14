@@ -10,6 +10,8 @@
 | Ajustes de la app y bibliotecas recientes | `%LOCALAPPDATA%\PhotosWindows\settings.json` | No |
 | Registros de diagnóstico | `%LOCALAPPDATA%\PhotosWindows\logs` (7 días) | No (el usuario puede abrirlos y compartirlos manualmente) |
 | Tiempos por fase de cada importación | Mismo registro local, una línea al terminar | No. Solo duraciones y recuentos: sin rutas ni nombres de archivo |
+| Tiempos de cada apertura en el visor y estado de las colas de miniaturas | Mismo registro local | No. Identificador interno, formato, tamaño en bytes y píxeles, duraciones y recuentos; sin rutas ni nombres |
+| Informe de rendimiento (`tools/diagnostics/Collect-PhotosWindowsPerformance.ps1`) | ZIP en el Escritorio, solo si el usuario lo confirma tras ver el resumen | No se envía nunca automáticamente. Reemplaza rutas y nombres de archivo; no incluye fotos, miniaturas, GPS, personas ni rostros |
 | Coordenadas GPS | Catálogo | No. Al exportar, la ubicación **no** se incluye salvo que el usuario lo active |
 | Personas: rostros (posición), descriptores numéricos (128 valores por rostro), grupos y nombres | Catálogo (`faces`, `people`, `face_analysis`) | No. Fuera de las copias de seguridad salvo que el usuario lo marque |
 | Miniaturas de rostros | `cache/faces/` de la biblioteca | No |

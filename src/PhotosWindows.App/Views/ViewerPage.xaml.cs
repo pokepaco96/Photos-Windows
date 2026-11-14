@@ -31,6 +31,7 @@ public sealed partial class ViewerPage : Page
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
+        UpdateStageSize();
         if (e.Parameter is ViewerNavigation target) await ViewModel.LoadAsync(target);
         TakeFocus();
     }
@@ -68,7 +69,8 @@ public sealed partial class ViewerPage : Page
                 break;
             case nameof(ViewerViewModel.Image):
             case nameof(ViewerViewModel.ViewRotation):
-                Zoomer.ChangeView(null, null, 1f, disableAnimation: true);
+                // A sharper version of the same photo (after zooming) keeps the current zoom and position.
+                if (!(e.PropertyName == nameof(ViewerViewModel.Image) && ViewModel.PreserveView)) Zoomer.ChangeView(null, null, 1f, disableAnimation: true);
                 FitImage();
                 break;
         }
@@ -88,7 +90,26 @@ public sealed partial class ViewerPage : Page
         Player.Source = null;
     }
 
-    private void OnStageSizeChanged(object sender, SizeChangedEventArgs e) => FitImage();
+    private void OnStageSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateStageSize();
+        FitImage();
+    }
+
+    /// <summary>The viewer renders for the pixels the stage really has (window size × display scale), not a fixed 4K.</summary>
+    private void UpdateStageSize()
+    {
+        var scale = XamlRoot?.RasterizationScale ?? 1.0;
+        var longSide = Math.Max(Stage.ActualWidth, Stage.ActualHeight) * scale;
+        if (longSide > 0) ViewModel.StageLongSidePx = (int)Math.Ceiling(longSide);
+    }
+
+    private void OnZoomerViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+    {
+        if (!e.IsIntermediate && Zoomer.ZoomFactor > 1.05f) _ = ViewModel.EnsureResolutionAsync(Zoomer.ZoomFactor);
+    }
+
+    private void OnPhotoFailed(object sender, ExceptionRoutedEventArgs e) => ViewModel.OnImageFailed(e.ErrorMessage);
 
     private void OnPhotoOpened(object sender, RoutedEventArgs e)
     {

@@ -425,6 +425,11 @@
   <data name="Viewer_ImprovingQuality" xml:space="preserve"><value>Mejorando calidad…</value></data>
   <data name="Viewer_SlowLoad" xml:space="preserve"><value>La carga tarda más de lo habitual. Puedes esperar o pasar a la siguiente foto.</value></data>
   <data name="Viewer_LoadFailed" xml:space="preserve"><value>No se pudo mostrar esta foto con la calidad completa. Inténtalo más tarde o pasa a la siguiente.</value></data>
+  <data name="Viewer_DecodingHeic" xml:space="preserve"><value>Decodificando foto HEIC…</value></data>
+  <data name="Viewer_HeicFailed" xml:space="preserve"><value>No se pudo decodificar esta foto HEIC. Comprueba que «Extensiones de imagen HEIF» está instalada y actualizada (Microsoft Store) y vuelve a intentarlo.</value></data>
+  <data name="Viewer_DecoderSlow" xml:space="preserve"><value>El decodificador de imágenes no responde. Puedes reintentar o pasar a la siguiente foto; mientras tanto la app no inicia más decodificaciones.</value></data>
+  <data name="Viewer_OutOfMemory" xml:space="preserve"><value>No hay memoria suficiente para mostrar esta foto ahora. Cierra otras aplicaciones y vuelve a intentarlo.</value></data>
+  <data name="Viewer_Retry.Content" xml:space="preserve"><value>Reintentar</value></data>
   <data name="Viewer_Unavailable" xml:space="preserve"><value>El archivo original no está disponible. Puede que se haya movido, eliminado o que esté en una unidad desconectada. Usa Ajustes › Comprobar biblioteca para localizarlo.</value></data>
   <data name="Viewer_VideoError" xml:space="preserve"><value>No se puede reproducir este vídeo. Puede que falte su códec (para HEVC, instala «Extensiones de vídeo HEVC» desde Microsoft Store).</value></data>
   <data name="Viewer_VideoErrorTitle" xml:space="preserve"><value>No se puede reproducir el vídeo</value></data>

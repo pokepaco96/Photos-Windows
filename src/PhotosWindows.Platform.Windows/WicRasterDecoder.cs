@@ -33,7 +33,8 @@ public sealed class WicRasterDecoder : IRasterDecoder
     {
         try
         {
-            var file = await StorageFile.GetFileFromPathAsync(path).AsTask(cancellationToken).ConfigureAwait(false);
+            // StorageFile rejects paths with mixed separators ("The specified path is invalid"): normalize first.
+            var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask(cancellationToken).ConfigureAwait(false);
             using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read).AsTask(cancellationToken).ConfigureAwait(false);
             var decoder = await BitmapDecoder.CreateAsync(stream).AsTask(cancellationToken).ConfigureAwait(false);
 
@@ -67,6 +68,9 @@ public sealed class WicRasterDecoder : IRasterDecoder
         catch (Exception ex) when (ex is COMException or ArgumentException or UnauthorizedAccessException or FileNotFoundException or InvalidCastException)
         {
             _logger.LogDebug(ex, "WIC could not decode {File}", Path.GetFileName(path));
+            // MF_E_TOPO_CODEC_NOT_FOUND: the HEIF container is readable but no HEVC decoder is installed (measured on a
+            // Windows runner with HEIF Image Extension 1.2.65.0 and no HEVC Video Extensions).
+            if (family == FormatFamily.Heif && ex.HResult == unchecked((int)0xC00D5212)) throw new MediaDecodeException(HevcMissingMessage, ex);
             throw new MediaDecodeException(MissingCodecMessage(family), ex);
         }
     }
@@ -92,6 +96,8 @@ public sealed class WicRasterDecoder : IRasterDecoder
 
         return 1;
     }
+
+    internal const string HevcMissingMessage = "This HEIC photo uses HEVC compression and Windows has no HEVC decoder. Install \"HEVC Video Extensions\" (or \"HEVC Video Extensions from Device Manufacturer\") from Microsoft Store, together with \"HEIF Image Extensions\".";
 
     private static string MissingCodecMessage(FormatFamily family) => family switch
     {

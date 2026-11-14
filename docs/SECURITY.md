@@ -35,3 +35,9 @@ La app procesa archivos no confiables (tarjetas SD, descargas, discos ajenos). L
 
 ## Notificar vulnerabilidades
 Abre un *security advisory* privado en GitHub en lugar de un issue público.
+
+## Decodificadores nativos y diagnóstico
+
+- **Decodificaciones nativas acotadas.** Las decodificaciones nativas (WIC/HEIF/HEVC, fotogramas de vídeo) no se pueden abortar desde código administrado. La app limita cuántas hay vivas: un hueco solo se libera cuando la llamada termina de verdad, y un archivo que superó el tiempo límite no se vuelve a lanzar mientras siga en marcha ([ADR-0016](decisions/0016-thumbnail-generation-ownership.md)). Si un códec se bloquease de forma reiterada, la siguiente medida sería aislar la decodificación en un proceso que se pueda terminar.
+- **Informe de diagnóstico.** El script es local, se ejecuta con los permisos del usuario, no hace peticiones de red y pide confirmación antes de escribir el ZIP.
+
