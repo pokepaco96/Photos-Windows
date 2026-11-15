@@ -61,12 +61,18 @@ public sealed class WicRasterDecoder : IRasterDecoder
                 transform.ScaledHeight = (uint)Math.Max(1, Math.Round(height * scale));
             }
 
+            // The decode is never abandoned: with AsTask(token) a cancel completed the task at once while WIC kept
+            // decoding, so the caller's worker slot was released and new decodes piled up on top of the old ones
+            // (20 GB private memory while browsing quickly through HEICs on Windows 11). The work runs to the end and
+            // the cancellation is honoured afterwards; the slot stays taken exactly as long as WIC is working.
+            cancellationToken.ThrowIfCancellationRequested();
             var pixels = await decoder.GetPixelDataAsync(
                 BitmapPixelFormat.Bgra8,
                 BitmapAlphaMode.Straight,
                 transform,
                 ExifOrientationMode.IgnoreExifOrientation,
-                ColorManagementMode.ColorManageToSRgb).AsTask(cancellationToken).ConfigureAwait(false);
+                ColorManagementMode.ColorManageToSRgb).AsTask().ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             var bytes = pixels.DetachPixelData();
             var outWidth = transform.ScaledWidth != 0 ? (int)transform.ScaledWidth : (int)width;
             var outHeight = transform.ScaledHeight != 0 ? (int)transform.ScaledHeight : (int)height;
@@ -106,7 +112,7 @@ public sealed class WicRasterDecoder : IRasterDecoder
             if (tw <= 0 || th <= 0 || Math.Max(tw, th) < target * EmbeddedThumbnailMinCoverage) return null;
             if (Math.Abs(tw / th - decoder.PixelWidth / (double)decoder.PixelHeight) > 0.02 * (tw / th)) return null;
             var pixels = await thumb.GetPixelDataAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Straight, new BitmapTransform(),
-                ExifOrientationMode.IgnoreExifOrientation, ColorManagementMode.DoNotColorManage).AsTask(cancellationToken).ConfigureAwait(false);
+                ExifOrientationMode.IgnoreExifOrientation, ColorManagementMode.DoNotColorManage).AsTask().ConfigureAwait(false);
             var orientation = await ReadOrientationAsync(decoder).ConfigureAwait(false);
             return new RasterImage((int)tw, (int)th, pixels.DetachPixelData(), orientation);
         }

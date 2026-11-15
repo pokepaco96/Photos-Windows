@@ -40,8 +40,11 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
     {
         try
         {
+            // Never abandoned (see WicRasterDecoder): the caller's worker slot must stay taken while Windows works.
+            cancellationToken.ThrowIfCancellationRequested();
             using var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem, (uint)Math.Clamp(maxLongSide, 64, 2048), ThumbnailOptions.ResizeThumbnail)
-                .AsTask(cancellationToken).ConfigureAwait(false);
+                .AsTask().ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             if (thumbnail is null || thumbnail.Type != ThumbnailType.Image)
             {
                 return null; // A generic file icon: no shell thumbnail handler (e.g. Windows Server) or no decoder.
@@ -74,8 +77,10 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
             composition.Clips.Add(clip);
             // A little way in: first frames are often black (fade-in).
             var at = TimeSpan.FromTicks(Math.Min(clip.OriginalDuration.Ticks / 10, TimeSpan.FromSeconds(1).Ticks));
+            cancellationToken.ThrowIfCancellationRequested();
             using var stream = await composition.GetThumbnailAsync(at, width, height, VideoFramePrecision.NearestFrame)
-                .AsTask(cancellationToken).ConfigureAwait(false);
+                .AsTask().ConfigureAwait(false); // never abandoned (see WicRasterDecoder)
+            cancellationToken.ThrowIfCancellationRequested();
             return stream is null ? null : await DecodeAsync(stream, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is COMException or ArgumentException or UnauthorizedAccessException or FileNotFoundException or InvalidOperationException)
@@ -89,7 +94,8 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
     {
         var decoder = await BitmapDecoder.CreateAsync(stream).AsTask(cancellationToken).ConfigureAwait(false);
         var pixels = await decoder.GetPixelDataAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Straight, new BitmapTransform(),
-            ExifOrientationMode.RespectExifOrientation, ColorManagementMode.ColorManageToSRgb).AsTask(cancellationToken).ConfigureAwait(false);
+            ExifOrientationMode.RespectExifOrientation, ColorManagementMode.ColorManageToSRgb).AsTask().ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
         return new RasterImage((int)decoder.OrientedPixelWidth, (int)decoder.OrientedPixelHeight, pixels.DetachPixelData());
     }
 }
