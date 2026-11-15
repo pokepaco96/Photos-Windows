@@ -50,6 +50,18 @@ public sealed class SkiaImageRenderer : IImageRenderer
         }, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<RenderedImage?> TryRenderEmbeddedThumbnailAsync(string sourcePath, FormatFamily family, int maxLongSide, EncodeOptions encode, CancellationToken cancellationToken)
+    {
+        if (SkiaFamilies.Contains(family)) return null; // Skia decodes these at a reduced scale cheaply anyway
+        foreach (var decoder in _decoders.Where(d => d.CanDecode(family)))
+        {
+            var raster = await decoder.TryDecodeEmbeddedThumbnailAsync(sourcePath, family, maxLongSide, cancellationToken).ConfigureAwait(false);
+            if (raster is not null) return await RenderAsync(raster, EditRecipe.Identity, maxLongSide, encode, cancellationToken).ConfigureAwait(false);
+        }
+
+        return null;
+    }
+
     /// <summary>Reads only the header to obtain stored dimensions; null when the format is not handled by Skia.</summary>
     public (int Width, int Height)? ProbeSize(string sourcePath, FormatFamily family)
     {

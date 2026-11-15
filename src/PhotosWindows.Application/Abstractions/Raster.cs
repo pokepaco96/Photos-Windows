@@ -49,6 +49,13 @@ public interface IRasterDecoder
     /// (decoders may use that hint to decode faster). Throws <see cref="MediaDecodeException"/> on failure.
     /// </summary>
     Task<RasterImage> DecodeAsync(string path, FormatFamily family, int? minLongSide, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The thumbnail stored inside the file (HEIC, RAW…) when it exists and covers <paramref name="minLongSide"/> well
+    /// enough; null otherwise. Never decodes the full image, so it is cheap enough for a first paint.
+    /// </summary>
+    Task<RasterImage?> TryDecodeEmbeddedThumbnailAsync(string path, FormatFamily family, int minLongSide, CancellationToken cancellationToken) =>
+        Task.FromResult<RasterImage?>(null);
 }
 
 /// <summary>Extracts a representative still frame from a video file.</summary>

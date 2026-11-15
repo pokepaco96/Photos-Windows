@@ -164,6 +164,36 @@ public sealed class ThumbnailService
         return File.Exists(path) && new FileInfo(path).Length > 0 ? path : null;
     }
 
+    /// <summary>
+    /// First paint for the viewer: the thumbnail embedded in the original (HEIC…), encoded as JPEG, without decoding the
+    /// full image and outside the worker lanes. Null when the file has none, is edited, or is a format Skia scales
+    /// cheaply (those use the small thumbnail instead). Never runs on the caller's UI thread.
+    /// </summary>
+    public Task<byte[]?> TryEmbeddedPreviewAsync(long assetId, CancellationToken cancellationToken) => Task.Run(async () =>
+    {
+        var asset = await _assets.GetAsync(assetId, cancellationToken).ConfigureAwait(false);
+        if (asset is null || asset.HasEdits || asset.MediaType != MediaType.Photo) return null;
+        var file = await _assets.GetOriginalFileAsync(assetId, cancellationToken).ConfigureAwait(false);
+        if (file is null || _context.Current is not { } library) return null;
+        var path = library.Resolve(file);
+        var family = MediaFormats.FromExtension(path)?.Family ?? FormatFamily.Unknown;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            var rendered = await _renderer.TryRenderEmbeddedThumbnailAsync(path, family, (int)ThumbnailSize.Small, EncodeOptions.ThumbnailJpeg, cancellationToken).ConfigureAwait(false);
+            return rendered?.Encoded;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogDebug(ex, "No embedded preview for asset {Id}", assetId);
+            return null;
+        }
+        finally
+        {
+            Record($"embedded-preview/{asset.Format}", sw.ElapsedMilliseconds);
+        }
+    }, CancellationToken.None);
+
     /// <summary>Returns the thumbnail path, generating it if needed. Null when the asset cannot be rendered.</summary>
     public Task<string?> GetOrCreateAsync(long assetId, ThumbnailSize size, CancellationToken cancellationToken) =>
         GetOrCreateCoreAsync(assetId, size, ThumbnailPriority.Interactive, cancellationToken);

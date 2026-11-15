@@ -182,7 +182,7 @@ public sealed partial class ViewerViewModel(
                     // Nothing cached at all: ask for the grid-size thumbnail on the viewer's second slot at the same time.
                     // It is ready long before the 2048 px preview (HEIC: embedded thumbnail, JPEG: 1/8 scaled decode), so
                     // the stage shows the photo at once instead of staying black; it also fills the grid cache.
-                    await ShowQuickPreviewAsync(asset.Id, largeTask, cts.Token);
+                    await ShowQuickPreviewAsync(asset, largeTask, cts.Token);
                     if (Image is not null) timing.Mark("small");
                 }
 
@@ -286,9 +286,33 @@ public sealed partial class ViewerViewModel(
     /// Generates the small thumbnail and shows it, unless the large preview is ready first. Failures are ignored: the
     /// large preview (or its error) decides what the viewer ends with.
     /// </summary>
-    private async Task ShowQuickPreviewAsync(long assetId, Task<string?> largeTask, CancellationToken ct)
+    private async Task ShowQuickPreviewAsync(Asset asset, Task<string?> largeTask, CancellationToken ct)
     {
-        var smallTask = thumbnails.GetOrCreateAsync(assetId, ThumbnailSize.Small, ThumbnailPriority.Viewer, ct);
+        if (IsHeif(asset))
+        {
+            // HEIC: only the embedded thumbnail (~30 ms, no worker slot). Making the small thumbnail would mean a second
+            // full HEVC decode next to the large one for photos without an embedded thumbnail (1–2 GB each, measured).
+            try
+            {
+                var bytes = await thumbnails.TryEmbeddedPreviewAsync(asset.Id, ct);
+                if (bytes is null || largeTask.IsCompleted) return;
+                var bitmap = await ImageLoader.FromBytesAsync(bytes, 0);
+                ct.ThrowIfCancellationRequested();
+                if (bitmap is not null && !largeTask.IsCompleted)
+                {
+                    _shownLongSide = (int)ThumbnailSize.Small;
+                    SetImage(bitmap, "Preview");
+                }
+            }
+            catch (Exception ex) when (ex is IOException or System.Runtime.InteropServices.ExternalException)
+            {
+                logger.LogDebug(ex, "Embedded preview could not be shown");
+            }
+
+            return;
+        }
+
+        var smallTask = thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Small, ThumbnailPriority.Viewer, ct);
         try
         {
             if (await Task.WhenAny(smallTask, largeTask) != smallTask) return;

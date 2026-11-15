@@ -66,26 +66,12 @@ public sealed class WicRasterDecoder : IRasterDecoder
             // (20 GB private memory while browsing quickly through HEICs on Windows 11). The work runs to the end and
             // the cancellation is honoured afterwards; the slot stays taken exactly as long as WIC is working.
             cancellationToken.ThrowIfCancellationRequested();
-            // A full HEIC decode costs 1–2 GB of transient memory inside the codec (24 MP iPhone photos, measured on
-            // Windows 11), whatever the output size. Viewer, grid and background lanes together allowed ten at once
-            // (5.8 GB private while browsing). Process-wide cap; embedded thumbnails do not take part.
-            var heavy = family is FormatFamily.Heif or FormatFamily.Avif;
-            if (heavy) await HeavyDecodes.WaitAsync(cancellationToken).ConfigureAwait(false);
-            PixelDataProvider pixels;
-            try
-            {
-                pixels = await decoder.GetPixelDataAsync(
-                    BitmapPixelFormat.Bgra8,
-                    BitmapAlphaMode.Straight,
-                    transform,
-                    ExifOrientationMode.IgnoreExifOrientation,
-                    ColorManagementMode.ColorManageToSRgb).AsTask().ConfigureAwait(false);
-            }
-            finally
-            {
-                if (heavy) HeavyDecodes.Release();
-            }
-
+            var pixels = await decoder.GetPixelDataAsync(
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Straight,
+                transform,
+                ExifOrientationMode.IgnoreExifOrientation,
+                ColorManagementMode.ColorManageToSRgb).AsTask().ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
             var bytes = pixels.DetachPixelData();
             var outWidth = transform.ScaledWidth != 0 ? (int)transform.ScaledWidth : (int)width;
@@ -103,10 +89,23 @@ public sealed class WicRasterDecoder : IRasterDecoder
         }
     }
 
-    /// <summary>Full HEIF/AVIF decodes allowed at once in the process (see DecodeAsync).</summary>
-    internal const int MaxHeavyDecodes = 2;
-
-    private static readonly SemaphoreSlim HeavyDecodes = new(MaxHeavyDecodes, MaxHeavyDecodes);
+    public async Task<RasterImage?> TryDecodeEmbeddedThumbnailAsync(string path, FormatFamily family, int minLongSide, CancellationToken cancellationToken)
+    {
+        if (family is not (FormatFamily.Heif or FormatFamily.Avif or FormatFamily.Raw)) return null;
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask().ConfigureAwait(false);
+            using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read).AsTask().ConfigureAwait(false);
+            var decoder = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
+            return await TryEmbeddedThumbnailCoreAsync(decoder, minLongSide).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogDebug(ex, "No embedded thumbnail for {File}", Path.GetFileName(path));
+            return null;
+        }
+    }
 
     /// <summary>Largest requested long side for which an embedded thumbnail may be used (grid tiles are 360 px).</summary>
     internal const int EmbeddedThumbnailMaxTarget = 512;

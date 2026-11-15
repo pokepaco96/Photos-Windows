@@ -44,6 +44,10 @@ public interface IImageRenderer
 
     /// <summary>Stored pixel dimensions read from the header only (no full decode); null when unknown.</summary>
     (int Width, int Height)? ProbeSize(string sourcePath, FormatFamily family);
+
+    /// <summary>Encodes the file's embedded thumbnail (oriented), or null when there is none; never decodes the full image.</summary>
+    Task<RenderedImage?> TryRenderEmbeddedThumbnailAsync(string sourcePath, FormatFamily family, int maxLongSide, EncodeOptions encode, CancellationToken cancellationToken) =>
+        Task.FromResult<RenderedImage?>(null);
 }
 
 public interface IPerceptualHasher
