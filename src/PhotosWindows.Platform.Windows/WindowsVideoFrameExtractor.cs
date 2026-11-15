@@ -31,9 +31,24 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
             return null;
         }
 
-        return await FromShellAsync(file, maxLongSide, cancellationToken).ConfigureAwait(false)
-            ?? await FromMediaFoundationAsync(file, maxLongSide, cancellationToken).ConfigureAwait(false);
+        var shell = await FromShellAsync(file, maxLongSide, cancellationToken).ConfigureAwait(false);
+        if (shell is not null) return shell;
+
+        // One Media Foundation extraction at a time in the process. Measured on Windows 11 with iPhone videos (the shell
+        // only returns an icon for them there): 300–360 MiB private per extraction and up to 1.5 GB for the first one;
+        // with the grid and background lanes running eight at once the app peaked at ~6 GB.
+        await MediaFoundationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await FromMediaFoundationAsync(file, maxLongSide, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            MediaFoundationGate.Release();
+        }
     }
+
+    private static readonly SemaphoreSlim MediaFoundationGate = new(1, 1);
 
     /// <summary>Shell thumbnail (fast, cached by Windows).</summary>
     private async Task<RasterImage?> FromShellAsync(StorageFile file, int maxLongSide, CancellationToken cancellationToken)
