@@ -45,6 +45,14 @@ public sealed class WicRasterDecoder : IRasterDecoder
                 throw new MediaDecodeException("The image dimensions exceed the safety limit.");
             }
 
+            // Small targets (grid tiles, hashes): an embedded HEIF thumbnail avoids decoding the whole HEVC image.
+            // Measured on Windows 11 with iPhone HEICs: 20–35 ms instead of 450–1000 ms, and no HEVC decoder instance.
+            if (family == FormatFamily.Heif && minLongSide is { } small && small > 0 && small <= EmbeddedThumbnailMaxTarget)
+            {
+                var embedded = await TryEmbeddedThumbnailAsync(decoder, small, cancellationToken).ConfigureAwait(false);
+                if (embedded is not null) return embedded;
+            }
+
             var transform = new BitmapTransform { InterpolationMode = BitmapInterpolationMode.Fant };
             if (minLongSide is { } target && target > 0 && Math.Max(width, height) > target)
             {
@@ -72,6 +80,36 @@ public sealed class WicRasterDecoder : IRasterDecoder
             // Windows runner with HEIF Image Extension 1.2.65.0 and no HEVC Video Extensions).
             if (family == FormatFamily.Heif && ex.HResult == unchecked((int)0xC00D5212)) throw new MediaDecodeException(HevcMissingMessage, ex);
             throw new MediaDecodeException(MissingCodecMessage(family), ex);
+        }
+    }
+
+    /// <summary>Largest requested long side for which an embedded thumbnail may be used (grid tiles are 360 px).</summary>
+    internal const int EmbeddedThumbnailMaxTarget = 512;
+
+    /// <summary>An embedded thumbnail is used when its long side is at least this fraction of the target (iPhone: 320 px for 360).</summary>
+    internal const double EmbeddedThumbnailMinCoverage = 0.85;
+
+    /// <summary>
+    /// Returns the image's embedded thumbnail when it is big enough for <paramref name="target"/> and has the same
+    /// proportions as the image (so it is not a crop); null otherwise (the caller decodes the full image).
+    /// </summary>
+    private async Task<RasterImage?> TryEmbeddedThumbnailAsync(BitmapDecoder decoder, int target, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var stream = await decoder.GetThumbnailAsync().AsTask(cancellationToken).ConfigureAwait(false);
+            var thumb = await BitmapDecoder.CreateAsync(stream).AsTask(cancellationToken).ConfigureAwait(false);
+            double tw = thumb.PixelWidth, th = thumb.PixelHeight;
+            if (tw <= 0 || th <= 0 || Math.Max(tw, th) < target * EmbeddedThumbnailMinCoverage) return null;
+            if (Math.Abs(tw / th - decoder.PixelWidth / (double)decoder.PixelHeight) > 0.02 * (tw / th)) return null;
+            var pixels = await thumb.GetPixelDataAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Straight, new BitmapTransform(),
+                ExifOrientationMode.IgnoreExifOrientation, ColorManagementMode.DoNotColorManage).AsTask(cancellationToken).ConfigureAwait(false);
+            var orientation = await ReadOrientationAsync(decoder).ConfigureAwait(false);
+            return new RasterImage((int)tw, (int)th, pixels.DetachPixelData(), orientation);
+        }
+        catch (Exception ex) when (ex is COMException or ArgumentException or InvalidCastException or NotSupportedException)
+        {
+            return null; // no embedded thumbnail (e.g. screenshots): decode the image
         }
     }
 
