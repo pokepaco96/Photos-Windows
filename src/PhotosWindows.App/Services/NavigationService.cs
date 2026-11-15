@@ -26,6 +26,12 @@ public sealed class NavigationService
 
     public bool CanGoBack => _frame?.CanGoBack == true;
 
+    /// <summary>
+    /// The photo the viewer was showing when the user went back. The library grid scrolls to it, so going back
+    /// returns to where the user was instead of the top of the library (the grid page is rebuilt on every visit).
+    /// </summary>
+    public long? ReturnToAssetId { get; set; }
+
     public Type? CurrentPage => _frame?.Content?.GetType();
 
     public void Attach(Frame frame)

@@ -48,6 +48,11 @@ public sealed partial class ViewerPage : Page
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
+        if (e.NavigationMode == NavigationMode.Back && ViewModel.Asset is { } shown)
+        {
+            App.Services.GetRequiredService<NavigationService>().ReturnToAssetId = shown.Id;
+        }
+
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ViewModel.Cancel();
         ViewModel.ExitFullScreen();

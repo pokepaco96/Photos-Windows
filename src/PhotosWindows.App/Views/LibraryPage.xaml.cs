@@ -38,8 +38,48 @@ public sealed partial class LibraryPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         Target = e.Parameter as LibraryNavigation ?? LibraryNavigation.AllPhotos;
+        var navigation = App.Services.GetRequiredService<NavigationService>();
+        var returnTo = e.NavigationMode == NavigationMode.Back ? navigation.ReturnToAssetId : null;
+        navigation.ReturnToAssetId = null;
         await ViewModel.LoadAsync(Target);
         ConfigureReorder();
+        if (returnTo is { } id && ViewModel.Find(id) is { } item) ScrollBackTo(item);
+    }
+
+    /// <summary>
+    /// Back from the viewer: show the photo the viewer was on (the user may have moved through many photos there),
+    /// in the middle of the grid, and give it keyboard focus so the arrows continue from it.
+    /// </summary>
+    private void ScrollBackTo(AssetItemViewModel item)
+    {
+        AssetsGrid.ScrollIntoView(item, ScrollIntoViewAlignment.Leading);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            if (AssetsGrid.ContainerFromItem(item) is GridViewItem container)
+            {
+                // Leading puts the row at the top; move it to the middle of the visible area.
+                var scroller = FindScrollViewer(AssetsGrid);
+                if (scroller is not null)
+                {
+                    var top = container.TransformToVisual(scroller).TransformPoint(default).Y;
+                    var offset = scroller.VerticalOffset + top - (scroller.ViewportHeight - container.ActualHeight) / 2;
+                    scroller.ChangeView(null, Math.Max(0, offset), null, disableAnimation: true);
+                }
+
+                container.Focus(FocusState.Programmatic);
+            }
+        });
+    }
+
+    private static ScrollViewer? FindScrollViewer(DependencyObject root)
+    {
+        if (root is ScrollViewer sv) return sv;
+        for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            if (FindScrollViewer(Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(root, i)) is { } found) return found;
+        }
+
+        return null;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.Dispose();

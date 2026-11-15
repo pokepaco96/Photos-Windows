@@ -138,6 +138,9 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         return _target.SearchText is { } text ? SearchService.Parse(text, baseQuery) with { MediaType = baseQuery.MediaType ?? SearchService.Parse(text).MediaType } : baseQuery;
     }
 
+    /// <summary>The tile of an asset in the current grid, if it is shown.</summary>
+    public AssetItemViewModel? Find(long assetId) => _byId.GetValueOrDefault(assetId);
+
     public async Task ReloadAsync()
     {
         _loadCts?.Cancel();
