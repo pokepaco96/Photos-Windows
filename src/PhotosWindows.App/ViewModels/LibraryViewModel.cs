@@ -30,6 +30,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     private readonly ISettingsStore _settings;
     private readonly UiThread _ui;
     private readonly PeopleCoordinator _people;
+    private readonly Microsoft.Extensions.Logging.ILogger<LibraryViewModel> _logger;
     private Person? _person;
     private readonly Dictionary<long, AssetItemViewModel> _byId = [];
     private CancellationTokenSource? _loadCts;
@@ -38,8 +39,10 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
     private bool _refreshQueued;
 
     public LibraryViewModel(IAssetRepository assets, OrganizationService organization, ThumbnailService thumbnails, ImageLoader images,
-        NavigationService navigation, SelectionActions actions, ImportCoordinator import, EditingService editing, ISettingsStore settings, UiThread ui, PeopleCoordinator people)
+        NavigationService navigation, SelectionActions actions, ImportCoordinator import, EditingService editing, ISettingsStore settings, UiThread ui, PeopleCoordinator people,
+        Microsoft.Extensions.Logging.ILogger<LibraryViewModel> logger)
     {
+        _logger = logger;
         _people = people;
         _assets = assets;
         _organization = organization;
@@ -59,7 +62,7 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         _thumbnails.ThumbnailReady += OnThumbnailReady;
     }
 
-    public ObservableCollection<AssetGroup> Groups { get; } = [];
+    public BulkObservableCollection<AssetGroup> Groups { get; } = [];
 
     public IReadOnlyList<long> SelectedIds { get; set; } = [];
 
@@ -146,22 +149,28 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         _loadCts?.Cancel();
         var cts = _loadCts = new CancellationTokenSource();
         IsLoading = true;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             var rows = await _assets.QueryAsync(BuildQuery(), cts.Token);
             if (cts.IsCancellationRequested) return;
+            var queryMs = sw.ElapsedMilliseconds;
             var mode = CanGroup ? (GroupingMode)GroupingIndex : GroupingMode.None;
             var groups = await Task.Run(() => BuildGroups(rows, mode), cts.Token);
             if (cts.IsCancellationRequested) return;
+            var groupMs = sw.ElapsedMilliseconds;
 
             foreach (var item in _byId.Values) item.Unload();
             _byId.Clear();
-            Groups.Clear();
             foreach (var group in groups)
             {
                 foreach (var item in group) _byId[item.Id] = item;
-                Groups.Add(group);
             }
+
+            Groups.ReplaceAll(groups); // one Reset instead of one change per group
+
+            Microsoft.Extensions.Logging.LoggerExtensions.LogInformation(_logger, "Library reload: {Count} items in {Groups} groups; query {Query} ms, grouping {Grouping} ms, UI update {Ui} ms",
+                rows.Count, groups.Count, queryMs, groupMs - queryMs, sw.ElapsedMilliseconds - groupMs);
 
             var photos = rows.Count(r => r.MediaType == MediaType.Photo);
             var videos = rows.Count - photos;
