@@ -338,7 +338,8 @@ public sealed partial class ViewerViewModel(
         Task<RenderedImage?> running;
         try
         {
-            running = editing.RenderFromOriginalAsync(asset.Id, recipe, longSide, EncodeOptions.PreviewJpeg, ct);
+            // Off the UI thread: the catalog lookups and the WIC StorageFile call must not run (and pump) on it.
+            running = Task.Run(() => editing.RenderFromOriginalAsync(asset.Id, recipe, longSide, EncodeOptions.PreviewJpeg, ct), CancellationToken.None);
         }
         catch
         {

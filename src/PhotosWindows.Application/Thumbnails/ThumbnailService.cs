@@ -181,9 +181,23 @@ public sealed class ThumbnailService
         _ => _background,
     };
 
-    private async Task<string?> GetOrCreateCoreAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken)
+    /// <summary>
+    /// Never runs on the caller's UI thread. The catalog returns completed tasks, so without this hop everything up to
+    /// the first truly asynchronous call (catalog queries, File.Exists and the StorageFile call of the WIC and video
+    /// decoders) ran on the UI thread inside the grid's ContainerContentChanging. That StorageFile call is a
+    /// cross-apartment COM call that pumps messages; the re-entrancy made WinUI fail fast (0xC000027B) while a large
+    /// import filled the grid with videos (crash dumps of 2026-11-10 and 2026-11-14 on Windows 11).
+    /// </summary>
+    private Task<string?> GetOrCreateCoreAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken)
     {
         if (priority == ThumbnailPriority.Interactive) Interlocked.Exchange(ref _lastInteractiveTicks, Environment.TickCount64);
+        return SynchronizationContext.Current is null
+            ? GetOrCreateOffUiAsync(assetId, size, priority, cancellationToken)
+            : Task.Run(() => GetOrCreateOffUiAsync(assetId, size, priority, cancellationToken), CancellationToken.None);
+    }
+
+    private async Task<string?> GetOrCreateOffUiAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken)
+    {
         var asset = await _assets.GetAsync(assetId, cancellationToken).ConfigureAwait(false);
         if (asset is null) return null;
         var recipe = asset.HasEdits ? (await _edits.GetAsync(assetId, cancellationToken).ConfigureAwait(false)) : null;
