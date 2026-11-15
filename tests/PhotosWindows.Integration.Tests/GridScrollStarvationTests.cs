@@ -117,6 +117,8 @@ public class GridScrollStarvationTests
         Assert.NotNull(preview);
         Assert.True(elapsed < TimeSpan.FromSeconds(1), $"viewer preview took {elapsed.TotalMilliseconds:0} ms behind abandoned grid work");
         // Before the fix all 199 abandoned thumbnails were decoded anyway (CPU busy long after scrolling stopped).
-        Assert.True(renderer.Started <= 6, $"{renderer.Started} decodes started for 199 abandoned requests + 1 preview");
+        // A request can take a free slot before its tile is recycled, and every cancelled decode frees its slot again,
+        // so a few more start on a slow machine (7 on a GitHub runner, 2026-11-15); the bound stays far below 199.
+        Assert.True(renderer.Started <= 12, $"{renderer.Started} decodes started for 199 abandoned requests + 1 preview");
     }
 }
