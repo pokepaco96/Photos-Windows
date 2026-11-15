@@ -358,7 +358,37 @@ public sealed class ThumbnailService
         }
     }
 
+    /// <summary>Diagnostics: work done per kind ("thumb-360/HEIF", "hash/JPEG"…): count and total milliseconds.</summary>
+    private readonly ConcurrentDictionary<string, (long Count, long Ms)> _workStats = new(StringComparer.Ordinal);
+
+    /// <summary>Counts and average/total time per kind of work since the last call (resets).</summary>
+    public string TakeWorkStats()
+    {
+        var parts = new List<string>();
+        foreach (var key in _workStats.Keys.Order(StringComparer.Ordinal))
+        {
+            if (_workStats.TryRemove(key, out var v)) parts.Add($"{key}: {v.Count}x avg {v.Ms / Math.Max(1, v.Count)} ms");
+        }
+
+        return parts.Count == 0 ? "no work" : string.Join(", ", parts);
+    }
+
+    private void Record(string kind, long ms) => _workStats.AddOrUpdate(kind, (1, ms), (_, v) => (v.Count + 1, v.Ms + ms));
+
     private async Task<string?> GenerateInSlotAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, CancellationToken ct)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            return await GenerateInSlotCoreAsync(asset, recipe, size, path, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            Record($"thumb-{(int)size}/{asset.Format}", sw.ElapsedMilliseconds);
+        }
+    }
+
+    private async Task<string?> GenerateInSlotCoreAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, CancellationToken ct)
     {
         try
         {
@@ -479,6 +509,8 @@ public sealed class ThumbnailService
         }
 
         if (_overdue.ContainsKey(path)) return;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var kind = family == FormatFamily.Jpeg && path.EndsWith(".jpg", StringComparison.Ordinal) && path.Contains("thumbs", StringComparison.Ordinal) ? "hash/from-thumb" : $"hash/original-{family}";
         try
         {
             // Same lane rules as thumbnails: the slot stays taken until the decode has really returned.
@@ -501,6 +533,10 @@ public sealed class ThumbnailService
         {
             _logger.LogDebug(ex, "Perceptual hash skipped for asset {Id}", assetId);
             await _assets.SetThumbnailStateAsync(assetId, ThumbnailState.Failed, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            Record(kind, sw.ElapsedMilliseconds);
         }
     }
 

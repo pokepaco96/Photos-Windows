@@ -66,6 +66,7 @@ public sealed class BackgroundProcessing : IDisposable
                         stats.PendingThumbnails, unhashed, _import.IsRunning, _thumbnails.Stats,
                         (long)process.TotalProcessorTime.TotalMilliseconds, process.WorkingSet64 >> 20, process.PrivateMemorySize64 >> 20,
                         GC.GetTotalMemory(false) >> 20, process.Threads.Count, maxWorkers - freeWorkers, ThreadPool.PendingWorkItemCount);
+                    _logger.LogInformation("Work: {Work}", _thumbnails.TakeWorkStats());
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
