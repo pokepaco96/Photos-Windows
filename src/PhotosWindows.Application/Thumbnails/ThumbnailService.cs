@@ -440,9 +440,10 @@ public sealed class ThumbnailService
             ThumbnailReady?.Invoke(this, asset.Id);
             return path;
         }
-        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException
-                                       or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Any failure of one file (codecs throw NotImplementedException, COMException, …) only fails that file;
+            // it must never escape into the background loop (it stopped all thumbnail work for the session).
             _logger.LogInformation(ex, "Thumbnail could not be created for asset {Id}", asset.Id);
             if (size == ThumbnailSize.Small) await _assets.SetThumbnailStateAsync(asset.Id, ThumbnailState.Failed, CancellationToken.None).ConfigureAwait(false);
             return null;
@@ -528,8 +529,7 @@ public sealed class ThumbnailService
         {
             // Left as is: retried when the lane recovers.
         }
-        catch (Exception ex) when (ex is MediaDecodeException or IOException or UnauthorizedAccessException
-                                       or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogDebug(ex, "Perceptual hash skipped for asset {Id}", assetId);
             await _assets.SetThumbnailStateAsync(assetId, ThumbnailState.Failed, cancellationToken).ConfigureAwait(false);

@@ -66,12 +66,26 @@ public sealed class WicRasterDecoder : IRasterDecoder
             // (20 GB private memory while browsing quickly through HEICs on Windows 11). The work runs to the end and
             // the cancellation is honoured afterwards; the slot stays taken exactly as long as WIC is working.
             cancellationToken.ThrowIfCancellationRequested();
-            var pixels = await decoder.GetPixelDataAsync(
-                BitmapPixelFormat.Bgra8,
-                BitmapAlphaMode.Straight,
-                transform,
-                ExifOrientationMode.IgnoreExifOrientation,
-                ColorManagementMode.ColorManageToSRgb).AsTask().ConfigureAwait(false);
+            // A full HEIC decode costs 1–2 GB of transient memory inside the codec (24 MP iPhone photos, measured on
+            // Windows 11), whatever the output size. Viewer, grid and background lanes together allowed ten at once
+            // (5.8 GB private while browsing). Process-wide cap; embedded thumbnails do not take part.
+            var heavy = family is FormatFamily.Heif or FormatFamily.Avif;
+            if (heavy) await HeavyDecodes.WaitAsync(cancellationToken).ConfigureAwait(false);
+            PixelDataProvider pixels;
+            try
+            {
+                pixels = await decoder.GetPixelDataAsync(
+                    BitmapPixelFormat.Bgra8,
+                    BitmapAlphaMode.Straight,
+                    transform,
+                    ExifOrientationMode.IgnoreExifOrientation,
+                    ColorManagementMode.ColorManageToSRgb).AsTask().ConfigureAwait(false);
+            }
+            finally
+            {
+                if (heavy) HeavyDecodes.Release();
+            }
+
             cancellationToken.ThrowIfCancellationRequested();
             var bytes = pixels.DetachPixelData();
             var outWidth = transform.ScaledWidth != 0 ? (int)transform.ScaledWidth : (int)width;
@@ -89,6 +103,11 @@ public sealed class WicRasterDecoder : IRasterDecoder
         }
     }
 
+    /// <summary>Full HEIF/AVIF decodes allowed at once in the process (see DecodeAsync).</summary>
+    internal const int MaxHeavyDecodes = 2;
+
+    private static readonly SemaphoreSlim HeavyDecodes = new(MaxHeavyDecodes, MaxHeavyDecodes);
+
     /// <summary>Largest requested long side for which an embedded thumbnail may be used (grid tiles are 360 px).</summary>
     internal const int EmbeddedThumbnailMaxTarget = 512;
 
@@ -104,10 +123,16 @@ public sealed class WicRasterDecoder : IRasterDecoder
     /// </summary>
     private async Task<RasterImage?> TryEmbeddedThumbnailAsync(BitmapDecoder decoder, int target, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await TryEmbeddedThumbnailCoreAsync(decoder, target).ConfigureAwait(false);
+    }
+
+    private async Task<RasterImage?> TryEmbeddedThumbnailCoreAsync(BitmapDecoder decoder, int target)
+    {
         try
         {
-            using var stream = await decoder.GetThumbnailAsync().AsTask(cancellationToken).ConfigureAwait(false);
-            var thumb = await BitmapDecoder.CreateAsync(stream).AsTask(cancellationToken).ConfigureAwait(false);
+            using var stream = await decoder.GetThumbnailAsync().AsTask().ConfigureAwait(false);
+            var thumb = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
             double tw = thumb.PixelWidth, th = thumb.PixelHeight;
             if (tw <= 0 || th <= 0 || Math.Max(tw, th) < target * EmbeddedThumbnailMinCoverage) return null;
             if (Math.Abs(tw / th - decoder.PixelWidth / (double)decoder.PixelHeight) > 0.02 * (tw / th)) return null;
@@ -116,9 +141,12 @@ public sealed class WicRasterDecoder : IRasterDecoder
             var orientation = await ReadOrientationAsync(decoder).ConfigureAwait(false);
             return new RasterImage((int)tw, (int)th, pixels.DetachPixelData(), orientation);
         }
-        catch (Exception ex) when (ex is COMException or ArgumentException or InvalidCastException or NotSupportedException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return null; // no embedded thumbnail (e.g. screenshots): decode the image
+            // No usable embedded thumbnail: decode the image. Seen on Windows 11: ArgumentException (none stored),
+            // NotImplementedException 0x80004001 (screenshots), COMException 0x88982F44 / 0xC00D3E8C.
+            _logger.LogDebug(ex, "No embedded thumbnail");
+            return null;
         }
     }
 

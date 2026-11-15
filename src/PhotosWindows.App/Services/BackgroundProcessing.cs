@@ -108,14 +108,23 @@ public sealed class BackgroundProcessing : IDisposable
                     await _signal.WaitAsync(TimeSpan.FromSeconds(30), token).ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 return;
             }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException or System.Data.Common.DbException)
+            catch (Exception ex)
             {
+                // Never end the loop on an unexpected error: before, one codec exception (NotImplementedException from
+                // a HEIC screenshot) ended it silently and no thumbnail or hash was made again until a restart.
                 _logger.LogWarning(ex, "Background processing paused after an error");
-                await Task.Delay(TimeSpan.FromSeconds(10), token).ConfigureAwait(false);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10), token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
             }
         }
     }
