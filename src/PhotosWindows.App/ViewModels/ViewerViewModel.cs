@@ -176,7 +176,17 @@ public sealed partial class ViewerViewModel(
             if (_shownLongSide < (int)ThumbnailSize.Large)
             {
                 LoadingMessage = Loc.Get(IsHeif(asset) ? "Viewer_DecodingHeic" : "Viewer_LoadingPreview");
-                var path = await thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ThumbnailPriority.Viewer, cts.Token);
+                var largeTask = thumbnails.GetOrCreateAsync(asset.Id, ThumbnailSize.Large, ThumbnailPriority.Viewer, cts.Token);
+                if (Image is null)
+                {
+                    // Nothing cached at all: ask for the grid-size thumbnail on the viewer's second slot at the same time.
+                    // It is ready long before the 2048 px preview (HEIC: embedded thumbnail, JPEG: 1/8 scaled decode), so
+                    // the stage shows the photo at once instead of staying black; it also fills the grid cache.
+                    await ShowQuickPreviewAsync(asset.Id, largeTask, cts.Token);
+                    if (Image is not null) timing.Mark("small");
+                }
+
+                var path = await largeTask;
                 timing.Mark("large");
                 if (path is not null) await ShowFileAsync(path, (int)ThumbnailSize.Large, target <= (int)ThumbnailSize.Large ? "Ready" : "Preview", cts.Token);
                 else if (Image is null) throw new MediaDecodeException(Loc.Get(IsHeif(asset) ? "Viewer_HeicFailed" : "Viewer_LoadFailed"));
@@ -269,6 +279,30 @@ public sealed partial class ViewerViewModel(
                 IsLoading = false;
                 LoadingMessage = string.Empty;
             }
+        }
+    }
+
+    /// <summary>
+    /// Generates the small thumbnail and shows it, unless the large preview is ready first. Failures are ignored: the
+    /// large preview (or its error) decides what the viewer ends with.
+    /// </summary>
+    private async Task ShowQuickPreviewAsync(long assetId, Task<string?> largeTask, CancellationToken ct)
+    {
+        var smallTask = thumbnails.GetOrCreateAsync(assetId, ThumbnailSize.Small, ThumbnailPriority.Viewer, ct);
+        try
+        {
+            if (await Task.WhenAny(smallTask, largeTask) != smallTask) return;
+            var small = await smallTask;
+            if (small is not null && !largeTask.IsCompleted) await ShowFileAsync(small, (int)ThumbnailSize.Small, "Preview", ct);
+        }
+        catch (Exception ex) when (ex is MediaDecodeException or IOException or System.Runtime.InteropServices.ExternalException)
+        {
+            logger.LogDebug(ex, "Quick preview not available");
+        }
+        finally
+        {
+            // Never leave a faulted task unobserved.
+            _ = smallTask.ContinueWith(t => _ = t.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
     }
 
