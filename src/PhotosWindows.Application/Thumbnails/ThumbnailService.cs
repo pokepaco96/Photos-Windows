@@ -286,7 +286,7 @@ public sealed class ThumbnailService
         var token = generation.Cancel.Token;
         try
         {
-            var result = await RunInLaneAsync(lane, ct => GenerateInSlotAsync(asset, recipe, size, path, ct), token, () =>
+            var result = await RunInLaneAsync(lane, ct => GenerateInSlotAsync(asset, recipe, size, path, lane == _background, ct), token, () =>
             {
                 _logger.LogWarning("Thumbnail for asset {Id} still running after {Timeout} s; it keeps its worker slot and is not started again", asset.Id, GenerationTimeout.TotalSeconds);
                 if (size == ThumbnailSize.Small) _ = _assets.SetThumbnailStateAsync(asset.Id, ThumbnailState.Failed, CancellationToken.None);
@@ -403,14 +403,37 @@ public sealed class ThumbnailService
         return parts.Count == 0 ? "no work" : string.Join(", ", parts);
     }
 
+/// <summary>
+    /// Background thumbnail of a HEIC/AVIF/RAW: its embedded thumbnail when usable (~30 ms); otherwise a full decode,
+    /// one at a time. Windows' HEVC decoder spreads one 12–24 MP decode over every core, so four background full
+    /// decodes at once kept a 12-core PC at 80–100 % CPU while the app looked idle (Windows 11, iPhone library with
+    /// ~9 % of HEICs lacking a usable embedded thumbnail). The visible grid and the viewer are not limited.
+    /// </summary>
+    private async Task<RenderedImage?> RenderHeavyInBackgroundAsync(string source, FormatFamily family, ThumbnailSize size, CancellationToken ct)
+    {
+        var embedded = await _renderer.TryRenderEmbeddedThumbnailAsync(source, family, (int)size, EncodeOptions.ThumbnailJpeg, ct).ConfigureAwait(false);
+        if (embedded is not null) return embedded;
+        await BackgroundFullDecodes.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            return await _renderer.RenderAsync(source, family, EditRecipe.Identity, (int)size, EncodeOptions.ThumbnailJpeg, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            BackgroundFullDecodes.Release();
+        }
+    }
+
+    private static readonly SemaphoreSlim BackgroundFullDecodes = new(1, 1);
+
     private void Record(string kind, long ms) => _workStats.AddOrUpdate(kind, (1, ms), (_, v) => (v.Count + 1, v.Ms + ms));
 
-    private async Task<string?> GenerateInSlotAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, CancellationToken ct)
+    private async Task<string?> GenerateInSlotAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, bool background, CancellationToken ct)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            return await GenerateInSlotCoreAsync(asset, recipe, size, path, ct).ConfigureAwait(false);
+            return await GenerateInSlotCoreAsync(asset, recipe, size, path, background, ct).ConfigureAwait(false);
         }
         finally
         {
@@ -418,7 +441,7 @@ public sealed class ThumbnailService
         }
     }
 
-    private async Task<string?> GenerateInSlotCoreAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, CancellationToken ct)
+    private async Task<string?> GenerateInSlotCoreAsync(Asset asset, EditRecipe recipe, ThumbnailSize size, string path, bool background, CancellationToken ct)
     {
         try
         {
@@ -444,6 +467,10 @@ public sealed class ThumbnailService
                         rendered = await _renderer.RenderAsync(frame, recipe, (int)size, EncodeOptions.ThumbnailJpeg, ct).ConfigureAwait(false);
                     }
                 }
+            }
+            else if (background && recipe.IsIdentity && family is FormatFamily.Heif or FormatFamily.Avif or FormatFamily.Raw)
+            {
+                rendered = await RenderHeavyInBackgroundAsync(source, family, size, ct).ConfigureAwait(false);
             }
             else
             {
