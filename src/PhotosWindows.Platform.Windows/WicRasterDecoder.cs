@@ -86,8 +86,11 @@ public sealed class WicRasterDecoder : IRasterDecoder
     /// <summary>Largest requested long side for which an embedded thumbnail may be used (grid tiles are 360 px).</summary>
     internal const int EmbeddedThumbnailMaxTarget = 512;
 
-    /// <summary>An embedded thumbnail is used when its long side is at least this fraction of the target (iPhone: 320 px for 360).</summary>
-    internal const double EmbeddedThumbnailMinCoverage = 0.85;
+    /// <summary>
+    /// An embedded thumbnail is used when its long side is at least this fraction of the target. iPhone HEICs carry
+    /// 320–416 px thumbnails, and 252 px ones for some photos (≈5 % of the test library); grid tiles show ~180 logical px.
+    /// </summary>
+    internal const double EmbeddedThumbnailMinCoverage = 0.66;
 
     /// <summary>
     /// Returns the image's embedded thumbnail when it is big enough for <paramref name="target"/> and has the same

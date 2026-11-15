@@ -283,7 +283,9 @@ public sealed class AssetRepository : IAssetRepository
 
     public Task<IReadOnlyList<long>> GetPhotosWithoutPerceptualHashAsync(int limit, CancellationToken cancellationToken) =>
         _db.ReadAsync<IReadOnlyList<long>>(async c =>
-            (await c.QueryAsync<long>("SELECT id FROM assets WHERE phash IS NULL AND media_type = 0 AND deleted_utc IS NULL AND original_available = 1 AND thumb_state <> 2 LIMIT @limit", new { limit }).ConfigureAwait(false)).ToList(),
+            // Only photos whose grid thumbnail is ready: the hash is computed from that 360 px JPEG. Hashing a photo
+            // before its thumbnail exists decoded the original a second time (a full HEVC decode for many HEICs).
+            (await c.QueryAsync<long>("SELECT id FROM assets WHERE phash IS NULL AND media_type = 0 AND deleted_utc IS NULL AND original_available = 1 AND thumb_state = 1 LIMIT @limit", new { limit }).ConfigureAwait(false)).ToList(),
             cancellationToken);
 
     public Task UpdateFileAvailabilityAsync(long fileId, bool available, DateTime verifiedUtc, CancellationToken cancellationToken) =>
