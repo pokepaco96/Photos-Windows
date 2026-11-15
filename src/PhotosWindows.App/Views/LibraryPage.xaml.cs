@@ -41,7 +41,11 @@ public sealed partial class LibraryPage : Page
         var navigation = App.Services.GetRequiredService<NavigationService>();
         var returnTo = e.NavigationMode == NavigationMode.Back ? navigation.ReturnToAssetId : null;
         navigation.ReturnToAssetId = null;
-        await ViewModel.LoadAsync(Target);
+        _depth = Frame.BackStackDepth;
+        LibraryViewState? restore = null;
+        if (e.NavigationMode == NavigationMode.Back && navigation.LibraryViewStates.Remove(_depth, out var saved)) restore = saved;
+        else navigation.LibraryViewStates.Remove(_depth);
+        await ViewModel.LoadAsync(Target, restore);
         ConfigureReorder();
         if (returnTo is { } id && ViewModel.Find(id) is { } item) ScrollBackTo(item);
     }
@@ -52,6 +56,21 @@ public sealed partial class LibraryPage : Page
     /// </summary>
     private void ScrollBackTo(AssetItemViewModel item)
     {
+        // Small views (Videos: 585 items, albums) load in a few ms, before the grid is laid out; ScrollIntoView is
+        // ignored then and the grid stayed at the top. Wait for the grid's first layout.
+        if (!AssetsGrid.IsLoaded || AssetsGrid.ItemsPanelRoot is null)
+        {
+            void OnLayout(object? sender, object e)
+            {
+                if (AssetsGrid.ItemsPanelRoot is null) return;
+                AssetsGrid.LayoutUpdated -= OnLayout;
+                ScrollBackTo(item);
+            }
+
+            AssetsGrid.LayoutUpdated += OnLayout;
+            return;
+        }
+
         AssetsGrid.ScrollIntoView(item, ScrollIntoViewAlignment.Leading);
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
         {
@@ -82,7 +101,18 @@ public sealed partial class LibraryPage : Page
         return null;
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.Dispose();
+    /// <summary>Pages below this one in the back stack when it was shown: the key of its saved view options.</summary>
+    private int _depth;
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        if (e.NavigationMode != NavigationMode.Back)
+        {
+            App.Services.GetRequiredService<NavigationService>().LibraryViewStates[_depth] = ViewModel.ViewState;
+        }
+
+        ViewModel.Dispose();
+    }
 
     private void ApplyItemSize()
     {

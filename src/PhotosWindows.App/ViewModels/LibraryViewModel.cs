@@ -96,14 +96,29 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
 
     partial void OnItemSizeChanged(double value) => _settings.Save(_settings.Load() with { GridItemSize = (int)value });
 
-    partial void OnGroupingIndexChanged(int value) => _ = ReloadAsync();
+    partial void OnGroupingIndexChanged(int value) => ReloadUnlessLoading();
 
-    partial void OnMediaFilterIndexChanged(int value) => _ = ReloadAsync();
+    partial void OnMediaFilterIndexChanged(int value) => ReloadUnlessLoading();
 
-    partial void OnFavoritesOnlyChanged(bool? value) => _ = ReloadAsync();
+    partial void OnFavoritesOnlyChanged(bool? value) => ReloadUnlessLoading();
 
-    public async Task LoadAsync(LibraryNavigation target)
+    /// <summary>
+    /// The view options change in LoadAsync too, which reloads once at its end: reloading on each of them as well ran
+    /// the query and the grouping two or three times per visit.
+    /// </summary>
+    private void ReloadUnlessLoading()
     {
+        if (!_settingUp) _ = ReloadAsync();
+    }
+
+    private bool _settingUp;
+
+    /// <summary>The filter, favourites and grouping chosen in this view, kept so going back restores them.</summary>
+    public LibraryViewState ViewState => new(GroupingIndex, MediaFilterIndex, FavoritesOnly);
+
+    public async Task LoadAsync(LibraryNavigation target, LibraryViewState? restore = null)
+    {
+        _settingUp = true;
         _target = target;
         IsTrash = target.Scope == LibraryScope.RecentlyDeleted;
         IsHiddenScope = target.Scope == LibraryScope.Hidden;
@@ -116,6 +131,14 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         IsNormalScope = !IsTrash && !IsHiddenScope;
         CanGroup = !IsManualAlbum && target.Scope is not LibraryScope.RecentlyAdded;
         GroupingIndex = CanGroup ? (int)GroupingMode.Days : (int)GroupingMode.None;
+        if (restore is { } state)
+        {
+            if (CanGroup) GroupingIndex = state.GroupingIndex;
+            MediaFilterIndex = state.MediaFilterIndex;
+            FavoritesOnly = state.FavoritesOnly;
+        }
+
+        _settingUp = false;
         Title = _target.Title
             ?? _album?.Name
             ?? (_person is not null ? PeopleCoordinator.DisplayName(_person) : null)
@@ -364,3 +387,6 @@ public sealed partial class LibraryViewModel : ObservableObject, IDisposable
         foreach (var item in _byId.Values) item.Unload();
     }
 }
+
+/// <summary>View options of a library grid that survive going to the viewer and back.</summary>
+public readonly record struct LibraryViewState(int GroupingIndex, int MediaFilterIndex, bool? FavoritesOnly);

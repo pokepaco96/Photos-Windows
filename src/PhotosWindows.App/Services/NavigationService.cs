@@ -32,6 +32,13 @@ public sealed class NavigationService
     /// </summary>
     public long? ReturnToAssetId { get; set; }
 
+    /// <summary>
+    /// View options (media filter, favourites, grouping) of library grids left for another page, by back-stack depth.
+    /// The grid page is rebuilt when the user comes back, so without them a "Videos" view came back as "Photos and
+    /// videos" and the video the user had opened was lost in the whole library.
+    /// </summary>
+    public Dictionary<int, ViewModels.LibraryViewState> LibraryViewStates { get; } = [];
+
     public Type? CurrentPage => _frame?.Content?.GetType();
 
     public void Attach(Frame frame)
