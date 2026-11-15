@@ -13,14 +13,16 @@ public sealed class BackgroundProcessing : IDisposable
 {
     private readonly ThumbnailService _thumbnails;
     private readonly ImportService _import;
+    private readonly IAssetRepository _assets;
     private readonly ILogger<BackgroundProcessing> _logger;
     private readonly SemaphoreSlim _signal = new(0, int.MaxValue);
     private CancellationTokenSource? _cts;
 
-    public BackgroundProcessing(ThumbnailService thumbnails, ImportService import, ILibraryContext context, ILogger<BackgroundProcessing> logger)
+    public BackgroundProcessing(ThumbnailService thumbnails, ImportService import, ILibraryContext context, IAssetRepository assets, ILogger<BackgroundProcessing> logger)
     {
         _thumbnails = thumbnails;
         _import = import;
+        _assets = assets;
         _logger = logger;
         context.LibraryChanged += (_, library) =>
         {
@@ -37,6 +39,44 @@ public sealed class BackgroundProcessing : IDisposable
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
         _ = Task.Run(() => RunAsync(token), token);
+        _ = Task.Run(() => HeartbeatAsync(token), token);
+    }
+
+    /// <summary>
+    /// Every 10 s, one log line with the queue and lane state, so a slow or busy app can be diagnosed from its log
+    /// (counts and sizes only; no paths or names).
+    /// </summary>
+    private async Task HeartbeatAsync(CancellationToken token)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        var process = System.Diagnostics.Process.GetCurrentProcess();
+        try
+        {
+            while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+            {
+                try
+                {
+                    var stats = await _assets.GetStatisticsAsync(token).ConfigureAwait(false);
+                    var unhashed = (await _assets.GetPhotosWithoutPerceptualHashAsync(100_000, token).ConfigureAwait(false)).Count;
+                    process.Refresh();
+                    ThreadPool.GetAvailableThreads(out var freeWorkers, out _);
+                    ThreadPool.GetMaxThreads(out var maxWorkers, out _);
+                    _logger.LogInformation(
+                        "Heartbeat: pendingThumbs={Pending} unhashed={Unhashed} import={Import} | {Stats} | cpuMs={Cpu} wsMiB={Ws} privateMiB={Private} gcHeapMiB={Heap} threads={Threads} poolBusy={PoolBusy} pending={PoolPending}",
+                        stats.PendingThumbnails, unhashed, _import.IsRunning, _thumbnails.Stats,
+                        (long)process.TotalProcessorTime.TotalMilliseconds, process.WorkingSet64 >> 20, process.PrivateMemorySize64 >> 20,
+                        GC.GetTotalMemory(false) >> 20, process.Threads.Count, maxWorkers - freeWorkers, ThreadPool.PendingWorkItemCount);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogDebug(ex, "Heartbeat skipped");
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // library closed
+        }
     }
 
     private void Stop()
