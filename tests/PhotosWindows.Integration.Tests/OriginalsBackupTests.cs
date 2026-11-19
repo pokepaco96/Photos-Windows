@@ -389,4 +389,105 @@ public sealed class OriginalsBackupTests : IAsyncLifetime
         Assert.Contains((await Backup.VerifyAsync(first.Folder, null, CancellationToken.None)).Problems, p => p.StartsWith("Unsafe path", StringComparison.Ordinal));
         Assert.False((await Backup.VerifyAsync(_refDir, null, CancellationToken.None)).IsValid); // a folder that is not a backup
     }
+
+    private async Task<string> AddNewPhotosAsync(string folderName, params (string Name, int Seed, DateTime Taken)[] photos)
+    {
+        var dir = _host.SourceDir(folderName);
+        foreach (var p in photos) Fixtures.Jpeg(Path.Combine(dir, p.Name), new Fixtures.PhotoSpec { Seed = p.Seed, Taken = p.Taken });
+        await _host.ImportAsync(dir, ImportMode.AddInPlace);
+        return dir;
+    }
+
+    private static Dictionary<string, (string Hash, DateTime Written)> Snapshot(string folder) =>
+        Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories)
+            .Where(f => Path.GetFileName(f) != OriginalsManifest.FileName)
+            .ToDictionary(f => Path.GetRelativePath(folder, f).Replace('\\', '/'), f => (Fixtures.Sha256(f), File.GetLastWriteTimeUtc(f)));
+
+    [Fact]
+    public async Task Incremental_update_copies_only_the_new_files_and_leaves_the_existing_backup_untouched()
+    {
+        var first = await Backup.CreateAsync(_dest, false, null, CancellationToken.None);
+        Assert.Equal(OriginalsBackupStatus.Complete, first.Status);
+        Assert.Equal([first.Folder], Backup.FindExisting(_dest));
+        var before = Snapshot(first.Folder);
+        var sources = SourceHashes();
+
+        // Nothing new yet: the backup is up to date and an update copies nothing.
+        var idle = await Backup.AnalyzeUpdateAsync(first.Folder, CancellationToken.None);
+        Assert.True(idle.UpToDate);
+        Assert.Equal((9, 0, 0L), (idle.FilesInBackup, idle.NewFiles, idle.NewBytes));
+
+        // Two new photos, one of them with the same name and month as a file already in the backup.
+        await AddNewPhotosAsync("nuevas", ("IMG_0200.JPG", 10, new DateTime(2024, 7, 25, 9, 0, 0)), ("IMG_0300.JPG", 11, new DateTime(2025, 1, 2, 9, 0, 0)));
+        var preview = await Backup.AnalyzeUpdateAsync(first.Folder, CancellationToken.None);
+        Assert.True(preview.CanStart);
+        Assert.Equal(2, preview.NewFiles);
+        Assert.True(preview.NewBytes > 0);
+
+        var progress = new List<OriginalsProgress>();
+        var updated = await Backup.UpdateAsync(first.Folder, false, new SyncProgress<OriginalsProgress>(progress.Add), CancellationToken.None);
+
+        Assert.Equal(OriginalsBackupStatus.Complete, updated.Status);
+        Assert.Equal(first.Folder, updated.Folder);                      // same folder, not a new backup
+        Assert.Equal((2, 0, 0), (updated.FilesCopied, updated.FilesAlreadyPresent, updated.Issues.Count));
+        Assert.Equal((2, 2, preview.NewBytes), (progress[^1].FilesDone, progress[^1].FilesTotal, progress[^1].BytesDone));
+        var after = Snapshot(first.Folder);
+        foreach (var (path, state) in before) Assert.Equal(state, after[path]);  // every earlier copy byte- and time-identical
+        Assert.Equal(before.Count + 2, after.Count);
+        Assert.Contains("2024/07/IMG_0200 (3).JPG", after.Keys);        // never overwrites the two IMG_0200.JPG already there
+        Assert.Contains("2025/01/IMG_0300.JPG", after.Keys);
+
+        var manifest = OriginalsManifest.Parse(File.ReadAllText(Path.Combine(first.Folder, OriginalsManifest.FileName)));
+        Assert.True(manifest.Complete);
+        Assert.NotNull(manifest.UpdatedUtc);
+        Assert.Equal(11, manifest.FileCount);
+        Assert.True((await Backup.VerifyAsync(first.Folder, null, CancellationToken.None)).IsValid);
+        Assert.True((await Backup.AnalyzeUpdateAsync(first.Folder, CancellationToken.None)).UpToDate);
+        Assert.Equal(sources.Count + 2, SourceHashes().Count);           // sources only read (two new ones added by the test)
+    }
+
+    [Fact]
+    public async Task Interrupted_update_keeps_the_backup_valid_and_the_next_update_finishes_it()
+    {
+        var first = await Backup.CreateAsync(_dest, false, null, CancellationToken.None);
+        await AddNewPhotosAsync("lote", ("a.jpg", 20, new DateTime(2025, 3, 1)), ("b.jpg", 21, new DateTime(2025, 3, 2)), ("c.jpg", 22, new DateTime(2025, 3, 3)));
+
+        using var cts = new CancellationTokenSource();
+        var stopped = await Backup.UpdateAsync(first.Folder, false, new SyncProgress<OriginalsProgress>(p => { if (p.FilesDone == 1) cts.Cancel(); }), cts.Token);
+        Assert.Equal(OriginalsBackupStatus.Cancelled, stopped.Status);
+        Assert.Equal(1, stopped.FilesCopied);
+        // What it holds is still a consistent backup: every listed file is there and verified, just not up to date.
+        var midway = await Backup.VerifyAsync(first.Folder, null, CancellationToken.None);
+        Assert.Equal(10, midway.FilesChecked);
+        Assert.DoesNotContain(midway.Problems, p => !p.Contains("not complete", StringComparison.Ordinal));
+        Assert.Equal(2, (await Backup.AnalyzeUpdateAsync(first.Folder, CancellationToken.None)).NewFiles);
+
+        // A copy made before a crash, not yet in the manifest, is reused after checking it is identical.
+        // (Import order is not fixed, so pick one of the two that the stopped update did not copy.)
+        var missing = new[] { "a.jpg", "b.jpg", "c.jpg" }.First(n => !File.Exists(Path.Combine(first.Folder, "2025", "03", n)));
+        File.Copy(Path.Combine(_host.SourceDir("lote"), missing), Path.Combine(first.Folder, "2025", "03", missing));
+        var resumed = await Backup.UpdateAsync(first.Folder, false, null, CancellationToken.None);
+        Assert.Equal(OriginalsBackupStatus.Complete, resumed.Status);
+        Assert.Equal((1, 1), (resumed.FilesCopied, resumed.FilesAlreadyPresent));
+        Assert.True((await Backup.VerifyAsync(first.Folder, null, CancellationToken.None)).IsValid);
+    }
+
+    [Fact]
+    public async Task Update_refuses_unfinished_or_foreign_folders_and_never_removes_what_the_backup_holds()
+    {
+        using var cts = new CancellationTokenSource();
+        var partial = await Backup.CreateAsync(_dest, false, new SyncProgress<OriginalsProgress>(p => { if (p.FilesDone == 2) cts.Cancel(); }), cts.Token);
+        await Assert.ThrowsAsync<ArgumentException>(() => Backup.UpdateAsync(partial.Folder, false, null, CancellationToken.None));
+        Assert.Empty(Backup.FindExisting(_dest));                       // an unfinished backup is resumed, not updated
+        await Assert.ThrowsAsync<InvalidDataException>(() => Backup.UpdateAsync(_refDir, false, null, CancellationToken.None));
+
+        var done = await Backup.ResumeAsync(partial.Folder, false, null, CancellationToken.None);
+        var manifestPath = Path.Combine(done.Folder, OriginalsManifest.FileName);
+        var before = Snapshot(done.Folder);
+        await AddNewPhotosAsync("otra", ("z.jpg", 30, new DateTime(2025, 6, 1)));
+        var updated = await Backup.UpdateAsync(done.Folder, false, null, CancellationToken.None);
+        Assert.Equal(1, updated.FilesCopied);
+        Assert.All(before.Keys, k => Assert.True(File.Exists(Path.Combine(done.Folder, k))));
+        Assert.Equal(10, OriginalsManifest.Parse(File.ReadAllText(manifestPath)).FileCount);
+    }
 }

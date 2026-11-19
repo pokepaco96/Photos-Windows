@@ -32,6 +32,13 @@
                 <TextBlock AutomationProperties.AutomationId="Backup_Analysis" Text="{x:Bind ViewModel.Analysis, Mode=OneWay}" TextWrapping="Wrap" />
                 <InfoBar AutomationProperties.AutomationId="Backup_Blocker" IsOpen="{x:Bind ViewModel.HasBlocker, Mode=OneWay}" IsClosable="False" Severity="Error" Message="{x:Bind ViewModel.Blocker, Mode=OneWay}" />
                 <InfoBar AutomationProperties.AutomationId="Backup_Warning" IsOpen="{x:Bind ViewModel.HasWarning, Mode=OneWay}" IsClosable="False" Severity="Warning" Message="{x:Bind ViewModel.Warning, Mode=OneWay}" />
+                <!-- Incremental update of the latest finished backup in the destination: only new files are copied. -->
+                <StackPanel Spacing="6" Padding="12" CornerRadius="6" Visibility="{x:Bind ViewModel.HasExisting, Mode=OneWay}"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}">
+                    <TextBlock AutomationProperties.AutomationId="Backup_Existing" Text="{x:Bind ViewModel.ExistingText, Mode=OneWay}" TextWrapping="Wrap" />
+                    <Button x:Uid="Backup_UpdateExisting" AutomationProperties.AutomationId="Backup_UpdateExisting" Content="Update existing backup (new files only)"
+                            Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.UpdateExistingCommand}" IsEnabled="{x:Bind ViewModel.CanUpdate, Mode=OneWay}" />
+                </StackPanel>
                 <CheckBox x:Uid="Backup_AcceptIncomplete" AutomationProperties.AutomationId="Backup_AcceptIncomplete" Content="Copy only the available files. The result will be marked as incomplete."
                           IsChecked="{x:Bind ViewModel.AcceptIncomplete, Mode=TwoWay}" Visibility="{x:Bind ViewModel.CanAcceptIncomplete, Mode=OneWay}" />
 

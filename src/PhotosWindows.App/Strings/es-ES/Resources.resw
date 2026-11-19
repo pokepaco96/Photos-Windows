@@ -821,4 +821,10 @@
   <data name="Backup_Status_PartialAccepted" xml:space="preserve"><value>incompleta (aceptada)</value></data>
   <data name="Backup_Status_Incomplete" xml:space="preserve"><value>sin completar</value></data>
   <data name="Backup_Status_Cancelled" xml:space="preserve"><value>cancelada</value></data>
+  <data name="Backup_UpdateExisting.Content" xml:space="preserve"><value>Actualizar copia existente (solo lo nuevo)</value></data>
+  <data name="Backup_Existing" xml:space="preserve"><value>Copia existente: {0}, actualizada el {1}, {2} archivos.</value></data>
+  <data name="Backup_ExistingNew" xml:space="preserve"><value>Faltan {0} archivos nuevos ({1}).</value></data>
+  <data name="Backup_ExistingUpToDate" xml:space="preserve"><value>Está al día.</value></data>
+  <data name="Backup_ExistingOnlyUnavailable" xml:space="preserve"><value>Solo le faltan archivos que ahora no están disponibles.</value></data>
+  <data name="Backup_Remaining" xml:space="preserve"><value>quedan unos {0}</value></data>
 </root>
