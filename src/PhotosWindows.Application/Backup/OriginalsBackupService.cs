@@ -148,6 +148,191 @@ public sealed class OriginalsBackupService
         return new OriginalsVerification(problems.Count == 0, manifest, done, problems);
     }
 
+    /// <summary>
+    /// Finished backups (complete, or incomplete by the user's choice) of the open library directly under
+    /// <paramref name="destinationFolder"/>, most recently created or updated first. These can be updated incrementally.
+    /// </summary>
+    public IReadOnlyList<string> FindExisting(string destinationFolder)
+    {
+        var library = _context.RequireCurrent();
+        if (!Directory.Exists(destinationFolder)) return [];
+        var found = new List<(string Folder, DateTime When)>();
+        foreach (var dir in Directory.EnumerateDirectories(destinationFolder, FolderPrefix + "*"))
+        {
+            if (dir.EndsWith(PartialSuffix, StringComparison.OrdinalIgnoreCase)) continue;
+            try
+            {
+                if (ReadManifest(dir) is { } m && m.LibraryId == library.Id) found.Add((dir, m.UpdatedUtc ?? m.CreatedUtc));
+            }
+            catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException or IOException or UnauthorizedAccessException)
+            {
+                // Not a readable backup of ours: ignore it, never touch it.
+            }
+        }
+
+        return found.OrderByDescending(f => f.When).Select(f => f.Folder).ToList();
+    }
+
+    /// <summary>What <see cref="UpdateAsync"/> would copy into <paramref name="backupFolder"/>. Reads the catalog, the manifest and file attributes only.</summary>
+    public async Task<OriginalsUpdatePreview> AnalyzeUpdateAsync(string backupFolder, CancellationToken ct)
+    {
+        var library = _context.RequireCurrent();
+        var folder = Path.GetFullPath(backupFolder);
+        var manifest = RequireUpdatable(library, folder);
+        var plan = await PlanAsync(library, ct).ConfigureAwait(false);
+        return await Task.Run(() =>
+        {
+            var (toCopy, _, _) = SplitForUpdate(folder, manifest, plan);
+            var preflight = Preflight(library, toCopy, Path.GetDirectoryName(folder)!, existingBytes: 0);
+            return new OriginalsUpdatePreview(folder, manifest.CreatedUtc, manifest.UpdatedUtc, manifest.Complete, manifest.Files.Count,
+                toCopy.Count - preflight.Unavailable.Count - preflight.TooLarge.Count, preflight.TotalBytes, preflight);
+        }, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Incremental update of a finished backup: copies (and verifies) only the files of the library that the backup
+    /// does not have yet, next to the ones already there. Files already in the backup are never overwritten, moved or
+    /// deleted, even if they are no longer in the library. If it is interrupted, running it again picks up where it
+    /// stopped (copies already made are recognised by their SHA-256).
+    /// </summary>
+    public async Task<OriginalsBackupResult> UpdateAsync(string backupFolder, bool acceptIncomplete, IProgress<OriginalsProgress>? progress, CancellationToken ct)
+    {
+        var library = _context.RequireCurrent();
+        var folder = Path.GetFullPath(backupFolder);
+        var manifest = RequireUpdatable(library, folder);
+        var plan = await PlanAsync(library, ct).ConfigureAwait(false);
+        var (toCopy, kept, carried) = SplitForUpdate(folder, manifest, plan);
+        var preflight = Preflight(library, toCopy, Path.GetDirectoryName(folder)!, existingBytes: 0);
+        if (preflight.DestinationProblem is not null) throw new OriginalsBackupBlockedException("The destination cannot be inside the library or inside a folder that holds originals.", preflight);
+        if (!preflight.EnoughSpace) throw new OriginalsBackupBlockedException("There is not enough free space in the destination.", preflight);
+        if (!preflight.CanBeComplete && !acceptIncomplete) throw new OriginalsBackupBlockedException("Some originals are not available, so the backup would not be complete.", preflight);
+
+        var skip = preflight.Unavailable.Concat(preflight.TooLarge).Select(i => i.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var work = toCopy.Where(e => !skip.Contains(e.RelativePath)).ToList();
+        var files = new List<OriginalsManifestFile>(kept);
+        var added = new List<OriginalsPlanEntry>();
+        var issues = new List<OriginalsManifestIssue>(carried.Concat(preflight.Unavailable).Concat(preflight.TooLarge));
+        int copied = 0, present = 0, done = 0;
+        long bytes = 0;
+        string? fatal = null;
+        var cancelled = false;
+        CleanTemporaries(folder);
+
+        OriginalsManifest Manifest(bool complete, bool updated) => manifest with
+        {
+            UpdatedUtc = updated ? _clock.UtcNow : manifest.UpdatedUtc,
+            AppVersion = BackupService.AppVersion,
+            Complete = complete,
+            AssetCount = files.Select(f => f.AssetId).Distinct().Count(),
+            PhotoCount = manifest.PhotoCount + added.Count(e => e.Role == FileRole.Original && e.MediaType == MediaType.Photo),
+            VideoCount = manifest.VideoCount + added.Count(e => e.Role == FileRole.Original && e.MediaType == MediaType.Video),
+            FileCount = files.Count,
+            TotalBytes = files.Sum(f => f.Size),
+            Files = files.ToList(),
+            Issues = issues.ToList(),
+        };
+
+        try
+        {
+            foreach (var entry in work)
+            {
+                ct.ThrowIfCancellationRequested();
+                progress?.Report(new OriginalsProgress(done, work.Count, bytes, preflight.TotalBytes, entry.OriginalName));
+                done++;
+                var (file, issue, wasPresent, stop) = await CopyOneAsync(folder, entry, replaceStale: false, ct).ConfigureAwait(false);
+                if (file is not null)
+                {
+                    files.Add(file);
+                    added.Add(entry);
+                    bytes += file.Size;
+                    if (wasPresent) present++;
+                    else copied++;
+                }
+
+                if (issue is not null) issues.Add(issue);
+                if (stop is not null)
+                {
+                    fatal = stop;
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            cancelled = true;
+        }
+
+        progress?.Report(new OriginalsProgress(done, work.Count, bytes, preflight.TotalBytes, string.Empty));
+        if (!Directory.Exists(folder))
+        {
+            return new OriginalsBackupResult(OriginalsBackupStatus.Incomplete, folder, copied, present, bytes, issues, fatal ?? "The destination is no longer available.");
+        }
+
+        // What was copied so far is recorded even when stopped: the backup stays valid, just not up to date.
+        var complete = !cancelled && fatal is null && issues.Count == 0;
+        TryWriteManifest(folder, Manifest(complete, updated: added.Count > 0 || complete));
+        if (cancelled) return new OriginalsBackupResult(OriginalsBackupStatus.Cancelled, folder, copied, present, bytes, issues, null);
+        if (fatal is not null) return new OriginalsBackupResult(OriginalsBackupStatus.Incomplete, folder, copied, present, bytes, issues, fatal);
+
+        var result = folder;
+        if (complete && folder.EndsWith(IncompleteSuffix, StringComparison.OrdinalIgnoreCase) && !Directory.Exists(folder[..^IncompleteSuffix.Length]))
+        {
+            result = folder[..^IncompleteSuffix.Length];
+            Directory.Move(folder, result);
+        }
+
+        _logger.LogInformation("Originals backup updated: {Files} new files, {Bytes} bytes, {Issues} issues", added.Count, bytes, issues.Count);
+        var status = complete ? OriginalsBackupStatus.Complete : acceptIncomplete ? OriginalsBackupStatus.PartialAccepted : OriginalsBackupStatus.Incomplete;
+        return new OriginalsBackupResult(status, result, copied, present, bytes, issues, null);
+    }
+
+    private static OriginalsManifest RequireUpdatable(LibraryInfo library, string folder)
+    {
+        if (folder.EndsWith(PartialSuffix, StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("This backup is unfinished: resume it instead.", nameof(folder));
+        var manifest = ReadManifest(folder) ?? throw new InvalidDataException("The folder has no backup manifest.");
+        if (manifest.LibraryId != library.Id) throw new InvalidOperationException("This backup belongs to another library.");
+        return manifest;
+    }
+
+    /// <summary>
+    /// Splits the library plan into the files the backup already holds and the ones still to copy, each with a
+    /// destination that does not clash with anything already in the backup. A file counts as held when the manifest
+    /// has the same asset, role and name with the catalog's size and content hash, and the copy is still on disk with
+    /// that size. Everything the manifest lists is kept, including files the library no longer has.
+    /// </summary>
+    private static (List<OriginalsPlanEntry> ToCopy, List<OriginalsManifestFile> Kept, List<OriginalsManifestIssue> Carried) SplitForUpdate(
+        string folder, OriginalsManifest manifest, IReadOnlyList<OriginalsPlanEntry> plan)
+    {
+        var byKey = manifest.Files.GroupBy(f => (f.AssetId, f.Role, Name: f.OriginalName.ToUpperInvariant())).ToDictionary(g => g.Key, g => g.ToList());
+        var taken = manifest.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var toCopy = new List<OriginalsPlanEntry>();
+        var carried = new List<OriginalsManifestIssue>();
+        foreach (var e in plan)
+        {
+            var held = byKey.TryGetValue((e.AssetUid, e.Role, e.OriginalName.ToUpperInvariant()), out var candidates)
+                ? candidates.FirstOrDefault(f => f.Size == e.CatalogSize
+                    && (string.IsNullOrEmpty(e.CatalogSha256) || string.Equals(f.Sha256, e.CatalogSha256, StringComparison.OrdinalIgnoreCase) || !f.MatchesCatalogHash)
+                    && TryResolve(folder, f.Path, out var p) && new FileInfo(p) is { Exists: true } info && info.Length == f.Size)
+                : null;
+            if (held is not null)
+            {
+                if (!held.MatchesCatalogHash) carried.Add(Issue(e, OriginalsIssueKind.ChangedSinceImport) with { Path = held.Path });
+                continue;
+            }
+
+            // A new file goes to its planned place, or the first free " (n)" next to it. A file already on disk there
+            // that the manifest does not list (an interrupted update) is reused only if identical: CopyOneAsync checks.
+            var slash = e.RelativePath.LastIndexOf('/') + 1;
+            var (dir, name) = (e.RelativePath[..slash], e.RelativePath[slash..]);
+            var relative = e.RelativePath;
+            for (var n = 2; taken.Contains(relative); n++) relative = dir + Path.GetFileNameWithoutExtension(name) + $" ({n})" + Path.GetExtension(name);
+            taken.Add(relative);
+            toCopy.Add(e with { RelativePath = relative });
+        }
+
+        return (toCopy, manifest.Files.ToList(), carried);
+    }
+
     // ------------------------------------------------------------------------------------------------ internals
 
     private async Task<IReadOnlyList<OriginalsPlanEntry>> PlanAsync(LibraryInfo library, CancellationToken ct)
@@ -268,7 +453,7 @@ public sealed class OriginalsBackupService
                 done++;
                 if (skip.ContainsKey(entry.RelativePath)) continue;
 
-                var (file, issue, wasPresent, stop) = await CopyOneAsync(workDir, entry, ct).ConfigureAwait(false);
+                var (file, issue, wasPresent, stop) = await CopyOneAsync(workDir, entry, replaceStale: true, ct).ConfigureAwait(false);
                 if (file is not null)
                 {
                     files.Add(file);
@@ -326,7 +511,7 @@ public sealed class OriginalsBackupService
         return new OriginalsBackupResult(OriginalsBackupStatus.PartialAccepted, partialDir, copied, present, bytes, issues, null);
     }
 
-    private async Task<(OriginalsManifestFile? File, OriginalsManifestIssue? Issue, bool WasPresent, string? Stop)> CopyOneAsync(string workDir, OriginalsPlanEntry entry, CancellationToken ct)
+    private async Task<(OriginalsManifestFile? File, OriginalsManifestIssue? Issue, bool WasPresent, string? Stop)> CopyOneAsync(string workDir, OriginalsPlanEntry entry, bool replaceStale, CancellationToken ct)
     {
         if (!TryResolve(workDir, entry.RelativePath, out var destination)) return (null, Issue(entry, OriginalsIssueKind.CopyFailed), false, null);
         var temporary = destination + PathSafety.PartialSuffix;
@@ -348,9 +533,14 @@ public sealed class OriginalsBackupService
                 {
                     wasPresent = true;
                 }
-                else
+                else if (replaceStale)
                 {
                     File.Delete(destination); // our own unfinished working folder: a stale or damaged copy is replaced
+                }
+                else
+                {
+                    // A finished backup: a different file is already there and is never overwritten.
+                    return (null, Issue(entry, OriginalsIssueKind.CopyFailed), false, null);
                 }
             }
             else

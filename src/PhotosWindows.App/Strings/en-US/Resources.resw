@@ -821,4 +821,10 @@
   <data name="Backup_Status_PartialAccepted" xml:space="preserve"><value>incomplete (accepted)</value></data>
   <data name="Backup_Status_Incomplete" xml:space="preserve"><value>not complete</value></data>
   <data name="Backup_Status_Cancelled" xml:space="preserve"><value>cancelled</value></data>
+  <data name="Backup_UpdateExisting.Content" xml:space="preserve"><value>Update existing backup (new files only)</value></data>
+  <data name="Backup_Existing" xml:space="preserve"><value>Existing backup: {0}, last updated {1}, {2} files.</value></data>
+  <data name="Backup_ExistingNew" xml:space="preserve"><value>{0} new files ({1}) to add.</value></data>
+  <data name="Backup_ExistingUpToDate" xml:space="preserve"><value>It is up to date.</value></data>
+  <data name="Backup_ExistingOnlyUnavailable" xml:space="preserve"><value>The only files missing from it are not available right now.</value></data>
+  <data name="Backup_Remaining" xml:space="preserve"><value>about {0} left</value></data>
 </root>

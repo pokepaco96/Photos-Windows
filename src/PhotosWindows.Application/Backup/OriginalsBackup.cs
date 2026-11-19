@@ -78,6 +78,8 @@ public sealed record OriginalsManifest
     public Guid LibraryId { get; init; }
     public string LibraryName { get; init; } = string.Empty;
     public DateTime CreatedUtc { get; init; }
+    /// <summary>Last time new files were added to this backup by an incremental update; null if never updated.</summary>
+    public DateTime? UpdatedUtc { get; init; }
     public string AppVersion { get; init; } = string.Empty;
     /// <summary>True only when every file of the catalog was copied and verified, with no issue at all.</summary>
     public bool Complete { get; init; }
@@ -229,6 +231,24 @@ public sealed record OriginalsPreflight
     public string? DestinationProblem { get; init; }
     public bool CanBeComplete => Unavailable.Count == 0 && TooLarge.Count == 0;
     public bool CanStart => DestinationProblem is null && EnoughSpace && FileCount > 0;
+}
+
+/// <summary>
+/// What an incremental update of an existing backup would do: only files that are not in it yet are copied; nothing
+/// already in the backup is touched, re-copied or removed.
+/// </summary>
+public sealed record OriginalsUpdatePreview(
+    string Folder,
+    DateTime CreatedUtc,
+    DateTime? UpdatedUtc,
+    bool WasComplete,
+    int FilesInBackup,
+    int NewFiles,
+    long NewBytes,
+    OriginalsPreflight Preflight)
+{
+    public bool UpToDate => NewFiles == 0 && Preflight.Unavailable.Count == 0 && Preflight.TooLarge.Count == 0;
+    public bool CanStart => !UpToDate && Preflight.DestinationProblem is null && Preflight.EnoughSpace;
 }
 
 public sealed record OriginalsProgress(int FilesDone, int FilesTotal, long BytesDone, long BytesTotal, string CurrentName);

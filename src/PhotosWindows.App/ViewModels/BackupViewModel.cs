@@ -21,6 +21,7 @@ public sealed partial class BackupViewModel(
     private CancellationTokenSource? _cts;
     private OriginalsPreflight? _preflight;
     private string? _unfinished;
+    private OriginalsUpdatePreview? _update;
     private string? _lastFolder;
 
     public ObservableCollection<string> History { get; } = [];
@@ -40,6 +41,10 @@ public sealed partial class BackupViewModel(
     [ObservableProperty] public partial bool AcceptIncomplete { get; set; }
     [ObservableProperty] public partial bool CanStart { get; set; }
     [ObservableProperty] public partial bool CanResume { get; set; }
+    /// <summary>A finished backup of this library exists in the destination: it can be brought up to date.</summary>
+    [ObservableProperty] public partial bool HasExisting { get; set; }
+    [ObservableProperty] public partial string ExistingText { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool CanUpdate { get; set; }
     [ObservableProperty] public partial bool IsRunning { get; set; }
     [ObservableProperty] public partial bool IsIdle { get; set; } = true;
     [ObservableProperty] public partial double Progress { get; set; }
@@ -128,6 +133,7 @@ public sealed partial class BackupViewModel(
             HasBlocker = Blocker.Length > 0;
             _unfinished = destination is null ? null : backup.FindUnfinished(destination).FirstOrDefault();
             CanResume = _unfinished is not null && !IsRunning;
+            await AnalyzeExistingAsync(destination);
             UpdateCanStart();
         }
         catch (InvalidOperationException)
@@ -142,8 +148,49 @@ public sealed partial class BackupViewModel(
         }
     }
 
-    private void UpdateCanStart() =>
+    /// <summary>The most recent finished backup in the destination and how many new files it is missing.</summary>
+    private async Task AnalyzeExistingAsync(string? destination)
+    {
+        _update = null;
+        var existing = destination is null ? null : backup.FindExisting(destination).FirstOrDefault();
+        if (existing is not null)
+        {
+            try
+            {
+                _update = await backup.AnalyzeUpdateAsync(existing, CancellationToken.None);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
+            {
+                _update = null;
+            }
+        }
+
+        HasExisting = _update is not null;
+        if (_update is { } u)
+        {
+            var when = (u.UpdatedUtc ?? u.CreatedUtc).ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+            var state = u.UpToDate ? Loc.Get("Backup_ExistingUpToDate")
+                : u.NewFiles > 0 ? Loc.Format("Backup_ExistingNew", u.NewFiles, SelectionActions.FormatBytes(u.NewBytes))
+                : Loc.Get("Backup_ExistingOnlyUnavailable");
+            ExistingText = Loc.Format("Backup_Existing", Path.GetFileName(u.Folder), when, u.FilesInBackup) + " " + state;
+            if (u.NewFiles > 0 && !u.Preflight.EnoughSpace) ExistingText += " " + Loc.Get("Backup_NotEnoughSpace");
+        }
+        else
+        {
+            ExistingText = string.Empty;
+        }
+
+        UpdateCanStart();
+    }
+
+    private void UpdateCanStart()
+    {
         CanStart = !IsRunning && HasDestination && _preflight is { } p && Directory.Exists(Destination) && p.CanStart && (p.CanBeComplete || AcceptIncomplete);
+        CanUpdate = !IsRunning && _update is { } u && u.CanStart && u.NewFiles > 0 && (u.Preflight.CanBeComplete || AcceptIncomplete);
+    }
+
+    [RelayCommand]
+    private Task UpdateExistingAsync() => _update is not { } u ? Task.CompletedTask : RunAsync((progress, ct) => backup.UpdateAsync(u.Folder, AcceptIncomplete, progress, ct));
 
     [RelayCommand]
     private Task StartAsync() => RunAsync((progress, ct) => backup.CreateAsync(Destination, AcceptIncomplete, progress, ct));
@@ -175,8 +222,14 @@ public sealed partial class BackupViewModel(
             {
                 Progress = p.BytesTotal > 0 ? Math.Min(100, 100.0 * p.BytesDone / p.BytesTotal) : 0;
                 var seconds = Math.Max(1, (now - started).TotalSeconds);
+                var rate = p.BytesDone / seconds;
                 ProgressText = Loc.Format("Backup_Progress", p.FilesDone, p.FilesTotal, SelectionActions.FormatBytes(p.BytesDone), SelectionActions.FormatBytes(p.BytesTotal),
-                    SelectionActions.FormatBytes((long)(p.BytesDone / seconds)));
+                    SelectionActions.FormatBytes((long)rate));
+                // An estimate only after a few seconds of copying, so the first file does not decide it.
+                if (seconds >= 3 && rate > 0 && p.BytesDone < p.BytesTotal)
+                {
+                    ProgressText += " · " + Loc.Format("Backup_Remaining", FormatDuration(TimeSpan.FromSeconds((p.BytesTotal - p.BytesDone) / rate)));
+                }
             });
         });
 
@@ -204,6 +257,12 @@ public sealed partial class BackupViewModel(
             await AnalyzeAsync();
         }
     }
+
+    /// <summary>"1 h 05 min", "12 min", "40 s": rounded, as an estimate should be.</summary>
+    internal static string FormatDuration(TimeSpan t) =>
+        t.TotalHours >= 1 ? string.Create(CultureInfo.CurrentCulture, $"{(int)t.TotalHours} h {t.Minutes:00} min")
+        : t.TotalMinutes >= 1 ? string.Create(CultureInfo.CurrentCulture, $"{Math.Ceiling(t.TotalMinutes):0} min")
+        : string.Create(CultureInfo.CurrentCulture, $"{Math.Max(5, Math.Ceiling(t.TotalSeconds / 5) * 5):0} s");
 
     private void ShowResult(OriginalsBackupResult r)
     {
