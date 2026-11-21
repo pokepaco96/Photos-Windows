@@ -48,6 +48,7 @@ public static class AppHost
         services.AddSingleton<DialogService>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<ImageLoader>();
+        services.AddSingleton<ThumbnailProgress>();
         services.AddSingleton<BackgroundProcessing>();
         services.AddSingleton<ActivityCenter>();
         services.AddSingleton<ImportCoordinator>();

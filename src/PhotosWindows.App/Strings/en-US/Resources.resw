@@ -827,4 +827,8 @@
   <data name="Backup_ExistingUpToDate" xml:space="preserve"><value>It is up to date.</value></data>
   <data name="Backup_ExistingOnlyUnavailable" xml:space="preserve"><value>The only files missing from it are not available right now.</value></data>
   <data name="Backup_Remaining" xml:space="preserve"><value>about {0} left</value></data>
+  <data name="Thumbs_ProgressTitle.Text" xml:space="preserve"><value>Preparing thumbnails</value></data>
+  <data name="Thumbs_ProgressBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Thumbnail progress</value></data>
+  <data name="Thumbs_Progress" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Thumbs_PausedForImport" xml:space="preserve"><value>waiting for the import to finish</value></data>
 </root>

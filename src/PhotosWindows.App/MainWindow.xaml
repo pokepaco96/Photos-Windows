@@ -114,6 +114,30 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
+            <NavigationView.PaneFooter>
+                <!-- Background thumbnail pass: discreet, never blocks the activity bar used by imports and exports. -->
+                <StackPanel
+                    AutomationProperties.AutomationId="ThumbsProgressPanel"
+                    Margin="16,4,16,8"
+                    Spacing="4"
+                    Visibility="{x:Bind conv:Bind.Visible(ViewModel.Thumbnails.IsVisible), Mode=OneWay}">
+                    <TextBlock x:Uid="Thumbs_ProgressTitle" Text="Preparing thumbnails" Style="{StaticResource CaptionTextBlockStyle}" />
+                    <ProgressBar
+                        x:Uid="Thumbs_ProgressBar"
+                        AutomationProperties.AutomationId="ThumbsProgressBar"
+                        AutomationProperties.Name="Thumbnail progress"
+                        Minimum="0"
+                        Maximum="100"
+                        Value="{x:Bind ViewModel.Thumbnails.Percent, Mode=OneWay}" />
+                    <TextBlock
+                        AutomationProperties.AutomationId="ThumbsProgressText"
+                        Text="{x:Bind ViewModel.Thumbnails.Text, Mode=OneWay}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </NavigationView.PaneFooter>
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
