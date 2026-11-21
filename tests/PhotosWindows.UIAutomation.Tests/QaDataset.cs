@@ -148,6 +148,11 @@ public sealed class QaDataset
     private (bool, string?) DownloadPeople()
     {
         Directory.CreateDirectory(PeopleFolder);
+        if (Environment.GetEnvironmentVariable("PW_QA_NO_DOWNLOADS") == "1")
+        {
+            return (false, "people photos not downloaded: PW_QA_NO_DOWNLOADS=1");
+        }
+
         try
         {
             using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(2) };
