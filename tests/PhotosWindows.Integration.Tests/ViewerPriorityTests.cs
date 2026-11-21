@@ -93,6 +93,50 @@ public class ViewerPriorityTests
     }
 
     [Fact]
+    public async Task A_grid_decode_stuck_past_the_timeout_does_not_hold_the_background_pass_for_ever()
+    {
+        // Seen in the UI suite (2026-11-21): one shell video thumbnail on the grid lane ran for minutes; the lane stayed
+        // busy, ForegroundBusy stayed true, and the background pass yielded the whole time (ETA 1 h 34 min for 66 clips).
+        var (host, frames, _) = await LibraryWithStuckBackgroundAsync(videos: 1);
+        await using var _ = host;
+        var thumbs = host.Get<ThumbnailService>();
+        thumbs.GenerationTimeout = TimeSpan.FromMilliseconds(300);
+        var video = (await host.AllAsync()).Single(a => a.MediaType == MediaType.Video);
+
+        Assert.Null(await thumbs.GetOrCreateAsync(video.Id, ThumbnailSize.Small, CancellationToken.None)); // times out, keeps its slot
+        Assert.Equal(1, frames.Started);
+        Assert.Equal(1, thumbs.BusyWorkers.Interactive);
+
+        // Past the 2 s "the user just asked for tiles" window, a stuck decode is not the user waiting.
+        await Task.Delay(TimeSpan.FromSeconds(2.2));
+        Assert.False(thumbs.ForegroundBusy, "a decode past its timeout keeps the background pass waiting");
+        Assert.Equal(1, thumbs.BusyWorkers.Interactive); // still counted, never relaunched
+    }
+
+    [Fact]
+    public async Task Tiles_asking_again_while_every_grid_slot_is_stuck_do_not_hold_the_background_pass()
+    {
+        var (host, frames, photoId) = await LibraryWithStuckBackgroundAsync(videos: 3);
+        await using var _ = host;
+        var thumbs = host.Get<ThumbnailService>();
+        thumbs.GenerationTimeout = TimeSpan.FromMilliseconds(300);
+        var videos = (await host.AllAsync()).Where(a => a.MediaType == MediaType.Video).Select(a => a.Id).ToList();
+
+        // Fill every grid slot with a decode that never returns.
+        await Task.WhenAll(videos.Select(id => thumbs.GetOrCreateAsync(id, ThumbnailSize.Small, CancellationToken.None)));
+        await Task.Delay(TimeSpan.FromSeconds(2.2));
+        Assert.False(thumbs.ForegroundBusy);
+
+        // Tiles keep asking (scrolling, a screen reader walking the grid): the stalled grid answers at once, and the
+        // background pass is not told to wait for it.
+        for (var i = 0; i < 10; i++)
+        {
+            Assert.Null(await thumbs.GetOrCreateAsync(photoId, ThumbnailSize.Small, CancellationToken.None));
+            Assert.False(thumbs.ForegroundBusy, $"request {i} made the background pass wait behind a stalled grid ({thumbs.Stats.ForegroundReason})");
+        }
+    }
+
+    [Fact]
     public async Task Same_preview_requested_twice_is_generated_once_and_in_flight_entries_are_cleared()
     {
         var (host, _, photoId) = await LibraryWithStuckBackgroundAsync(videos: 0);
