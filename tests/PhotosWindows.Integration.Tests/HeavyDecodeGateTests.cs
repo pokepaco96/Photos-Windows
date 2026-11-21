@@ -155,6 +155,33 @@ public class HeavyDecodeGateTests
         public bool CanDecode(FormatFamily family) => inner.CanDecode(family);
 
         public (int Width, int Height)? ProbeSize(string sourcePath, FormatFamily family) => inner.ProbeSize(sourcePath, family);
+
+        public Task<RenderedImage?> TryRenderEmbeddedThumbnailAsync(string sourcePath, FormatFamily family, int maxLongSide, EncodeOptions encode, CancellationToken cancellationToken)
+        {
+            EmbeddedSeen.Enqueue(HeavyDecodeGate.CurrentPriority);
+            return Task.FromResult<RenderedImage?>(null);
+        }
+
+        public ConcurrentQueue<DecodePriority> EmbeddedSeen { get; } = new();
+    }
+
+    [Fact]
+    public async Task The_viewer_first_paint_asks_for_the_embedded_thumbnail_at_viewer_priority()
+    {
+        PriorityRecordingRenderer? renderer = null;
+        await using var host = new TestHost(s => s.AddSingleton<IImageRenderer>(sp =>
+            renderer = new PriorityRecordingRenderer(ActivatorUtilities.CreateInstance<SkiaImageRenderer>(sp))));
+        await host.CreateLibraryAsync();
+        var dir = host.SourceDir("lib");
+        Fixtures.Jpeg(Path.Combine(dir, "IMG_1.jpg"), new Fixtures.PhotoSpec { Width = 400, Height = 300, Seed = 1 });
+        await host.Import.ImportAsync(new ImportRequest([dir], ImportMode.AddInPlace), null, CancellationToken.None);
+        var id = (await host.AllAsync()).Single().Id;
+
+        _ = await host.Get<ThumbnailService>().TryEmbeddedPreviewAsync(id, CancellationToken.None);
+
+        Assert.True(renderer!.EmbeddedSeen.TryDequeue(out var seen), "the embedded thumbnail should have been asked for");
+        Assert.Equal(DecodePriority.Viewer, seen);
+        Assert.Equal(DecodePriority.Interactive, HeavyDecodeGate.CurrentPriority);
     }
 
     [Fact]

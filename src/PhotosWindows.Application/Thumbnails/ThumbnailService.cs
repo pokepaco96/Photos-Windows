@@ -183,7 +183,14 @@ public sealed class ThumbnailService
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var rendered = await _renderer.TryRenderEmbeddedThumbnailAsync(path, family, (int)ThumbnailSize.Small, EncodeOptions.ThumbnailJpeg, cancellationToken).ConfigureAwait(false);
+            // The viewer's first paint: served first at the process-wide limits on HEVC decodes (HeavyDecodeGate).
+            Task<RenderedImage?> rendering;
+            using (HeavyDecodeGate.Use(DecodePriority.Viewer))
+            {
+                rendering = _renderer.TryRenderEmbeddedThumbnailAsync(path, family, (int)ThumbnailSize.Small, EncodeOptions.ThumbnailJpeg, cancellationToken);
+            }
+
+            var rendered = await rendering.ConfigureAwait(false);
             return rendered?.Encoded;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
