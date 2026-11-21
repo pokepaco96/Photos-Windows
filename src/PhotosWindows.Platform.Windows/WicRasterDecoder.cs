@@ -75,6 +75,7 @@ public sealed class WicRasterDecoder : IRasterDecoder
                 ? await HeavyDecodeGate.Shared.AcquireAsync(cancellationToken).ConfigureAwait(false)
                 : null;
             cancellationToken.ThrowIfCancellationRequested();
+            using var activity = slot is not null ? DecodeActivity.Begin(DecodeKind.HeifFull) : null;
             var pixels = await decoder.GetPixelDataAsync(
                 BitmapPixelFormat.Bgra8,
                 BitmapAlphaMode.Straight,
@@ -109,7 +110,7 @@ public sealed class WicRasterDecoder : IRasterDecoder
             var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask().ConfigureAwait(false);
             using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read).AsTask().ConfigureAwait(false);
             var decoder = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
-            return await TryEmbeddedThumbnailCoreAsync(decoder, minLongSide).ConfigureAwait(false);
+            return await TryEmbeddedThumbnailCoreAsync(decoder, minLongSide, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -134,17 +135,21 @@ public sealed class WicRasterDecoder : IRasterDecoder
     private async Task<RasterImage?> TryEmbeddedThumbnailAsync(BitmapDecoder decoder, int target, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await TryEmbeddedThumbnailCoreAsync(decoder, target).ConfigureAwait(false);
+        return await TryEmbeddedThumbnailCoreAsync(decoder, target, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<RasterImage?> TryEmbeddedThumbnailCoreAsync(BitmapDecoder decoder, int target)
+    private async Task<RasterImage?> TryEmbeddedThumbnailCoreAsync(BitmapDecoder decoder, int target, CancellationToken cancellationToken)
     {
         try
         {
             // The embedded tile of a HEIF is itself HEVC: limited process-wide, the viewer first (HeavyDecodeGate.Embedded).
+            // Waiting for the slot honours the caller's token, so a tile scrolled away never starts a decoder; once the
+            // decode has started it is never abandoned and the slot is held until Windows returns.
             using var slot = decoder.DecoderInformation?.CodecId == BitmapDecoder.HeifDecoderId
-                ? await HeavyDecodeGate.Embedded.AcquireAsync(CancellationToken.None).ConfigureAwait(false)
+                ? await HeavyDecodeGate.Embedded.AcquireAsync(cancellationToken).ConfigureAwait(false)
                 : null;
+            cancellationToken.ThrowIfCancellationRequested();
+            using var activity = slot is not null ? DecodeActivity.Begin(DecodeKind.HeifEmbedded) : null;
             using var stream = await decoder.GetThumbnailAsync().AsTask().ConfigureAwait(false);
             var thumb = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
             double tw = thumb.PixelWidth, th = thumb.PixelHeight;

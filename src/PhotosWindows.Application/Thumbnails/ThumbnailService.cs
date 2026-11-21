@@ -288,7 +288,14 @@ public sealed class ThumbnailService
             if (_inFlight.TryGetValue(key, out var current) && ReferenceEquals(current, generation)) _inFlight.Remove(key);
         }
 
-        generation.Cancel.Cancel();
+        try
+        {
+            generation.Cancel.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The generation finished (and disposed its source) between the check above and this call: nothing to stop.
+        }
     }
 
     private async Task RunGenerationAsync(Generation generation, (string Path, ThumbnailPriority) key, Asset asset, EditRecipe recipe, ThumbnailSize size, string path, Lane lane)

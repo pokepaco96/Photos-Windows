@@ -99,10 +99,11 @@ public sealed class BackgroundProcessing : IDisposable
                     ThreadPool.GetAvailableThreads(out var freeWorkers, out _);
                     ThreadPool.GetMaxThreads(out var maxWorkers, out _);
                     _logger.LogInformation(
-                        "Heartbeat: pendingThumbs={Pending} unhashed={Unhashed} import={Import} | {Stats} | cpuMs={Cpu} wsMiB={Ws} privateMiB={Private} gcHeapMiB={Heap} threads={Threads} poolBusy={PoolBusy} pending={PoolPending}",
-                        stats.PendingThumbnails, unhashed, _import.IsRunning, _thumbnails.Stats,
+                        "Heartbeat: pendingThumbs={Pending} unhashed={Unhashed} import={Import} | {Stats} | decodes {Decodes} | cpuMs={Cpu} wsMiB={Ws} privateMiB={Private} gcHeapMiB={Heap} threads={Threads} handles={Handles} gen2={Gen2} allocMiB={Alloc} poolBusy={PoolBusy} pending={PoolPending}",
+                        stats.PendingThumbnails, unhashed, _import.IsRunning, _thumbnails.Stats, DecodeActivity.Snapshot(),
                         (long)process.TotalProcessorTime.TotalMilliseconds, process.WorkingSet64 >> 20, process.PrivateMemorySize64 >> 20,
-                        GC.GetTotalMemory(false) >> 20, process.Threads.Count, maxWorkers - freeWorkers, ThreadPool.PendingWorkItemCount);
+                        GC.GetTotalMemory(false) >> 20, process.Threads.Count, process.HandleCount, GC.CollectionCount(2), GC.GetTotalAllocatedBytes() >> 20,
+                        maxWorkers - freeWorkers, ThreadPool.PendingWorkItemCount);
                     _logger.LogInformation("Work: {Work}", _thumbnails.TakeWorkStats());
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)

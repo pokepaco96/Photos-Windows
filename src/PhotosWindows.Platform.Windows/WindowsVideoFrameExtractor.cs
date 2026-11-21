@@ -62,7 +62,12 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
     {
         try
         {
-            var frame = await Task.Run(() => MediaFoundationFrameReader.Read(Path.GetFullPath(path)), CancellationToken.None).ConfigureAwait(false);
+            RasterImage frame;
+            using (DecodeActivity.Begin(DecodeKind.VideoSourceReader))
+            {
+                frame = await Task.Run(() => MediaFoundationFrameReader.Read(Path.GetFullPath(path)), CancellationToken.None).ConfigureAwait(false);
+            }
+
             cancellationToken.ThrowIfCancellationRequested();
             return frame;
         }
@@ -73,7 +78,6 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
         }
     }
 
-
     /// <summary>Shell thumbnail (fast, cached by Windows).</summary>
     private async Task<RasterImage?> FromShellAsync(StorageFile file, int maxLongSide, CancellationToken cancellationToken)
     {
@@ -81,6 +85,7 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
         {
             // Never abandoned (see WicRasterDecoder): the caller's worker slot must stay taken while Windows works.
             cancellationToken.ThrowIfCancellationRequested();
+            using var activity = DecodeActivity.Begin(DecodeKind.VideoShell);
             using var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem, (uint)Math.Clamp(maxLongSide, 64, 2048), ThumbnailOptions.ResizeThumbnail)
                 .AsTask().ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
@@ -106,6 +111,7 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
     {
         try
         {
+            using var activity = DecodeActivity.Begin(DecodeKind.VideoComposition);
             var clip = await MediaClip.CreateFromFileAsync(file).AsTask(cancellationToken).ConfigureAwait(false);
             var video = clip.GetVideoEncodingProperties();
             if (video is null || video.Width == 0 || video.Height == 0) return null;
