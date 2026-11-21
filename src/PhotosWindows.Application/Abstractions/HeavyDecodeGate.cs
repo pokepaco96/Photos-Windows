@@ -31,6 +31,14 @@ public sealed class HeavyDecodeGate
 {
     public static HeavyDecodeGate Shared { get; } = new(capacity: 3, backgroundCapacity: 1);
 
+    /// <summary>
+    /// Embedded HEIF thumbnails (the 320–416 px tile stored in the file). Each is decoded by its own HEVC decoder
+    /// instance (~250 MB until Windows tears it down, independent of releasing our references). Measured on Windows 11
+    /// with 100 iPhone HEICs: 1/2/4 at once took 83/66/58 ms per thumbnail but 0.4/0.5/0.7 GB median private memory
+    /// (1.0/1.1/1.3 GB peak), so more than two in the background buys little.
+    /// </summary>
+    public static HeavyDecodeGate Embedded { get; } = new(capacity: 3, backgroundCapacity: 2);
+
     private static readonly AsyncLocal<DecodePriority?> Ambient = new();
     private readonly Lock _lock = new();
     private readonly Queue<Waiter>[] _queues = [new(), new(), new()];

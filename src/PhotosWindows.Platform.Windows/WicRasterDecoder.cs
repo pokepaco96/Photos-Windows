@@ -135,6 +135,10 @@ public sealed class WicRasterDecoder : IRasterDecoder
     {
         try
         {
+            // The embedded tile of a HEIF is itself HEVC: limited process-wide, the viewer first (HeavyDecodeGate.Embedded).
+            using var slot = decoder.DecoderInformation?.CodecId == BitmapDecoder.HeifDecoderId
+                ? await HeavyDecodeGate.Embedded.AcquireAsync(CancellationToken.None).ConfigureAwait(false)
+                : null;
             using var stream = await decoder.GetThumbnailAsync().AsTask().ConfigureAwait(false);
             var thumb = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
             double tw = thumb.PixelWidth, th = thumb.PixelHeight;

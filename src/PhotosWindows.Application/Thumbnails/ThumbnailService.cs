@@ -652,7 +652,7 @@ public sealed record ThumbnailStats(
 {
     public override string ToString() =>
         $"viewer {ViewerBusy}+{ViewerWaiting}w, grid {InteractiveBusy}+{InteractiveWaiting}w, background {BackgroundBusy}+{BackgroundWaiting}w, " +
-        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}, {HeavyDecodeGate.Shared.Stats}";
+        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}, {HeavyDecodeGate.Shared.Stats}, embedded {HeavyDecodeGate.Embedded.Stats}";
 }
 
 /// <summary>All slots of a lane are held by decodes that did not return in time.</summary>
