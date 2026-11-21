@@ -34,6 +34,11 @@ public static class HeifThumbnailProbe
         {
             return null;
         }
+        catch (ArgumentException)
+        {
+            // A stream that rejects a position (should not happen after the bounds checks): unknown.
+            return null;
+        }
     }
 
     public static bool? HasThumbnail(Stream stream)
@@ -54,7 +59,11 @@ public static class HeifThumbnailProbe
 
             if (type == "mdat" || size < headerLength) return null;
             if (!stream.CanSeek) return null;
-            stream.Seek(size - headerLength, SeekOrigin.Current);
+            // A size beyond the end of the file (corrupt, or a lying 64-bit size) is unknown, not an error: Seek would
+            // throw ArgumentOutOfRangeException for offsets a stream cannot represent.
+            var skip = size - headerLength;
+            if (skip > stream.Length - stream.Position) return null;
+            stream.Seek(skip, SeekOrigin.Current);
         }
 
         return null;
