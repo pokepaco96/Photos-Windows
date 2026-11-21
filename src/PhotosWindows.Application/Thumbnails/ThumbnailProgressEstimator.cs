@@ -2,7 +2,8 @@ namespace PhotosWindows.Application.Thumbnails;
 
 /// <summary>What the shell shows about the background thumbnail pass.</summary>
 /// <param name="Visible">False when there is nothing (or too little) to show.</param>
-/// <param name="Done">Thumbnails made since this pass started.</param>
+/// <param name="Done">Photos processed since this pass started: thumbnail made, failed (unsupported or damaged file), or
+/// photo removed. It is the drop in the pending count, never more than <paramref name="Total"/>.</param>
 /// <param name="Total">Thumbnails in this pass (grows when an import adds more).</param>
 /// <param name="Remaining">Estimated time left; null until there is enough data, or while paused.</param>
 /// <param name="Paused">The pass is waiting (an import is running).</param>
@@ -26,6 +27,12 @@ public sealed class ThumbnailProgressEstimator
 
     /// <summary>No estimate before this much measured work: early rates are noisy.</summary>
     public static readonly TimeSpan Warmup = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Longest gap between two samples counted as work. Samples come every few seconds; a longer gap means the PC slept
+    /// or the clock jumped, and counting it would make the rate look slow and the estimate far too long.
+    /// </summary>
+    public static readonly TimeSpan MaxGap = TimeSpan.FromSeconds(30);
 
     private readonly Queue<(TimeSpan Worked, int Done)> _samples = new();
     private int _total;
@@ -55,7 +62,8 @@ public sealed class ThumbnailProgressEstimator
         _lastPending = pending;
         if (pending >= MinimumToShow) _visible = true;
 
-        var delta = _last is { } last && nowUtc > last ? nowUtc - last : TimeSpan.Zero;
+        // A clock that goes back or a long gap (sleep) adds no work time.
+        var delta = _last is { } last && nowUtc > last && nowUtc - last <= MaxGap ? nowUtc - last : TimeSpan.Zero;
         _last = nowUtc;
         var done = _total - pending;
         if (!paused)
