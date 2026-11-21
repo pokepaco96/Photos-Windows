@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Extensions.Logging;
 using PhotosWindows.Application.Abstractions;
+using PhotosWindows.Application.Common;
 using PhotosWindows.Domain;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -47,7 +48,10 @@ public sealed class WicRasterDecoder : IRasterDecoder
 
             // Small targets (grid tiles, hashes): an embedded HEIF thumbnail avoids decoding the whole HEVC image.
             // Measured on Windows 11 with iPhone HEICs: 20–35 ms instead of 450–1000 ms, and no HEVC decoder instance.
-            if (family == FormatFamily.Heif && minLongSide is { } small && small > 0 && small <= EmbeddedThumbnailMaxTarget)
+            // Only when the file stores one: otherwise Windows "makes" a thumbnail by decoding the whole image, and the
+            // image would then be decoded twice (see HeifThumbnailProbe).
+            if (family == FormatFamily.Heif && minLongSide is { } small && small > 0 && small <= EmbeddedThumbnailMaxTarget
+                && HeifThumbnailProbe.HasThumbnail(Path.GetFullPath(path)) != false)
             {
                 var embedded = await TryEmbeddedThumbnailAsync(decoder, small, cancellationToken).ConfigureAwait(false);
                 if (embedded is not null) return embedded;
@@ -97,6 +101,8 @@ public sealed class WicRasterDecoder : IRasterDecoder
     public async Task<RasterImage?> TryDecodeEmbeddedThumbnailAsync(string path, FormatFamily family, int minLongSide, CancellationToken cancellationToken)
     {
         if (family is not (FormatFamily.Heif or FormatFamily.Avif or FormatFamily.Raw)) return null;
+        // No stored thumbnail: asking Windows for one would cost a full decode (see HeifThumbnailProbe).
+        if (family == FormatFamily.Heif && HeifThumbnailProbe.HasThumbnail(Path.GetFullPath(path)) == false) return null;
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
