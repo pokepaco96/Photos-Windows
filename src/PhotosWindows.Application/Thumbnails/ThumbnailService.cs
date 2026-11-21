@@ -72,14 +72,17 @@ public sealed class ThumbnailService
         _videoFrames = videoFrames.FirstOrDefault();
         _logger = logger;
         _parallelism = Math.Clamp(settings.Load().MaxBackgroundWorkers, 1, 8);
-        _viewer = new Lane(2);
-        _interactive = new Lane(Math.Max(2, _parallelism));
-        _background = new Lane(_parallelism);
+        _viewer = new Lane(2, DecodePriority.Viewer);
+        _interactive = new Lane(Math.Max(2, _parallelism), DecodePriority.Interactive);
+        _background = new Lane(_parallelism, DecodePriority.Background);
     }
 
-    private sealed class Lane(int capacity)
+    private sealed class Lane(int capacity, DecodePriority priority)
     {
         public int Capacity { get; } = capacity;
+
+        /// <summary>Priority of this lane's decodes at the process-wide <see cref="HeavyDecodeGate"/>.</summary>
+        public DecodePriority Priority { get; } = priority;
         public SemaphoreSlim Slots { get; } = new(capacity);
         public int Waiting;
         public int Overdue;
@@ -343,7 +346,8 @@ public sealed class ThumbnailService
         Interlocked.Increment(ref _live);
         try
         {
-            running = work(token);
+            // The lane's priority flows into the decoders (HeavyDecodeGate) through the async context.
+            using (HeavyDecodeGate.Use(lane.Priority)) running = work(token);
         }
         catch
         {
@@ -648,7 +652,7 @@ public sealed record ThumbnailStats(
 {
     public override string ToString() =>
         $"viewer {ViewerBusy}+{ViewerWaiting}w, grid {InteractiveBusy}+{InteractiveWaiting}w, background {BackgroundBusy}+{BackgroundWaiting}w, " +
-        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}";
+        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}, {HeavyDecodeGate.Shared.Stats}";
 }
 
 /// <summary>All slots of a lane are held by decodes that did not return in time.</summary>

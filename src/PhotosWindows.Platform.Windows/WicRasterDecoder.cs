@@ -65,6 +65,11 @@ public sealed class WicRasterDecoder : IRasterDecoder
             // decoding, so the caller's worker slot was released and new decodes piled up on top of the old ones
             // (20 GB private memory while browsing quickly through HEICs on Windows 11). The work runs to the end and
             // the cancellation is honoured afterwards; the slot stays taken exactly as long as WIC is working.
+            // HEIF and AVIF go through a Media Foundation video decoder (~300–450 MB and 45–80 threads each): the number
+            // running in the whole process is limited, with the viewer first (see HeavyDecodeGate).
+            using var slot = family is FormatFamily.Heif or FormatFamily.Avif
+                ? await HeavyDecodeGate.Shared.AcquireAsync(cancellationToken).ConfigureAwait(false)
+                : null;
             cancellationToken.ThrowIfCancellationRequested();
             var pixels = await decoder.GetPixelDataAsync(
                 BitmapPixelFormat.Bgra8,

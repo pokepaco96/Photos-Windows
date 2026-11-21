@@ -397,7 +397,11 @@ public sealed partial class ViewerViewModel(
         try
         {
             // Off the UI thread: the catalog lookups and the WIC StorageFile call must not run (and pump) on it.
-            running = Task.Run(() => editing.RenderFromOriginalAsync(asset.Id, recipe, longSide, EncodeOptions.PreviewJpeg, ct), CancellationToken.None);
+            // Viewer priority at the process-wide limit on heavy (HEIF/AVIF) decodes.
+            running = Task.Run(() =>
+            {
+                using (HeavyDecodeGate.Use(DecodePriority.Viewer)) return editing.RenderFromOriginalAsync(asset.Id, recipe, longSide, EncodeOptions.PreviewJpeg, ct);
+            }, CancellationToken.None);
         }
         catch
         {
