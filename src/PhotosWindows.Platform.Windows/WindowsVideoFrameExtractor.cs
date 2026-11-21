@@ -128,8 +128,9 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
             cancellationToken.ThrowIfCancellationRequested();
             if (stream is null) return null;
             var frame = await DecodeAsync(stream, cancellationToken).ConfigureAwait(false);
-            // MediaComposition returns an all-black frame for HDR HEVC iPhone videos: a placeholder is better than that.
-            return IsAllBlack(frame) ? null : frame;
+            // MediaComposition returns a blank frame (every pixel exactly 0) when it cannot decode, e.g. for HDR HEVC: a
+            // placeholder is better than a black tile. This path runs only after the Source Reader failed.
+            return IsBlankFrame(frame) ? null : frame;
         }
         catch (Exception ex) when (ex is COMException or ArgumentException or UnauthorizedAccessException or FileNotFoundException or InvalidOperationException)
         {
@@ -138,12 +139,18 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
         }
     }
 
-    internal static bool IsAllBlack(RasterImage image)
+    /// <summary>
+    /// True when every pixel is at most 2 in each channel: what MediaComposition returns when its decoder failed (measured
+    /// on Windows 11: exactly 0 everywhere for HLG and PQ HEVC). Every pixel is checked, so a dark scene, a night shot or an
+    /// underexposed clip (sensor noise, a few lit pixels) is kept; only a frame with no signal at all is dropped. The old
+    /// rule (every 7th pixel at most 8) could drop a legitimately dark frame.
+    /// </summary>
+    internal static bool IsBlankFrame(RasterImage image)
     {
         var p = image.Pixels;
-        for (var i = 0; i + 2 < p.Length; i += 4 * 7)
+        for (var i = 0; i + 2 < p.Length; i += 4)
         {
-            if (p[i] > 8 || p[i + 1] > 8 || p[i + 2] > 8) return false;
+            if (p[i] > 2 || p[i + 1] > 2 || p[i + 2] > 2) return false;
         }
 
         return true;

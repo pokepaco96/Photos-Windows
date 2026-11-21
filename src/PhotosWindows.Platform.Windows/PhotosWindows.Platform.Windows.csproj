@@ -5,6 +5,7 @@
     <RootNamespace>PhotosWindows.Platform.Windows</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="PhotosWindows.Platform.Windows.Tests" />
     <ProjectReference Include="..\PhotosWindows.Application\PhotosWindows.Application.csproj" />
   </ItemGroup>
   <ItemGroup>

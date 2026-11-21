@@ -19,7 +19,7 @@ internal static class MediaFoundationFrameReader
     private const uint FirstVideoStream = 0xFFFFFFFC;
     private const uint AllStreams = 0xFFFFFFFE;
     private const uint MediaSource = 0xFFFFFFFF;
-    private static readonly Guid Duration = new("6c990d33-bb8e-477a-8598-0d5d96fcd88a");
+    private static readonly Guid DurationKey = new("6c990d33-bb8e-477a-8598-0d5d96fcd88a");
     private const uint EndOfStream = 0x2;
     private const uint ReaderError = 0x1;
     private static readonly Guid EnableVideoProcessing = new("fb394f3d-ccf1-42ee-bbb3-f9b845d5681d");
@@ -29,83 +29,184 @@ internal static class MediaFoundationFrameReader
     private static readonly Guid DefaultStride = new("644b4e48-1e02-4516-b0eb-c01ca9d49ac6");
     private static readonly Guid VideoRotation = new("c380465d-2271-428c-9b83-ecea3b4a85c1");
     private static readonly Guid MinimumDisplayAperture = new("d7388766-18fe-48c6-a177-ee894867c8c4");
+    private static readonly Guid GeometricAperture = new("66758743-7e5f-400d-980a-aa8596c85696");
     private static readonly Guid MediaTypeVideo = new("73646976-0000-0010-8000-00AA00389B71");
     private static readonly Guid VideoFormatRgb32 = new("00000016-0000-0010-8000-00AA00389B71");
     private static readonly Lazy<int> Startup = new(() => MFStartup(0x00020070, 0), LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    /// The frame at a tenth of the video (at most 1 s in: first frames are often black) or the key frame before it, as BGRA with the
-    /// rotation stored in the video carried as an EXIF orientation. Throws <see cref="COMException"/> when Media
-    /// Foundation cannot read the file and <see cref="InvalidDataException"/> when it has no decodable frame.
+    /// A poster frame as BGRA, with the rotation stored in the video carried as an EXIF orientation. Seeking lands on the
+    /// key frame before the poster time (a tenth of the video, at most 1 s in), which is used as is unless it is nearly
+    /// black; then the reader decodes forward to the poster time, and if that is still nearly black, to the middle of the
+    /// video, keeping the brightest. Each step decodes at most <see cref="MaxForwardFrames"/> frames, so the cost stays
+    /// bounded, and a really dark video still gets its own dark frame. Throws <see cref="COMException"/> when Media Foundation cannot read the file and
+    /// <see cref="InvalidDataException"/> when it has no decodable frame.
     /// </summary>
     public static RasterImage Read(string path)
     {
         Marshal.ThrowExceptionForHR(Startup.Value);
-        IMFAttributes? attributes = null, type = null, native = null, current = null;
+        IMFAttributes? attributes = null, type = null, native = null;
         IMFSourceReader? reader = null;
-        IMFSample? sample = null;
-        IMFMediaBuffer? buffer = null;
         try
         {
             Marshal.ThrowExceptionForHR(MFCreateAttributes(out attributes, 1));
             attributes.SetUINT32(EnableVideoProcessing, 1);
+            // Known Windows behaviour (measured on Windows 11, 2026-11-21): every file Media Foundation cannot parse leaves
+            // 2 ALPC ports and 2 events open for good (+4 handles per failed call), also when the file is opened as a byte
+            // stream first; and every HEVC decoder instance leaves one semaphore. Neither is ours to release.
             Marshal.ThrowExceptionForHR(MFCreateSourceReaderFromURL(path, attributes, out reader));
             reader.SetStreamSelection(AllStreams, false);
             reader.SetStreamSelection(FirstVideoStream, true);
 
             reader.GetNativeMediaType(FirstVideoStream, 0, out native);
             var rotation = TryGetUInt32(native, VideoRotation) ?? 0;
-            var aperture = TryGetAperture(native);
+            var nativeAperture = TryGetAperture(native);
 
             Marshal.ThrowExceptionForHR(MFCreateMediaType(out type));
             type.SetGUID(MajorType, MediaTypeVideo);
             type.SetGUID(Subtype, VideoFormatRgb32);
-            reader.SetCurrentMediaType(FirstVideoStream, IntPtr.Zero, type);
+            SetCurrentMediaType(reader, type);
+
+            var duration = Duration(reader);
+            var poster = PosterTime(duration);
+            var frame = ReadFrameAt(reader, poster, exact: false, nativeAperture)
+                ?? (duration > TimeSpan.Zero ? ReadFrameAt(reader, TimeSpan.Zero, exact: false, nativeAperture) : null) // seek past the end
+                ?? throw new InvalidDataException("The video has no decodable frame.");
+            var luma = MeanLuma(frame);
+            TimeSpan[] retries = duration > TimeSpan.FromSeconds(2) ? [poster, TimeSpan.FromTicks(duration.Ticks / 2)] : [poster];
+            foreach (var at in retries)
+            {
+                if (luma >= NearlyBlackLuma || at <= TimeSpan.Zero) break;
+                if (ReadFrameAt(reader, at, exact: true, nativeAperture) is { } later && MeanLuma(later) is var l && l > luma) (frame, luma) = (later, l);
+            }
+
+            return new RasterImage(frame.Width, frame.Height, frame.Pixels, OrientationFor(rotation));
+        }
+        finally
+        {
+            Release(type);
+            Release(native);
+            Release(reader);
+            Release(attributes);
+        }
+    }
+
+    /// <summary>Mean luma (0-255) under which a poster frame counts as nearly black.</summary>
+    internal const double NearlyBlackLuma = 12;
+
+    /// <summary>Approximate mean luma (Rec. 709 weights) of a BGRA frame from about 4,096 evenly spread pixels.</summary>
+    internal static double MeanLuma(RasterImage image)
+    {
+        var p = image.Pixels;
+        var count = image.Width * image.Height;
+        if (count == 0) return 0;
+        var step = Math.Max(1, count / 4096);
+        double sum = 0;
+        var n = 0;
+        for (var i = 0; i < count; i += step)
+        {
+            var o = i * 4;
+            sum += (0.0722 * p[o]) + (0.7152 * p[o + 1]) + (0.2126 * p[o + 2]);
+            n++;
+        }
+
+        return sum / n;
+    }
+
+    /// <summary>
+    /// Seeks and copies a decoded frame, cropped to the display aperture: the first one after the seek (the key frame at or
+    /// before <paramref name="at"/>), or with <paramref name="exact"/> the first at or after <paramref name="at"/>, decoding
+    /// at most <see cref="MaxForwardFrames"/> frames forward. Null at the end of the stream. The output size and stride are
+    /// read again for the frame, as they may change mid-stream (MF_SOURCE_READERF_CURRENTMEDIATYPECHANGED).
+    /// </summary>
+    private static RasterImage? ReadFrameAt(IMFSourceReader reader, TimeSpan at, bool exact, (int X, int Y, int Width, int Height)? nativeAperture)
+    {
+        var position = new PropVariantInt64 { VarType = 20 /* VT_I8 */, Value = at.Ticks };
+        try
+        {
+            reader.SetCurrentPosition(Guid.Empty, ref position);
+        }
+        catch (COMException)
+        {
+            // Not seekable: the next frame will do.
+        }
+
+        IMFSample? sample = null;
+        try
+        {
+            var forward = 0;
+            for (var i = 0; i < MaxReads; i++)
+            {
+                reader.ReadSample(FirstVideoStream, 0, out _, out var flags, out var timestamp, out sample);
+                if ((flags & ReaderError) != 0) throw new InvalidDataException("The video stream reported an error.");
+                if (sample is null)
+                {
+                    if ((flags & EndOfStream) != 0) break;
+                    continue; // a stream tick (a gap): read on
+                }
+
+                // Frames before the requested time: decoded on the way from the key frame, skipped (bounded).
+                if (exact && timestamp + HalfFrame < at.Ticks && ++forward < MaxForwardFrames && (flags & EndOfStream) == 0)
+                {
+                    Release(sample);
+                    sample = null;
+                    continue;
+                }
+
+                break;
+            }
+
+            return sample is null ? null : Copy(reader, sample, nativeAperture);
+        }
+        finally
+        {
+            Release(sample);
+        }
+    }
+
+    /// <summary>Most ReadSample calls for one frame (gaps and stream ticks give no sample).</summary>
+    private const int MaxReads = 300;
+
+    /// <summary>Most frames decoded forward from a key frame to reach a time (4 s at 30 fps).</summary>
+    internal const int MaxForwardFrames = 120;
+
+    /// <summary>Tolerance when comparing a frame's time with the requested one (half a 60 fps frame, in 100 ns units).</summary>
+    private const long HalfFrame = 83_333;
+
+    private static RasterImage Copy(IMFSourceReader reader, IMFSample sample, (int X, int Y, int Width, int Height)? nativeAperture)
+    {
+        IMFAttributes? current = null;
+        IMFMediaBuffer? buffer = null;
+        try
+        {
             reader.GetCurrentMediaType(FirstVideoStream, out current);
             current.GetUINT64(FrameSize, out var packed);
             int width = (int)(packed >> 32), height = (int)(packed & 0xFFFFFFFF);
             if (width <= 0 || height <= 0 || (long)width * height > DecodeLimits.MaxPixels) throw new InvalidDataException("Unsupported video frame size.");
             var stride = TryGetUInt32(current, DefaultStride) is { } rawStride ? unchecked((int)rawStride) : width * 4;
+            if (Math.Abs((long)stride) < width * 4L) throw new InvalidDataException("Unexpected frame stride.");
+            // The decoder states the display area on its output type (H.264 pads 1080 lines to 1088); some containers (MOV
+            // 'clap') state it on the native type.
+            var (x0, y0, outWidth, outHeight) = Crop(TryGetAperture(current) ?? TryGetGeometricAperture(current) ?? nativeAperture, width, height);
 
-            var at = PosterTime(reader);
-            if (at > TimeSpan.Zero)
-            {
-                var position = new PropVariantInt64 { VarType = 20 /* VT_I8 */, Value = at.Ticks };
-                try
-                {
-                    reader.SetCurrentPosition(Guid.Empty, ref position);
-                }
-                catch (COMException)
-                {
-                    // Not seekable: the first frame will do.
-                }
-            }
-
-            for (var i = 0; i < 300 && sample is null; i++)
-            {
-                reader.ReadSample(FirstVideoStream, 0, out _, out var flags, out _, out sample);
-                if ((flags & ReaderError) != 0) throw new InvalidDataException("The video stream reported an error.");
-                if ((flags & EndOfStream) != 0) break;
-            }
-
-            if (sample is null) throw new InvalidDataException("The video has no decodable frame.");
             sample.ConvertToContiguousBuffer(out buffer);
             buffer.Lock(out var data, out _, out var length);
             try
             {
-                // Crop the decoder's padding (1080 lines are coded as 1088) when the display area starts at the corner.
-                var (outWidth, outHeight) = aperture is { X: 0, Y: 0 } a && a.Width <= width && a.Height <= height ? (a.Width, a.Height) : (width, height);
-                if (Math.Abs(stride) < outWidth * 4 || (long)Math.Abs(stride) * (outHeight - 1) + outWidth * 4 > length) throw new InvalidDataException("Unexpected frame layout.");
+                // Every byte read must lie inside the buffer. A negative stride means a bottom-up image: the first
+                // displayed row is the last row in memory.
+                var rowBytes = Math.Abs((long)stride);
+                var lastMemoryRow = stride > 0 ? y0 + outHeight - 1 : height - 1 - y0;
+                if ((lastMemoryRow * rowBytes) + ((x0 + outWidth) * 4L) > length) throw new InvalidDataException("Unexpected frame layout.");
                 var pixels = new byte[outWidth * outHeight * 4];
                 for (var y = 0; y < outHeight; y++)
                 {
-                    // A negative stride means a bottom-up image.
-                    var row = stride >= 0 ? y * (long)stride : (height - 1 - y) * (long)-stride;
-                    Marshal.Copy(data + (nint)row, pixels, y * outWidth * 4, outWidth * 4);
+                    var memoryRow = stride > 0 ? y0 + y : height - 1 - (y0 + y);
+                    Marshal.Copy(data + (nint)((memoryRow * rowBytes) + (x0 * 4L)), pixels, y * outWidth * 4, outWidth * 4);
                 }
 
                 for (var i = 3; i < pixels.Length; i += 4) pixels[i] = 255; // RGB32 leaves the fourth byte undefined
-                return new RasterImage(outWidth, outHeight, pixels, OrientationFor(rotation));
+                return new RasterImage(outWidth, outHeight, pixels);
             }
             finally
             {
@@ -115,28 +216,64 @@ internal static class MediaFoundationFrameReader
         finally
         {
             Release(buffer);
-            Release(sample);
             Release(current);
-            Release(type);
-            Release(native);
-            Release(reader);
-            Release(attributes);
         }
     }
 
-    /// <summary>A tenth of the duration, at most 1 s; zero when the duration is unknown.</summary>
-    private static TimeSpan PosterTime(IMFSourceReader reader)
+    /// <summary>
+    /// The displayed area of a decoded frame: the minimum display aperture when it lies inside the frame (decoders pad
+    /// 1080 lines to 1088 and odd sizes to whole blocks), else the whole frame.
+    /// </summary>
+    internal static (int X, int Y, int Width, int Height) Crop((int X, int Y, int Width, int Height)? aperture, int width, int height) =>
+        aperture is { } a && a.X >= 0 && a.Y >= 0 && a.Width > 0 && a.Height > 0 && a.X + a.Width <= width && a.Y + a.Height <= height
+            ? a
+            : (0, 0, width, height);
+
+    /// <summary>
+    /// Passes the media type as IMFMediaType* (its own interface pointer, from QueryInterface) instead of relying on its
+    /// IMFAttributes pointer being the same one.
+    /// </summary>
+    private static void SetCurrentMediaType(IMFSourceReader reader, IMFAttributes type)
+    {
+        var unknown = Marshal.GetIUnknownForObject(type);
+        try
+        {
+            var iid = MediaTypeInterface;
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(unknown, in iid, out var mediaType));
+            try
+            {
+                reader.SetCurrentMediaType(FirstVideoStream, IntPtr.Zero, mediaType);
+            }
+            finally
+            {
+                Marshal.Release(mediaType);
+            }
+        }
+        finally
+        {
+            Marshal.Release(unknown);
+        }
+    }
+
+    private static readonly Guid MediaTypeInterface = new("44ae0fa8-ea31-4109-8d2e-4cae4997c555");
+
+    /// <summary>MF_PD_DURATION of the file; zero when unknown.</summary>
+    private static TimeSpan Duration(IMFSourceReader reader)
     {
         try
         {
-            reader.GetPresentationAttribute(MediaSource, Duration, out var value);
-            return value.VarType == 21 /* VT_UI8 */ && value.Value > 0 ? TimeSpan.FromTicks(Math.Min(value.Value / 10, TimeSpan.FromSeconds(1).Ticks)) : TimeSpan.Zero;
+            reader.GetPresentationAttribute(MediaSource, DurationKey, out var value);
+            return value.VarType == 21 /* VT_UI8 */ && value.Value > 0 ? TimeSpan.FromTicks(value.Value) : TimeSpan.Zero;
         }
         catch (COMException)
         {
             return TimeSpan.Zero;
         }
     }
+
+    /// <summary>A tenth of the duration, at most 1 s; zero when the duration is unknown.</summary>
+    internal static TimeSpan PosterTime(TimeSpan duration) =>
+        duration > TimeSpan.Zero ? TimeSpan.FromTicks(Math.Min(duration.Ticks / 10, TimeSpan.FromSeconds(1).Ticks)) : TimeSpan.Zero;
 
     /// <summary>MF_MT_VIDEO_ROTATION is clockwise; EXIF 6/3/8 rotate 90/180/270 clockwise to display.</summary>
     internal static int OrientationFor(uint rotation) => rotation switch
@@ -149,17 +286,22 @@ internal static class MediaFoundationFrameReader
 
     private static uint? TryGetUInt32(IMFAttributes attributes, Guid key) => attributes.GetUINT32(key, out var value) == 0 ? value : null;
 
-    private static (int X, int Y, int Width, int Height)? TryGetAperture(IMFAttributes attributes)
+    private static (int X, int Y, int Width, int Height)? TryGetAperture(IMFAttributes attributes) => TryGetArea(attributes, MinimumDisplayAperture);
+
+    private static (int X, int Y, int Width, int Height)? TryGetGeometricAperture(IMFAttributes attributes) => TryGetArea(attributes, GeometricAperture);
+
+    private static (int X, int Y, int Width, int Height)? TryGetArea(IMFAttributes attributes, Guid key)
     {
-        // MFVideoArea: two MFOffset (16.16 fixed point) then a SIZE.
+        // MFVideoArea: two MFOffset (16.16 fixed point: WORD fraction, then SHORT value) then a SIZE.
         var area = new int[4];
-        if (attributes.GetBlob(MinimumDisplayAperture, area, 16, out var size) != 0 || size != 16) return null;
+        if (attributes.GetBlob(key, area, 16, out var size) != 0 || size != 16) return null;
         return (area[0] >> 16, area[1] >> 16, area[2], area[3]);
     }
 
+    /// <summary>Releases a runtime callable wrapper this class obtained from one out parameter (each is released once).</summary>
     private static void Release(object? com)
     {
-        if (com is not null) Marshal.ReleaseComObject(com);
+        if (com is not null && Marshal.IsComObject(com)) Marshal.FinalReleaseComObject(com);
     }
 
     [DllImport("mfplat.dll", ExactSpelling = true)]
@@ -207,7 +349,7 @@ internal static class MediaFoundationFrameReader
         void SetStreamSelection(uint stream, [MarshalAs(UnmanagedType.Bool)] bool selected);
         void GetNativeMediaType(uint stream, uint index, out IMFAttributes mediaType);
         void GetCurrentMediaType(uint stream, out IMFAttributes mediaType);
-        void SetCurrentMediaType(uint stream, IntPtr reserved, IMFAttributes mediaType);
+        void SetCurrentMediaType(uint stream, IntPtr reserved, IntPtr mediaType);
         void SetCurrentPosition(in Guid timeFormat, ref PropVariantInt64 position);
         void ReadSample(uint stream, uint control, out uint actualStream, out uint flags, out long timestamp, out IMFSample? sample);
         void Flush(uint stream);
