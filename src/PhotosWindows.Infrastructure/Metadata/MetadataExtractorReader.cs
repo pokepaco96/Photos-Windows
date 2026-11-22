@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.Heif;
 using MetadataExtractor.Formats.Iptc;
 using MetadataExtractor.Formats.Jpeg;
 using MetadataExtractor.Formats.Png;
@@ -94,6 +95,12 @@ public sealed partial class MetadataExtractorReader : IMetadataReader
         {
             (width, height) = (pw, ph);
         }
+        else if (HeifPrimaryItem(dirs) is { } heif && heif.TryGetInt32(HeicImagePropertiesDirectory.TagImageWidth, out var hw) && heif.TryGetInt32(HeicImagePropertiesDirectory.TagImageHeight, out var hh))
+        {
+            // The primary item's 'ispe' (stored size, before rotation, like EXIF's pixel dimensions). HEICs saved by apps
+            // often carry no EXIF size at all: 260 of a 60 GB iPhone library were imported as 0×0 (2026-11-21).
+            (width, height) = (hw, hh);
+        }
         else if (sub is not null && sub.TryGetInt32(ExifDirectoryBase.TagExifImageWidth, out var ew) && sub.TryGetInt32(ExifDirectoryBase.TagExifImageHeight, out var eh))
         {
             (width, height) = (ew, eh);
@@ -153,6 +160,18 @@ public sealed partial class MetadataExtractorReader : IMetadataReader
             Raw = Flatten(dirs),
             Warnings = warnings,
         };
+    }
+
+    /// <summary>
+    /// Properties of the HEIF primary image. MetadataExtractor lists one HeicImagePropertiesDirectory per item it
+    /// describes ("HEIC Primary Item Properties", "HEIC Thumbnail Properties"); the thumbnail's 416×312 must not be taken
+    /// for the image size, so only a directory not named as a thumbnail is used.
+    /// </summary>
+    private static HeicImagePropertiesDirectory? HeifPrimaryItem(IReadOnlyList<Directory> dirs)
+    {
+        var items = dirs.OfType<HeicImagePropertiesDirectory>().ToList();
+        return items.FirstOrDefault(d => d.Name.Contains("Primary", StringComparison.OrdinalIgnoreCase))
+            ?? items.FirstOrDefault(d => !d.Name.Contains("Thumbnail", StringComparison.OrdinalIgnoreCase));
     }
 
     private MediaMetadata ReadVideo(IReadOnlyList<Directory> dirs)

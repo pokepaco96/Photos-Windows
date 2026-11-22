@@ -65,11 +65,7 @@ public sealed partial class ViewerPage : Page
         {
             case nameof(ViewerViewModel.VideoSource):
                 StopVideo();
-                if (ViewModel.VideoSource is { } uri)
-                {
-                    Player.Source = MediaSource.CreateFromUri(uri);
-                    if (Player.MediaPlayer is { } player) player.MediaFailed += OnMediaFailed;
-                }
+                if (ViewModel.VideoSource is { } uri) PlayVideo(uri);
 
                 break;
             case nameof(ViewerViewModel.Image):
@@ -84,15 +80,43 @@ public sealed partial class ViewerPage : Page
     private void OnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args) =>
         DispatcherQueue.TryEnqueue(() => _ = App.Services.GetRequiredService<DialogService>().ShowMessageAsync(Loc.Get("Viewer_VideoErrorTitle"), Loc.Get("Viewer_VideoError")));
 
+    /// <summary>The player of the video on screen; null when no video was played on this page.</summary>
+    private MediaPlayer? _player;
+
+    /// <summary>
+    /// Plays a video with a player of our own whose system media controls (SystemMediaTransportControls) are off. With
+    /// them on, the player updated them through a cross-process COM call on the UI thread; that call pumps messages,
+    /// XAML ran re-entrantly in the middle of its own work and failed fast with E_UNEXPECTED (0xC000027B). Caught with a
+    /// full dump during a viewer stress test (2026-11-22): XAML -> MediaPlayer -> MFMediaEngine -> MediaControl ->
+    /// combase -> user32 message pump -> XAML. The in-viewer transport controls keep working.
+    /// </summary>
+    private void PlayVideo(Uri uri)
+    {
+        var player = new MediaPlayer { AutoPlay = true };
+        player.CommandManager.IsEnabled = false;
+        player.MediaFailed += OnMediaFailed;
+        player.Source = MediaSource.CreateFromUri(uri);
+        Player.SetMediaPlayer(player);
+        _player = player;
+    }
+
+    /// <summary>
+    /// Stops and releases the video player, if a video was played. Photos never touch the element: setting its Source,
+    /// even to null, created and woke up its built-in player (with the system media controls) on every photo.
+    /// </summary>
     private void StopVideo()
     {
-        if (Player.MediaPlayer is { } player)
+        if (_player is not { } player) return;
+        _player = null;
+        player.MediaFailed -= OnMediaFailed;
+        player.Pause();
+        Player.SetMediaPlayer(null);
+        // Releasing the Media Foundation engine can take a while: not on the UI thread.
+        _ = Task.Run(() =>
         {
-            player.MediaFailed -= OnMediaFailed;
-            player.Pause();
-        }
-
-        Player.Source = null;
+            player.Source = null;
+            player.Dispose();
+        });
     }
 
     private void OnStageSizeChanged(object sender, SizeChangedEventArgs e)

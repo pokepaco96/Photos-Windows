@@ -47,6 +47,8 @@ public sealed class AppSession : IDisposable
         // A folder next to the profile plays the role of a connected device for the Devices scenarios (QA hook).
         psi.Environment["PW_QA_SIMULATED_DEVICE"] = Path.Combine(Path.GetDirectoryName(profileDir)!, "sim-device");
         psi.Environment["PW_QA_SIMULATED_DEVICE_DELETE"] = "1";
+        // The scenarios check the English strings: run the app in English whatever the desktop language (QA hook).
+        psi.Environment["PW_QA_LANGUAGE"] = Environment.GetEnvironmentVariable("PW_QA_LANGUAGE") is { Length: > 0 } l ? l : "en-US";
         var app = FlaUI.Core.Application.Launch(psi);
         var automation = new UIA3Automation();
         Window? window = null;

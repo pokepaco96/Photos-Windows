@@ -50,6 +50,12 @@ public sealed partial class EndToEndTests
         }
 
         App.Screenshot("29_download_dialog");
+        if (Environment.GetEnvironmentVariable("PW_QA_NO_DOWNLOADS") == "1")
+        {
+            App.DialogButton("CloseButton");
+            throw new StepBlockedException("the face models were not downloaded: PW_QA_NO_DOWNLOADS=1 (the dialog text was checked)");
+        }
+
         App.DialogButton("PrimaryButton");
         var result = WaitActivity(TimeSpan.FromMinutes(5));
         if (!result.Contains("verified", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Model download did not finish: " + result);

@@ -48,6 +48,7 @@ public static class AppHost
         services.AddSingleton<DialogService>();
         services.AddSingleton<ThemeService>();
         services.AddSingleton<ImageLoader>();
+        services.AddSingleton<ThumbnailProgress>();
         services.AddSingleton<BackgroundProcessing>();
         services.AddSingleton<ActivityCenter>();
         services.AddSingleton<ImportCoordinator>();
@@ -56,7 +57,8 @@ public static class AppHost
 
         services.AddSingleton<ShellViewModel>();
         services.AddTransient<WelcomeViewModel>();
-        services.AddTransient<LibraryViewModel>();
+        // LibraryViewModel and PeopleViewModel are IDisposable: their pages create them with ActivatorUtilities, never
+        // through the container, which would keep every one (and its page) until the app exits.
         services.AddTransient<ViewerViewModel>();
         services.AddTransient<EditorViewModel>();
         services.AddTransient<AlbumsViewModel>();
@@ -68,7 +70,6 @@ public static class AppHost
         services.AddTransient<DuplicatesViewModel>();
         services.AddTransient<ImportsViewModel>();
         services.AddTransient<SettingsViewModel>();
-        services.AddTransient<PeopleViewModel>();
         return services.BuildServiceProvider();
     }
 }

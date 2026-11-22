@@ -35,6 +35,12 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
             if (achieves is not null) qa.Achieve(achieves);
             qa.Evidence.Record(number, name, StepStatus.Passed, sw.Elapsed, null);
         }
+        catch (StepBlockedException ex)
+        {
+            qa.Evidence.Log("blocked: " + ex.Message);
+            qa.Evidence.Record(number, name, StepStatus.Blocked, sw.Elapsed, ex.Message);
+            throw new InvalidOperationException("BLOCKED – " + ex.Message, ex);
+        }
         catch (Exception ex)
         {
             qa.Evidence.Log("exception: " + ex);
@@ -258,3 +264,6 @@ public sealed partial class EndToEndTests(QaFixture qa) : IClassFixture<QaFixtur
     private string ManagedCopy(string fileName) =>
         Directory.EnumerateFiles(Path.Combine(qa.LibraryRoot, "originals"), fileName, SearchOption.AllDirectories).Single();
 }
+
+/// <summary>A scenario that cannot run in this environment (for example, downloads are disabled): recorded as blocked, never as passed.</summary>
+public sealed class StepBlockedException(string message) : Exception(message);

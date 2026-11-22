@@ -74,7 +74,7 @@
                     </Image.RenderTransform>
                 </Image>
             </ScrollViewer>
-            <MediaPlayerElement x:Name="Player" AutomationProperties.AutomationId="Viewer_Player" AreTransportControlsEnabled="True" AutoPlay="True" Visibility="{x:Bind ViewModel.IsVideo, Mode=OneWay}" />
+            <MediaPlayerElement x:Name="Player" AutomationProperties.AutomationId="Viewer_Player" AreTransportControlsEnabled="True" Visibility="{x:Bind ViewModel.IsVideo, Mode=OneWay}" />
             <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Warning" VerticalAlignment="Top" Margin="24"
                      x:Uid="Viewer_ErrorBar" AutomationProperties.AutomationId="Viewer_ErrorBar" Title="Cannot show this item" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}">
                 <InfoBar.ActionButton>

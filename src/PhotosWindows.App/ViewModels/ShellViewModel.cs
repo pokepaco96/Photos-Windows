@@ -21,7 +21,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly PeopleCoordinator _people;
 
     public ShellViewModel(LibraryManager libraries, ILibraryContext context, ISettingsStore settings, NavigationService navigation, DialogService dialogs,
-        ImportCoordinator import, ActivityCenter activity, PeopleCoordinator people, UiThread ui, ILogger<ShellViewModel> logger)
+        ImportCoordinator import, ActivityCenter activity, ThumbnailProgress thumbnails, PeopleCoordinator people, UiThread ui, ILogger<ShellViewModel> logger)
     {
         _people = people;
         _libraries = libraries;
@@ -32,6 +32,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _ui = ui;
         _logger = logger;
         Activity = activity;
+        Thumbnails = thumbnails;
         context.LibraryChanged += (_, library) => _ui.Post(() =>
         {
             HasLibrary = library is not null;
@@ -43,6 +44,9 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     public ActivityCenter Activity { get; }
+
+    /// <summary>Background thumbnail pass shown at the bottom of the navigation pane.</summary>
+    public ThumbnailProgress Thumbnails { get; }
 
     [ObservableProperty] public partial bool HasLibrary { get; set; }
     [ObservableProperty] public partial string LibraryName { get; set; } = string.Empty;

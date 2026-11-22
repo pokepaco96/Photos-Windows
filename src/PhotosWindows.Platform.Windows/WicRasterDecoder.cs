@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.Extensions.Logging;
 using PhotosWindows.Application.Abstractions;
+using PhotosWindows.Application.Common;
 using PhotosWindows.Domain;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -47,7 +48,10 @@ public sealed class WicRasterDecoder : IRasterDecoder
 
             // Small targets (grid tiles, hashes): an embedded HEIF thumbnail avoids decoding the whole HEVC image.
             // Measured on Windows 11 with iPhone HEICs: 20–35 ms instead of 450–1000 ms, and no HEVC decoder instance.
-            if (family == FormatFamily.Heif && minLongSide is { } small && small > 0 && small <= EmbeddedThumbnailMaxTarget)
+            // Only when the file stores one: otherwise Windows "makes" a thumbnail by decoding the whole image, and the
+            // image would then be decoded twice (see HeifThumbnailProbe).
+            if (family == FormatFamily.Heif && minLongSide is { } small && small > 0 && small <= EmbeddedThumbnailMaxTarget
+                && HeifThumbnailProbe.HasThumbnail(Path.GetFullPath(path)) != false)
             {
                 var embedded = await TryEmbeddedThumbnailAsync(decoder, small, cancellationToken).ConfigureAwait(false);
                 if (embedded is not null) return embedded;
@@ -65,7 +69,13 @@ public sealed class WicRasterDecoder : IRasterDecoder
             // decoding, so the caller's worker slot was released and new decodes piled up on top of the old ones
             // (20 GB private memory while browsing quickly through HEICs on Windows 11). The work runs to the end and
             // the cancellation is honoured afterwards; the slot stays taken exactly as long as WIC is working.
+            // HEIF and AVIF go through a Media Foundation video decoder (~300–450 MB and 45–80 threads each): the number
+            // running in the whole process is limited, with the viewer first (see HeavyDecodeGate).
+            using var slot = family is FormatFamily.Heif or FormatFamily.Avif
+                ? await HeavyDecodeGate.Shared.AcquireAsync(cancellationToken).ConfigureAwait(false)
+                : null;
             cancellationToken.ThrowIfCancellationRequested();
+            using var activity = slot is not null ? DecodeActivity.Begin(DecodeKind.HeifFull) : null;
             var pixels = await decoder.GetPixelDataAsync(
                 BitmapPixelFormat.Bgra8,
                 BitmapAlphaMode.Straight,
@@ -92,13 +102,15 @@ public sealed class WicRasterDecoder : IRasterDecoder
     public async Task<RasterImage?> TryDecodeEmbeddedThumbnailAsync(string path, FormatFamily family, int minLongSide, CancellationToken cancellationToken)
     {
         if (family is not (FormatFamily.Heif or FormatFamily.Avif or FormatFamily.Raw)) return null;
+        // No stored thumbnail: asking Windows for one would cost a full decode (see HeifThumbnailProbe).
+        if (family == FormatFamily.Heif && HeifThumbnailProbe.HasThumbnail(Path.GetFullPath(path)) == false) return null;
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
             var file = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask().ConfigureAwait(false);
             using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read).AsTask().ConfigureAwait(false);
             var decoder = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
-            return await TryEmbeddedThumbnailCoreAsync(decoder, minLongSide).ConfigureAwait(false);
+            return await TryEmbeddedThumbnailCoreAsync(decoder, minLongSide, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -123,13 +135,21 @@ public sealed class WicRasterDecoder : IRasterDecoder
     private async Task<RasterImage?> TryEmbeddedThumbnailAsync(BitmapDecoder decoder, int target, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await TryEmbeddedThumbnailCoreAsync(decoder, target).ConfigureAwait(false);
+        return await TryEmbeddedThumbnailCoreAsync(decoder, target, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<RasterImage?> TryEmbeddedThumbnailCoreAsync(BitmapDecoder decoder, int target)
+    private async Task<RasterImage?> TryEmbeddedThumbnailCoreAsync(BitmapDecoder decoder, int target, CancellationToken cancellationToken)
     {
         try
         {
+            // The embedded tile of a HEIF is itself HEVC: limited process-wide, the viewer first (HeavyDecodeGate.Embedded).
+            // Waiting for the slot honours the caller's token, so a tile scrolled away never starts a decoder; once the
+            // decode has started it is never abandoned and the slot is held until Windows returns.
+            using var slot = decoder.DecoderInformation?.CodecId == BitmapDecoder.HeifDecoderId
+                ? await HeavyDecodeGate.Embedded.AcquireAsync(cancellationToken).ConfigureAwait(false)
+                : null;
+            cancellationToken.ThrowIfCancellationRequested();
+            using var activity = slot is not null ? DecodeActivity.Begin(DecodeKind.HeifEmbedded) : null;
             using var stream = await decoder.GetThumbnailAsync().AsTask().ConfigureAwait(false);
             var thumb = await BitmapDecoder.CreateAsync(stream).AsTask().ConfigureAwait(false);
             double tw = thumb.PixelWidth, th = thumb.PixelHeight;

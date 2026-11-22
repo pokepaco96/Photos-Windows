@@ -17,7 +17,11 @@ public sealed partial class LibraryPage : Page
 
     public LibraryPage()
     {
-        ViewModel = App.Services.GetRequiredService<LibraryViewModel>();
+        // Created outside the container: it is IDisposable, and the root provider keeps every disposable transient
+        // it creates until the app exits. Every page (and its whole grid) stayed in memory that way: +25-35 MB per
+        // return from the viewer, and a WinUI fail-fast (0xC000027B) after ~20 returns (UI stress, 2026-11-22).
+        // The page disposes it in OnNavigatedFrom.
+        ViewModel = ActivatorUtilities.CreateInstance<LibraryViewModel>(App.Services);
         InitializeComponent();
         _source.Source = ViewModel.Groups;
         AssetsGrid.ItemsSource = _source.View;

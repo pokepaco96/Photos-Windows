@@ -12,6 +12,7 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     public App()
     {
+        ApplyQaLanguage();
         InitializeComponent();
         UnhandledException += OnUnhandledException;
         TaskScheduler.UnobservedTaskException += (_, e) =>
@@ -67,6 +68,23 @@ public partial class App : Microsoft.UI.Xaml.Application
             _logger?.LogCritical(ex, "Start-up failed");
             FatalStartupError(ex);
         }
+    }
+
+    /// <summary>
+    /// QA only: PW_QA_LANGUAGE (en-US or es-ES) runs the app in that language whatever the Windows display language, so
+    /// the UI automation suite, written against the English strings, also runs on a Spanish desktop. Unset, nothing
+    /// changes. Set before any resource or XAML is loaded.
+    /// </summary>
+    private static void ApplyQaLanguage()
+    {
+        var language = Environment.GetEnvironmentVariable("PW_QA_LANGUAGE");
+        if (language is not ("en-US" or "es-ES")) return;
+        Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = language;
+        var culture = System.Globalization.CultureInfo.GetCultureInfo(language);
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+        System.Globalization.CultureInfo.CurrentCulture = culture;
+        System.Globalization.CultureInfo.CurrentUICulture = culture;
     }
 
     /// <summary>Last-resort message when the UI cannot be shown at all (instead of exiting silently).</summary>

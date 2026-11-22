@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Windows-only tests of the platform layer (Media Foundation, WIC). Not part of PhotosWindows.Core.slnf, whose CI
+    also runs on Linux. Video tests generate their clips with ffmpeg (PW_FFMPEG or ffmpeg on PATH) in a temporary
+    folder and are reported as skipped when it is not available.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>PhotosWindows.Platform.Windows.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PhotosWindows.Platform.Windows\PhotosWindows.Platform.Windows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xunit.SkippableFact" />
+  </ItemGroup>
+</Project>

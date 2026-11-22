@@ -132,7 +132,9 @@ public sealed class PeopleService
             var file = await _assets.GetOriginalFileAsync(assetId, cancellationToken).ConfigureAwait(false);
             if (asset is null || file is null) return -1;
             var family = MediaFormats.FromExtension(file.StoredPath)?.Family ?? FormatFamily.Unknown;
-            var image = await _renderer.DecodeOrientedAsync(library.Resolve(file), family, AnalysisLongSide, cancellationToken).ConfigureAwait(false);
+            Task<RasterImage> decoding;
+            using (HeavyDecodeGate.Use(DecodePriority.Background)) decoding = _renderer.DecodeOrientedAsync(library.Resolve(file), family, AnalysisLongSide, cancellationToken);
+            var image = await decoding.ConfigureAwait(false);
             var detections = await _detector!.DetectAsync(image, cancellationToken).ConfigureAwait(false);
             var stored = new List<NewFace>(detections.Count);
             foreach (var detection in detections)

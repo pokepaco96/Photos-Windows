@@ -72,14 +72,17 @@ public sealed class ThumbnailService
         _videoFrames = videoFrames.FirstOrDefault();
         _logger = logger;
         _parallelism = Math.Clamp(settings.Load().MaxBackgroundWorkers, 1, 8);
-        _viewer = new Lane(2);
-        _interactive = new Lane(Math.Max(2, _parallelism));
-        _background = new Lane(_parallelism);
+        _viewer = new Lane(2, DecodePriority.Viewer);
+        _interactive = new Lane(Math.Max(2, _parallelism), DecodePriority.Interactive);
+        _background = new Lane(_parallelism, DecodePriority.Background);
     }
 
-    private sealed class Lane(int capacity)
+    private sealed class Lane(int capacity, DecodePriority priority)
     {
         public int Capacity { get; } = capacity;
+
+        /// <summary>Priority of this lane's decodes at the process-wide <see cref="HeavyDecodeGate"/>.</summary>
+        public DecodePriority Priority { get; } = priority;
         public SemaphoreSlim Slots { get; } = new(capacity);
         public int Waiting;
         public int Overdue;
@@ -105,7 +108,7 @@ public sealed class ThumbnailService
             lock (_gate)
             {
                 return new ThumbnailStats(_viewer.Busy, _viewer.Waiting, _interactive.Busy, _interactive.Waiting, _background.Busy, _background.Waiting,
-                    Volatile.Read(ref _live), _overdue.Count, _inFlight.Count, ForegroundBusy);
+                    Volatile.Read(ref _live), _overdue.Count, _inFlight.Count, ForegroundBusy) { ForegroundReason = ForegroundReason };
             }
         }
     }
@@ -114,9 +117,21 @@ public sealed class ThumbnailService
     /// True while the user is waiting for something on screen: the viewer is loading, or grid thumbnails were requested
     /// in the last two seconds. Background passes stop taking new work meanwhile.
     /// </summary>
-    public bool ForegroundBusy =>
-        Volatile.Read(ref _foreground) > 0 || _viewer.Busy > 0 || _interactive.Busy > 0 || _interactive.Waiting > 0
-        || Environment.TickCount64 - Interlocked.Read(ref _lastInteractiveTicks) < 2000;
+    /// <remarks>
+    /// Decodes past the timeout still hold their slots but are not counted here: the user is no longer waiting for them,
+    /// and one stuck call (a shell video thumbnail that ran for minutes in the UI suite, 2026-11-21) otherwise stopped the
+    /// whole background pass for as long as it lasted.
+    /// </remarks>
+    public bool ForegroundBusy => ForegroundReason is not null;
+
+    /// <summary>Why the background pass is yielding right now (diagnostics); null when it is not.</summary>
+    public string? ForegroundReason =>
+        Volatile.Read(ref _foreground) > 0 ? "viewer-open"
+        : _viewer.Busy - Volatile.Read(ref _viewer.Overdue) > 0 ? "viewer-lane"
+        : _interactive.Busy - Volatile.Read(ref _interactive.Overdue) > 0 ? "grid-lane"
+        : _interactive.Waiting > 0 ? "grid-waiting"
+        : Environment.TickCount64 - Interlocked.Read(ref _lastInteractiveTicks) < 2000 ? "grid-requested"
+        : null;
 
     /// <summary>Marks a foreground load (the viewer opening a photo) until disposed; background work yields meanwhile.</summary>
     public IDisposable BeginForeground()
@@ -180,7 +195,14 @@ public sealed class ThumbnailService
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var rendered = await _renderer.TryRenderEmbeddedThumbnailAsync(path, family, (int)ThumbnailSize.Small, EncodeOptions.ThumbnailJpeg, cancellationToken).ConfigureAwait(false);
+            // The viewer's first paint: served first at the process-wide limits on HEVC decodes (HeavyDecodeGate).
+            Task<RenderedImage?> rendering;
+            using (HeavyDecodeGate.Use(DecodePriority.Viewer))
+            {
+                rendering = _renderer.TryRenderEmbeddedThumbnailAsync(path, family, (int)ThumbnailSize.Small, EncodeOptions.ThumbnailJpeg, cancellationToken);
+            }
+
+            var rendered = await rendering.ConfigureAwait(false);
             return rendered?.Encoded;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -220,7 +242,10 @@ public sealed class ThumbnailService
     /// </summary>
     private Task<string?> GetOrCreateCoreAsync(long assetId, ThumbnailSize size, ThumbnailPriority priority, CancellationToken cancellationToken)
     {
-        if (priority == ThumbnailPriority.Interactive) Interlocked.Exchange(ref _lastInteractiveTicks, Environment.TickCount64);
+        // A grid request makes the background pass yield for 2 s, unless every grid slot is held by a decode past its
+        // timeout: then the grid cannot serve it anyway, and yielding would stop the only lane that still makes
+        // thumbnails (seen in the UI suite: tiles asked again and again kept the pass waiting for 8 minutes).
+        if (priority == ThumbnailPriority.Interactive && !_interactive.Stalled) Interlocked.Exchange(ref _lastInteractiveTicks, Environment.TickCount64);
         return SynchronizationContext.Current is null
             ? GetOrCreateOffUiAsync(assetId, size, priority, cancellationToken)
             : Task.Run(() => GetOrCreateOffUiAsync(assetId, size, priority, cancellationToken), CancellationToken.None);
@@ -278,7 +303,14 @@ public sealed class ThumbnailService
             if (_inFlight.TryGetValue(key, out var current) && ReferenceEquals(current, generation)) _inFlight.Remove(key);
         }
 
-        generation.Cancel.Cancel();
+        try
+        {
+            generation.Cancel.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The generation finished (and disposed its source) between the check above and this call: nothing to stop.
+        }
     }
 
     private async Task RunGenerationAsync(Generation generation, (string Path, ThumbnailPriority) key, Asset asset, EditRecipe recipe, ThumbnailSize size, string path, Lane lane)
@@ -343,7 +375,8 @@ public sealed class ThumbnailService
         Interlocked.Increment(ref _live);
         try
         {
-            running = work(token);
+            // The lane's priority flows into the decoders (HeavyDecodeGate) through the async context.
+            using (HeavyDecodeGate.Use(lane.Priority)) running = work(token);
         }
         catch
         {
@@ -646,9 +679,11 @@ public sealed record ThumbnailStats(
     int BackgroundBusy, int BackgroundWaiting,
     int DecodesRunning, int DecodesPastTimeout, int Generations, bool ForegroundBusy)
 {
+    public string? ForegroundReason { get; init; }
+
     public override string ToString() =>
         $"viewer {ViewerBusy}+{ViewerWaiting}w, grid {InteractiveBusy}+{InteractiveWaiting}w, background {BackgroundBusy}+{BackgroundWaiting}w, " +
-        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}";
+        $"decoding {DecodesRunning} ({DecodesPastTimeout} past timeout), generations {Generations}, foreground {ForegroundBusy}{(ForegroundReason is null ? string.Empty : $" ({ForegroundReason})")}, {HeavyDecodeGate.Shared.Stats}, embedded {HeavyDecodeGate.Embedded.Stats}";
 }
 
 /// <summary>All slots of a lane are held by decodes that did not return in time.</summary>

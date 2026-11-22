@@ -15,14 +15,19 @@ public sealed class BackgroundProcessing : IDisposable
     private readonly ImportService _import;
     private readonly IAssetRepository _assets;
     private readonly ILogger<BackgroundProcessing> _logger;
+    private readonly ThumbnailProgress _progress;
+    private readonly UiThread _ui;
     private readonly SemaphoreSlim _signal = new(0, int.MaxValue);
     private CancellationTokenSource? _cts;
 
-    public BackgroundProcessing(ThumbnailService thumbnails, ImportService import, ILibraryContext context, IAssetRepository assets, ILogger<BackgroundProcessing> logger)
+    public BackgroundProcessing(ThumbnailService thumbnails, ImportService import, ILibraryContext context, IAssetRepository assets, ThumbnailProgress progress, UiThread ui,
+        ILogger<BackgroundProcessing> logger)
     {
         _thumbnails = thumbnails;
         _import = import;
         _assets = assets;
+        _progress = progress;
+        _ui = ui;
         _logger = logger;
         context.LibraryChanged += (_, library) =>
         {
@@ -40,6 +45,38 @@ public sealed class BackgroundProcessing : IDisposable
         var token = _cts.Token;
         _ = Task.Run(() => RunAsync(token), token);
         _ = Task.Run(() => HeartbeatAsync(token), token);
+        _ = Task.Run(() => ProgressAsync(token), token);
+    }
+
+    /// <summary>Every 3 s while the library is open: pending thumbnails → the pane's progress bar and time left.</summary>
+    private async Task ProgressAsync(CancellationToken token)
+    {
+        var estimator = new ThumbnailProgressEstimator();
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+            {
+                try
+                {
+                    var pending = (await _assets.GetStatisticsAsync(token).ConfigureAwait(false)).PendingThumbnails;
+                    var state = estimator.Update(DateTime.UtcNow, pending, paused: _import.IsRunning);
+                    _ui.Post(() => _progress.Apply(state));
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _logger.LogDebug(ex, "Thumbnail progress skipped");
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // library closed
+        }
+        finally
+        {
+            _ui.Post(() => _progress.Apply(default));
+        }
     }
 
     /// <summary>
@@ -62,10 +99,11 @@ public sealed class BackgroundProcessing : IDisposable
                     ThreadPool.GetAvailableThreads(out var freeWorkers, out _);
                     ThreadPool.GetMaxThreads(out var maxWorkers, out _);
                     _logger.LogInformation(
-                        "Heartbeat: pendingThumbs={Pending} unhashed={Unhashed} import={Import} | {Stats} | cpuMs={Cpu} wsMiB={Ws} privateMiB={Private} gcHeapMiB={Heap} threads={Threads} poolBusy={PoolBusy} pending={PoolPending}",
-                        stats.PendingThumbnails, unhashed, _import.IsRunning, _thumbnails.Stats,
+                        "Heartbeat: pendingThumbs={Pending} unhashed={Unhashed} import={Import} | {Stats} | decodes {Decodes} | cpuMs={Cpu} wsMiB={Ws} privateMiB={Private} gcHeapMiB={Heap} threads={Threads} handles={Handles} gen2={Gen2} allocMiB={Alloc} poolBusy={PoolBusy} pending={PoolPending}",
+                        stats.PendingThumbnails, unhashed, _import.IsRunning, _thumbnails.Stats, DecodeActivity.Snapshot(),
                         (long)process.TotalProcessorTime.TotalMilliseconds, process.WorkingSet64 >> 20, process.PrivateMemorySize64 >> 20,
-                        GC.GetTotalMemory(false) >> 20, process.Threads.Count, maxWorkers - freeWorkers, ThreadPool.PendingWorkItemCount);
+                        GC.GetTotalMemory(false) >> 20, process.Threads.Count, process.HandleCount, GC.CollectionCount(2), GC.GetTotalAllocatedBytes() >> 20,
+                        maxWorkers - freeWorkers, ThreadPool.PendingWorkItemCount);
                     _logger.LogInformation("Work: {Work}", _thumbnails.TakeWorkStats());
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)

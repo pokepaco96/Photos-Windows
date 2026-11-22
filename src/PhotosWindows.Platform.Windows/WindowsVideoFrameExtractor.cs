@@ -34,12 +34,16 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
         var shell = await FromShellAsync(file, maxLongSide, cancellationToken).ConfigureAwait(false);
         if (shell is not null) return shell;
 
-        // One Media Foundation extraction at a time in the process. Measured on Windows 11 with iPhone videos (the shell
-        // only returns an icon for them there): 300–360 MiB private per extraction and up to 1.5 GB for the first one;
-        // with the grid and background lanes running eight at once the app peaked at ~6 GB.
+        // One in-process Media Foundation extraction at a time, and it counts against the process-wide limit on heavy
+        // decodes (the HEVC decoder takes ~300 MB, ~1.2 GB for 4K). Measured on Windows 11 with iPhone videos: the
+        // shell returns only an icon for ~40 % of them (HDR HEVC, some re-encoded H.264).
         await MediaFoundationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            using var slot = await HeavyDecodeGate.Shared.AcquireAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            var reader = await FromSourceReaderAsync(path, cancellationToken).ConfigureAwait(false);
+            if (reader is not null) return reader;
             return await FromMediaFoundationAsync(file, maxLongSide, cancellationToken).ConfigureAwait(false);
         }
         finally
@@ -50,6 +54,30 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
 
     private static readonly SemaphoreSlim MediaFoundationGate = new(1, 1);
 
+    /// <summary>
+    /// Software decode of one frame (see <see cref="MediaFoundationFrameReader"/>); null when Media Foundation cannot
+    /// read the file. Runs off the caller's thread and is never abandoned: the slot stays taken while it works.
+    /// </summary>
+    private async Task<RasterImage?> FromSourceReaderAsync(string path, CancellationToken cancellationToken)
+    {
+        try
+        {
+            RasterImage frame;
+            using (DecodeActivity.Begin(DecodeKind.VideoSourceReader))
+            {
+                frame = await Task.Run(() => MediaFoundationFrameReader.Read(Path.GetFullPath(path)), CancellationToken.None).ConfigureAwait(false);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            return frame;
+        }
+        catch (Exception ex) when (ex is COMException or InvalidDataException or ArgumentException or InvalidCastException)
+        {
+            _logger.LogInformation(ex, "Source Reader could not read a frame of {File}", Path.GetFileName(path));
+            return null;
+        }
+    }
+
     /// <summary>Shell thumbnail (fast, cached by Windows).</summary>
     private async Task<RasterImage?> FromShellAsync(StorageFile file, int maxLongSide, CancellationToken cancellationToken)
     {
@@ -57,6 +85,7 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
         {
             // Never abandoned (see WicRasterDecoder): the caller's worker slot must stay taken while Windows works.
             cancellationToken.ThrowIfCancellationRequested();
+            using var activity = DecodeActivity.Begin(DecodeKind.VideoShell);
             using var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem, (uint)Math.Clamp(maxLongSide, 64, 2048), ThumbnailOptions.ResizeThumbnail)
                 .AsTask().ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
@@ -82,6 +111,7 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
     {
         try
         {
+            using var activity = DecodeActivity.Begin(DecodeKind.VideoComposition);
             var clip = await MediaClip.CreateFromFileAsync(file).AsTask(cancellationToken).ConfigureAwait(false);
             var video = clip.GetVideoEncodingProperties();
             if (video is null || video.Width == 0 || video.Height == 0) return null;
@@ -96,13 +126,34 @@ public sealed class WindowsVideoFrameExtractor : IVideoFrameExtractor
             using var stream = await composition.GetThumbnailAsync(at, width, height, VideoFramePrecision.NearestFrame)
                 .AsTask().ConfigureAwait(false); // never abandoned (see WicRasterDecoder)
             cancellationToken.ThrowIfCancellationRequested();
-            return stream is null ? null : await DecodeAsync(stream, cancellationToken).ConfigureAwait(false);
+            if (stream is null) return null;
+            var frame = await DecodeAsync(stream, cancellationToken).ConfigureAwait(false);
+            // MediaComposition returns a blank frame (every pixel exactly 0) when it cannot decode, e.g. for HDR HEVC: a
+            // placeholder is better than a black tile. This path runs only after the Source Reader failed.
+            return IsBlankFrame(frame) ? null : frame;
         }
         catch (Exception ex) when (ex is COMException or ArgumentException or UnauthorizedAccessException or FileNotFoundException or InvalidOperationException)
         {
             _logger.LogInformation(ex, "No poster frame for {File}: no decoder for this video", file.Name);
             return null;
         }
+    }
+
+    /// <summary>
+    /// True when every pixel is at most 2 in each channel: what MediaComposition returns when its decoder failed (measured
+    /// on Windows 11: exactly 0 everywhere for HLG and PQ HEVC). Every pixel is checked, so a dark scene, a night shot or an
+    /// underexposed clip (sensor noise, a few lit pixels) is kept; only a frame with no signal at all is dropped. The old
+    /// rule (every 7th pixel at most 8) could drop a legitimately dark frame.
+    /// </summary>
+    internal static bool IsBlankFrame(RasterImage image)
+    {
+        var p = image.Pixels;
+        for (var i = 0; i + 2 < p.Length; i += 4)
+        {
+            if (p[i] > 2 || p[i + 1] > 2 || p[i + 2] > 2) return false;
+        }
+
+        return true;
     }
 
     private static async Task<RasterImage> DecodeAsync(global::Windows.Storage.Streams.IRandomAccessStream stream, CancellationToken cancellationToken)

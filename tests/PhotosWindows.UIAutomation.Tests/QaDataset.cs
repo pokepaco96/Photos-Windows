@@ -24,6 +24,7 @@ public sealed class QaDataset
         CopyFolder = Path.Combine(root, "copy");
         InPlaceFolder = Path.Combine(root, "inplace");
         PeopleFolder = Path.Combine(root, "people");
+        BulkFolder = Path.Combine(root, "bulk");
     }
 
     public string Root { get; }
@@ -35,6 +36,16 @@ public sealed class QaDataset
     public bool HasPeople { get; private set; }
     public string? PeopleNote { get; private set; }
     public string PeopleFolder { get; }
+
+    /// <summary>
+    /// Enough distinct video clips for the background thumbnail pass to show its progress bar (it shows from 50 pending,
+    /// sampled every 3 s). Videos, because JPEG thumbnails are too cheap: 300 large JPEGs were done in under 5 s.
+    /// </summary>
+    public string BulkFolder { get; }
+
+    public const int BulkCount = 120;
+
+    public bool HasBulk { get; private set; }
 
     /// <summary>
     /// Works of the US federal government (NASA), public domain. Two photos of Mark C. Lee (1984, 1993), Eugene A.
@@ -88,6 +99,22 @@ public sealed class QaDataset
         File.WriteAllText(Path.Combine(InPlaceFolder, "notas.txt"), "not a media file");
 
         (HasVideo, VideoNote) = Video(Path.Combine(InPlaceFolder, "clip.mp4"));
+
+        Directory.CreateDirectory(BulkFolder);
+        if (HasVideo)
+        {
+            var made = 0;
+            Parallel.For(0, BulkCount, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
+            {
+                // A different hue per clip: every file is distinct (no duplicates at import).
+                if (Ffmpeg(["-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=s=1280x720:r=30:d=2", "-vf", $"hue=h={i * 3}",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast", "-movflags", "+faststart", Path.Combine(BulkFolder, $"BULK_{i:0000}.mp4")]))
+                {
+                    Interlocked.Increment(ref made);
+                }
+            });
+            HasBulk = made == BulkCount;
+        }
         (HasPeople, PeopleNote) = DownloadPeople();
 
         Hashes = Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories)
@@ -148,6 +175,11 @@ public sealed class QaDataset
     private (bool, string?) DownloadPeople()
     {
         Directory.CreateDirectory(PeopleFolder);
+        if (Environment.GetEnvironmentVariable("PW_QA_NO_DOWNLOADS") == "1")
+        {
+            return (false, "people photos not downloaded: PW_QA_NO_DOWNLOADS=1");
+        }
+
         try
         {
             using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(2) };
@@ -173,6 +205,23 @@ public sealed class QaDataset
     }
 
     /// <summary>Creates a short H.264/AAC MP4 with ffmpeg when available (the workflow installs it).</summary>
+    private static bool Ffmpeg(string[] args)
+    {
+        var psi = new ProcessStartInfo(Environment.GetEnvironmentVariable("PW_FFMPEG") ?? "ffmpeg") { RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        try
+        {
+            using var p = Process.Start(psi)!;
+            p.StandardError.ReadToEnd();
+            p.WaitForExit(60_000);
+            return p.ExitCode == 0;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    }
+
     private static (bool, string?) Video(string path)
     {
         var ffmpeg = Environment.GetEnvironmentVariable("PW_FFMPEG") ?? "ffmpeg";
